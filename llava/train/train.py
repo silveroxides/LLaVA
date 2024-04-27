@@ -824,6 +824,12 @@ def train(attn_implementation=None):
                 **bnb_model_from_pretrained_args
             )
         else:
+          # Remove the problematic arguments from bnb_model_from_pretrained_args
+            if 'low_cpu_mem_usage' in bnb_model_from_pretrained_args:
+                del bnb_model_from_pretrained_args['low_cpu_mem_usage']
+            if 'device_map' in bnb_model_from_pretrained_args:
+                del bnb_model_from_pretrained_args['device_map']
+                            
             model = LlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
                 cache_dir=training_args.cache_dir,
