@@ -145,7 +145,7 @@ class LlavaMetaForCausalLM(ABC):
 
         moe_block = self.get_model().mm_projector
         image_features = moe_block.forward(image_features)
-        print("Image features shape before SparseMoeBlock:", image_features.shape)
+        print("Image features shape After SparseMoeBlock:", image_features.shape)
 
         return image_features
 
