@@ -139,12 +139,9 @@ class LlavaMetaForCausalLM(ABC):
 
     def encode_images(self, images):
         image_features = self.get_model().get_vision_tower()(images)
+        print("Image features shape Before SparseMoeBlock:", image_features.shape)
 
-        # Print the shape of the image features before processing with SparseMoeBlock
-        print("Image features shape before SparseMoeBlock:", image_features.shape)
-
-        moe_block = self.get_model().mm_projector
-        image_features = moe_block.forward(image_features)
+        image_features = self.get_model().mm_projector(image_features)
         print("Image features shape After SparseMoeBlock:", image_features.shape)
 
         return image_features
