@@ -838,9 +838,6 @@ def train(attn_implementation=None):
                 **bnb_model_from_pretrained_args
             )
 
-            print(model)
-            print('####################################################################################################')
-            print('####################################################################################################')
     else:
         model = transformers.LlamaForCausalLM.from_pretrained(
             model_args.model_name_or_path,
@@ -850,6 +847,10 @@ def train(attn_implementation=None):
             **bnb_model_from_pretrained_args
         )
     model.config.use_cache = False
+    print(model)
+    print('####################################################################################################')
+    print('####################################################################################################')
+
 
     if model_args.freeze_backbone:
         model.model.requires_grad_(False)
