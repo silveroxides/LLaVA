@@ -859,6 +859,7 @@ def train(attn_implementation=None):
         from peft import prepare_model_for_kbit_training
         model.config.torch_dtype=(torch.float32 if training_args.fp16 else (torch.bfloat16 if training_args.bf16 else torch.float32))
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=training_args.gradient_checkpointing)
+        print('training_args.bits in [4, 8]:')
         print(model)
         print('####################################################################################################')
         print('####################################################################################################')
@@ -888,6 +889,7 @@ def train(attn_implementation=None):
                 model.to(torch.float16)
         rank0_print("Adding LoRA adapters...")
         model = get_peft_model(model, lora_config)
+        print('training_args.lora_enable')
         print(model)
         print('####################################################################################################')
         print('####################################################################################################')
@@ -961,8 +963,11 @@ def train(attn_implementation=None):
         model.config.mm_use_im_patch_token = model_args.mm_use_im_patch_token
         model.initialize_vision_tokenizer(model_args, tokenizer=tokenizer)
 
+    print('####################################################################################################')
+    print('initialize_vision_modules')
+    print('####################################################################################################')
     print(model.get_model())
-
+    print('####################################################################################################')
     if training_args.bits in [4, 8]:
         from peft.tuners.lora import LoraLayer
         for name, module in model.named_modules():
