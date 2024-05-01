@@ -80,6 +80,7 @@ class SparseMoeBlock(nn.Module):
 
         # Loop over all available experts in the model and perform the computation on each expert
         for expert_idx in range(self.num_experts):
+            print(f'Expert: {expert_idx}')
             expert_layer = self.experts[expert_idx]
             idx, top_x = torch.where(expert_mask[expert_idx])
 
@@ -96,6 +97,7 @@ class SparseMoeBlock(nn.Module):
             # the `top_x` tensor here.
             final_hidden_states.index_add_(0, top_x, current_hidden_states.to(hidden_states.dtype))
         final_hidden_states = final_hidden_states.reshape(batch_size, sequence_length, hidden_dim)
+        print(f'Final hidden states: {final_hidden_states.shape}')
 #         return final_hidden_states, router_logits
         return final_hidden_states
 
