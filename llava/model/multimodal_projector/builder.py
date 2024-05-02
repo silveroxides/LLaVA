@@ -42,12 +42,12 @@ class SparseMoeBlock(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.hidden_dim = config.hidden_size
-        self.ffn_dim = config.hidden_size
+        self.ffn_dim = config.mm_hidden_size
         self.num_experts = 4
         self.top_k = 2
 
         # gating
-        self.gate = nn.Linear(self.mm_hidden_size, self.num_experts, bias=False)
+        self.gate = nn.Linear(self.ffn_dim, self.num_experts, bias=False)
 
         self.experts = nn.ModuleList([Experts(config) for _ in range(self.num_experts)])
 
