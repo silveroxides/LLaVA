@@ -21,6 +21,8 @@ import json
 import logging
 import pathlib
 from typing import Dict, Optional, Sequence, List
+from transformers import BitsAndBytesConfig
+
 
 import torch
 
@@ -796,7 +798,6 @@ def train(attn_implementation=None):
 
     bnb_model_from_pretrained_args = {}
     if training_args.bits in [4, 8]:
-        from transformers import BitsAndBytesConfig
         bnb_model_from_pretrained_args.update(dict(
             device_map={"": training_args.device},
             load_in_4bit=training_args.bits == 4,
@@ -813,6 +814,10 @@ def train(attn_implementation=None):
             )
         ))
 
+    print('####################################################################################################')
+    print(f'bnb_model_from_pretrained_args: {bnb_model_from_pretrained_args}')
+    print('####################################################################################################')
+    
     if model_args.vision_tower is not None:
         if 'mpt' in model_args.model_name_or_path:
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)

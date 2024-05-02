@@ -37,7 +37,7 @@ class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
     def __init__(self, config: LlamaConfig):
         super(LlavaLlamaModel, self).__init__(config)
 
-
+# LlavaLlamaForCausalLM is a subclass of both LlamaForCausalLM and LlavaMetaForCausalLM.
 class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
     config_class = LlavaConfig
 
