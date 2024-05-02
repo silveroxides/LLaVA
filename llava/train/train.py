@@ -841,6 +841,10 @@ def train(attn_implementation=None):
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
                 **bnb_model_from_pretrained_args
             )
+            print('##############################model = LlavaLlamaForCausalLM.from_pretrained#########################')
+            print('####################################################################################################')
+            print(model)
+            print('####################################################################################################')
 
     else:
         model = transformers.LlamaForCausalLM.from_pretrained(
@@ -851,9 +855,6 @@ def train(attn_implementation=None):
             **bnb_model_from_pretrained_args
         )
     model.config.use_cache = False
-    print(model)
-    print('####################################################################################################')
-    print('####################################################################################################')
 
 
     if model_args.freeze_backbone:
