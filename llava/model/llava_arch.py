@@ -33,8 +33,8 @@ class LlavaMetaModel:
 
         if hasattr(config, "mm_vision_tower"):
             self.vision_tower = build_vision_tower(config, delay_load=True)
-            # self.mm_projector = build_vision_projector(config)
-            self.mm_projector = build_vision_moe_projector(config)
+            self.mm_projector = build_vision_projector(config)
+            # self.mm_projector = build_vision_moe_projector(config)
             print('###############################################################################################################')
             print('###############################################################################################################')
             print('Vision Projector is Build')
