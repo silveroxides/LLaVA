@@ -65,7 +65,8 @@ class SparseMoeBlock(nn.Module):
         print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
         print(f'Hidden States Shape: {hidden_states.shape}')
         print('#################################################################################################################################')
-        hidden_states = hidden_states.view(-1, hidden_dim)
+        # hidden_states = hidden_states.view(-1, hidden_dim)
+        hidden_states = hidden_states.view(batch_size * sequence_length, hidden_dim)
         # router_logits: (batch * sequence_length, n_experts)
         router_logits = self.gate(hidden_states)
 
