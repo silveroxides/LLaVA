@@ -56,6 +56,10 @@ def eval_model(args):
         args.model_path, args.model_base, model_name
     )
 
+    print('#########################################################################################################')
+    print(model)
+    print('#########################################################################################################')
+    
     qs = args.query
     image_token_se = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN
     if IMAGE_PLACEHOLDER in qs:
