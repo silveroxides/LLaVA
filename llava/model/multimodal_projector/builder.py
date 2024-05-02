@@ -150,3 +150,16 @@ def build_vision_projector(config, delay_load=False, **kwargs):
         return SparseMoeBlock(config)
     
     raise ValueError(f'Unknown projector type: {projector_type}')
+
+
+def build_vision_moe_projector(config):
+    # if projector_type == 'sparse_moe':
+    print('###############################################################################################################')
+    print('###############################################################################################################')
+    print('sparse_moe EXECUTED IN BUILDER.PY')
+    print('###############################################################################################################')
+    print('###############################################################################################################')
+    return SparseMoeBlock(config)
+    
+    raise ValueError(f'Unknown projector type: {projector_type}')
+
