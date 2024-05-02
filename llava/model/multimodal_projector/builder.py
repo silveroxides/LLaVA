@@ -19,7 +19,7 @@ class Experts(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.ffn = nn.Sequential(
-            nn.Linear(config.hidden_size, config.hidden_size),
+            nn.Linear(config.mm_hidden_size, config.hidden_size),
             nn.GELU(),
             nn.Linear(config.hidden_size, config.hidden_size)
         )
@@ -47,7 +47,7 @@ class SparseMoeBlock(nn.Module):
         self.top_k = 2
 
         # gating
-        self.gate = nn.Linear(self.hidden_dim, self.num_experts, bias=False)
+        self.gate = nn.Linear(self.mm_hidden_size, self.num_experts, bias=False)
 
         self.experts = nn.ModuleList([Experts(config) for _ in range(self.num_experts)])
 
@@ -160,6 +160,4 @@ def build_vision_moe_projector(config):
     print('###############################################################################################################')
     print('###############################################################################################################')
     return SparseMoeBlock(config)
-    
-    raise ValueError(f'Unknown projector type: {projector_type}')
 
