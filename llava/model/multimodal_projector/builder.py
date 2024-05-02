@@ -126,6 +126,11 @@ def build_vision_projector(config, delay_load=False, **kwargs):
 
     mlp_gelu_match = re.match(r'^mlp(\d+)x_gelu$', projector_type)
     if mlp_gelu_match:
+        print('###############################################################################################################')
+        print('###############################################################################################################')
+        print('MPL 2X GELU EXECUTED IN BUILDER.PY')
+        print('###############################################################################################################')
+        print('###############################################################################################################')
         mlp_depth = int(mlp_gelu_match.group(1))
         modules = [nn.Linear(config.mm_hidden_size, config.hidden_size)]
         for _ in range(1, mlp_depth):
@@ -137,6 +142,11 @@ def build_vision_projector(config, delay_load=False, **kwargs):
         return IdentityMap()
     
     if projector_type == 'sparse_moe':
+        print('###############################################################################################################')
+        print('###############################################################################################################')
+        print('sparse_moe EXECUTED IN BUILDER.PY')
+        print('###############################################################################################################')
+        print('###############################################################################################################')
         return SparseMoeBlock(config)
     
     raise ValueError(f'Unknown projector type: {projector_type}')
