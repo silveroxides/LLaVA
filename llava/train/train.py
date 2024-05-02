@@ -817,7 +817,7 @@ def train(attn_implementation=None):
     print('####################################################################################################')
     print(f'bnb_model_from_pretrained_args: {bnb_model_from_pretrained_args}')
     print('####################################################################################################')
-    
+
     if model_args.vision_tower is not None:
         if 'mpt' in model_args.model_name_or_path:
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
@@ -830,10 +830,10 @@ def train(attn_implementation=None):
             )
         else:
           # Remove the problematic arguments from bnb_model_from_pretrained_args
-            if 'low_cpu_mem_usage' in bnb_model_from_pretrained_args:
-                del bnb_model_from_pretrained_args['low_cpu_mem_usage']
-            if 'device_map' in bnb_model_from_pretrained_args:
-                del bnb_model_from_pretrained_args['device_map']
+            # if 'low_cpu_mem_usage' in bnb_model_from_pretrained_args:
+            #     del bnb_model_from_pretrained_args['low_cpu_mem_usage']
+            # if 'device_map' in bnb_model_from_pretrained_args:
+            #     del bnb_model_from_pretrained_args['device_map']
                             
             model = LlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
