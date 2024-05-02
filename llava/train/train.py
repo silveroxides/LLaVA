@@ -812,11 +812,7 @@ def train(attn_implementation=None):
                 bnb_4bit_quant_type=training_args.quant_type # {'fp4', 'nf4'}
             )
         ))
-
-    print('####################################################################################################')
-    print(f'bnb_model_from_pretrained_args: {bnb_model_from_pretrained_args}')
-    print('####################################################################################################')
-
+        
     if model_args.vision_tower is not None:
         if 'mpt' in model_args.model_name_or_path:
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
