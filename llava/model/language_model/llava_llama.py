@@ -43,8 +43,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
     def __init__(self, config):
         super(LlamaForCausalLM, self).__init__(config)
-        print('###############################################################################################################')
-        print(config)
+        print('##################################################--mm_projector_type--####################################################')
+        print(config.mm_projector_type)
         print('###############################################################################################################') 
         self.model = LlavaLlamaModel(config)
         self.pretraining_tp = config.pretraining_tp
