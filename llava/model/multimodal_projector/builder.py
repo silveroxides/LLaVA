@@ -42,7 +42,7 @@ class SparseMoeBlock(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.hidden_dim = config.mm_hidden_size #mm_hidden_size": 1024
-        self.ffn_dim = config.hidden_size    
+        self.ffn_dim = config.hidden_size    #hidden_size": 4096
         self.num_experts = 4
         self.top_k = 2
 
@@ -67,8 +67,15 @@ class SparseMoeBlock(nn.Module):
         print('#################################################################################################################################')
         # hidden_states = hidden_states.view(-1, hidden_dim)
         hidden_states = hidden_states.reshape(-1, hidden_dim)
+
+        print(f'Shape of gate weights:", {tuple(self.gate.weight.shape)} - (num_experts, dim)')
+        print('#################################################################################################################################')           
         # router_logits: (batch * sequence_length, n_experts)
         router_logits = self.gate(hidden_states)
+
+        print('#################################################################################################################################')
+        print(f'router_logits: {router_logits.shape} - (sequence_length, num_experts)')
+        print('#################################################################################################################################')
 
         routing_weights = F.softmax(router_logits, dim=1, dtype=torch.float)
         routing_weights, selected_experts = torch.topk(routing_weights, self.top_k, dim=-1)
@@ -77,8 +84,11 @@ class SparseMoeBlock(nn.Module):
         routing_weights = routing_weights.to(hidden_states.dtype)
 
         final_hidden_states = torch.zeros(
-            (batch_size * sequence_length, self.hidden_dim), dtype=hidden_states.dtype, device=hidden_states.device
+            (batch_size * sequence_length, self.ffn_dim), dtype=hidden_states.dtype, device=hidden_states.device
         )
+        print('#################################################################################################################################')
+        print(f'final_hidden_states: {final_hidden_states.shape}')
+        print('#################################################################################################################################')
 
         # One hot encode the selected experts to create an expert mask
         # this will be used to easily index which expert is going to be sollicitated
@@ -111,8 +121,11 @@ class SparseMoeBlock(nn.Module):
             # However `index_add_` only support torch tensors for indexing so we'll use
             # the `top_x` tensor here.
             final_hidden_states.index_add_(0, top_x, current_hidden_states.to(hidden_states.dtype))
+
         final_hidden_states = final_hidden_states.reshape(batch_size, sequence_length, self.hidden_dim)
-        print(f'Final hidden states: {final_hidden_states.shape}')
+        print('#################################################################################################################################')
+        print(f'current_hidden_states Shape: {current_hidden_states.shape}')
+        print('#################################################################################################################################')
 #         return final_hidden_states, router_logits
         return final_hidden_states
 
