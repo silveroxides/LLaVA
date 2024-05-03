@@ -61,21 +61,21 @@ class SparseMoeBlock(nn.Module):
         if self.training and self.jitter_noise > 0:
             hidden_states *= torch.empty_like(hidden_states).uniform_(1.0 - self.jitter_noise, 1.0 + self.jitter_noise)
 
-        print('#################################################################################################################################')
-        print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
-        print(f'Hidden States Shape: {hidden_states.shape}')
-        print('#################################################################################################################################')
+        # print('#################################################################################################################################')
+        # print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
+        # print(f'Hidden States Shape: {hidden_states.shape}')
+        # print('#################################################################################################################################')
         # hidden_states = hidden_states.view(-1, hidden_dim)
         hidden_states = hidden_states.reshape(-1, hidden_dim)
 
-        print(f'Shape of gate weights:", {tuple(self.gate.weight.shape)} - (num_experts, dim)')
-        print('#################################################################################################################################')           
+        # print(f'Shape of gate weights:", {tuple(self.gate.weight.shape)} - (num_experts, dim)')
+        # print('#################################################################################################################################')           
         # router_logits: (batch * sequence_length, n_experts)
         router_logits = self.gate(hidden_states)
 
-        print('#################################################################################################################################')
-        print(f'router_logits: {router_logits.shape} - (sequence_length, num_experts)')
-        print('#################################################################################################################################')
+        # print('#################################################################################################################################')
+        # print(f'router_logits: {router_logits.shape} - (sequence_length, num_experts)')
+        # print('#################################################################################################################################')
 
         routing_weights = F.softmax(router_logits, dim=1, dtype=torch.float)
         routing_weights, selected_experts = torch.topk(routing_weights, self.top_k, dim=-1)
@@ -86,9 +86,9 @@ class SparseMoeBlock(nn.Module):
         final_hidden_states = torch.zeros(
             (batch_size * sequence_length, self.ffn_dim), dtype=hidden_states.dtype, device=hidden_states.device
         )
-        print('#################################################################################################################################')
-        print(f'final_hidden_states: {final_hidden_states.shape}')
-        print('#################################################################################################################################')
+        # print('#################################################################################################################################')
+        # print(f'final_hidden_states: {final_hidden_states.shape}')
+        # print('#################################################################################################################################')
 
         # One hot encode the selected experts to create an expert mask
         # this will be used to easily index which expert is going to be sollicitated
@@ -108,9 +108,9 @@ class SparseMoeBlock(nn.Module):
             # states by `routing_weights` on the corresponding tokens (top-1 and top-2)
             current_state = hidden_states[None, top_x].reshape(-1, hidden_dim)
             current_hidden_states = expert_layer(current_state) * routing_weights[top_x, idx, None]
-            print('#################################################################################################################################')
-            print(f'current_hidden_states Shape: {current_hidden_states.shape}')
-            print('#################################################################################################################################')
+            # print('#################################################################################################################################')
+            # print(f'current_hidden_states Shape: {current_hidden_states.shape}')
+            # print('#################################################################################################################################')
 
             '''
             final_hidden_states.index_add_(0, top_x, current_hidden_states.to(hidden_states.dtype))
@@ -123,9 +123,9 @@ class SparseMoeBlock(nn.Module):
             final_hidden_states.index_add_(0, top_x, current_hidden_states.to(hidden_states.dtype))
 
         final_hidden_states = final_hidden_states.reshape(batch_size, sequence_length, self.ffn_dim)
-        print('#################################################################################################################################')
-        print(f'current_hidden_states Shape: {current_hidden_states.shape}')
-        print('#################################################################################################################################')
+        # print('#################################################################################################################################')
+        # print(f'current_hidden_states Shape: {current_hidden_states.shape}')
+        # print('#################################################################################################################################')
 #         return final_hidden_states, router_logits
         return final_hidden_states
 
