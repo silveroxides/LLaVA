@@ -41,13 +41,13 @@ class SparseMoeBlock(nn.Module):
 
     def __init__(self, config):
         super().__init__()
-        self.hidden_dim = config.hidden_size
-        self.ffn_dim = config.mm_hidden_size
+        self.hidden_dim = config.mm_hidden_size #mm_hidden_size": 1024
+        self.ffn_dim = config.hidden_size    
         self.num_experts = 4
         self.top_k = 2
 
         # gating
-        self.gate = nn.Linear(self.ffn_dim, self.num_experts, bias=False)
+        self.gate = nn.Linear(self.hidden_dim, self.num_experts, bias=False)
 
         self.experts = nn.ModuleList([Experts(config) for _ in range(self.num_experts)])
 
@@ -77,7 +77,7 @@ class SparseMoeBlock(nn.Module):
         routing_weights = routing_weights.to(hidden_states.dtype)
 
         final_hidden_states = torch.zeros(
-            (batch_size * sequence_length, hidden_dim), dtype=hidden_states.dtype, device=hidden_states.device
+            (batch_size * sequence_length, self.hidden_dim), dtype=hidden_states.dtype, device=hidden_states.device
         )
 
         # One hot encode the selected experts to create an expert mask
@@ -102,10 +102,16 @@ class SparseMoeBlock(nn.Module):
             print(f'current_hidden_states Shape: {current_hidden_states.shape}')
             print('#################################################################################################################################')
 
+            '''
+            final_hidden_states.index_add_(0, top_x, current_hidden_states.to(hidden_states.dtype))
+            RuntimeError: source tensor shape must match self tensor shape, 
+            excluding the specified dimension. Got self.shape = [18432, 1024] source.shape = [12869, 4096]
+            '''
+
             # However `index_add_` only support torch tensors for indexing so we'll use
             # the `top_x` tensor here.
             final_hidden_states.index_add_(0, top_x, current_hidden_states.to(hidden_states.dtype))
-        final_hidden_states = final_hidden_states.reshape(batch_size, sequence_length, hidden_dim)
+        final_hidden_states = final_hidden_states.reshape(batch_size, sequence_length, self.hidden_dim)
         print(f'Final hidden states: {final_hidden_states.shape}')
 #         return final_hidden_states, router_logits
         return final_hidden_states
