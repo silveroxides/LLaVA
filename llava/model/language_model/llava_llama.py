@@ -30,6 +30,7 @@ from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 # and adding new attribute called model_type attribute to it
 class LlavaConfig(LlamaConfig):
     model_type = "llava_llama"
+    mm_projector_type = "sparse_moe"
 
 # this was called by LlavaLlamaForCausalLM
 class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
@@ -46,13 +47,16 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
     def __init__(self, config):
         super(LlamaForCausalLM, self).__init__(config)
-        print('##################################################--AutoConfig--###############################################')
+        print('##################################################--Config--###############################################')
         print(config)
         print('###############################################################################################################') 
         print('##################################################--mm_projector_type--####################################################')
         print(config.mm_projector_type)
         print('###############################################################################################################') 
         self.model = LlavaLlamaModel(config)
+        print('##################################################--Model--####################################################')
+        print(self.model)
+        print('###############################################################################################################') 
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
