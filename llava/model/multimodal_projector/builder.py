@@ -43,8 +43,8 @@ class SparseMoeBlock(nn.Module):
         super().__init__()
         self.hidden_dim = config.mm_hidden_size #mm_hidden_size": 1024
         self.ffn_dim = config.hidden_size    #hidden_size": 4096
-        self.num_experts = 4
-        self.top_k = 2
+        self.num_experts = config.num_experts #num_experts": 4
+        self.top_k = config.num_experts_per_tok #num_experts_per_tok": 2
 
         # gating
         self.gate = nn.Linear(self.hidden_dim, self.num_experts, bias=False)

@@ -30,7 +30,8 @@ from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 # and adding new attribute called model_type attribute to it
 class LlavaConfig(LlamaConfig):
     model_type = "llava_llama"
-    mm_projector_type = "sparse_moe"
+    num_experts_per_tok = 1
+    num_experts = 1
 
 # this was called by LlavaLlamaForCausalLM
 class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
@@ -47,6 +48,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
     def __init__(self, config, model_args=None):
 
+        config.num_experts = model_args['num_experts']
+        config.num_experts_per_tok = model_args['num_experts_per_tok']
         print('#' * 30 + '--model_args--' + '#' * 30)
         print(model_args)
         print('#' * 80)
@@ -60,7 +63,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         # if model_args and hasattr(model_args, 'mm_projector_type'):
         #     config.mm_projector_type = model_args.mm_projector_type
         if model_args and 'mm_projector_type' in model_args:
-            config.mm_projector_type = model_args['mm_projector_type']            
+            config.mm_projector_type = model_args['mm_projector_type']
+                        
         super(LlamaForCausalLM, self).__init__(config)
 
         print('#' * 30 + '--Config -> After Replacing--' + '#' * 30)
