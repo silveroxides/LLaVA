@@ -155,7 +155,7 @@ class LlavaMetaForCausalLM(ABC):
         print('*'*100)
 
 
-        return image_features
+        return image_features, gate_logits
 
     def prepare_inputs_labels_for_multimodal(
         self, input_ids, position_ids, attention_mask, past_key_values, labels,
