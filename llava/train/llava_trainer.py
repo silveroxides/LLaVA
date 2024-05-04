@@ -144,7 +144,11 @@ class LLaVATrainer(Trainer):
         print('#'*40 + '-Tracking the compute loss-' + '#'*40)
         print(loss)
         print('#'*100)
-        gate_logits = model.gate_logits  # Access the gate logits
+        # Get the underlying model from the DeepSpeedEngine object
+        model = model.module if hasattr(model, "module") else model
+
+        # Access the gate_logits attribute from the underlying model
+        gate_logits = model.gate_logits  # Access the gate_logits        
         print('#'*40 + '-Tracking Gate Logits-' + '#'*40)
         print(gate_logits.shape)
         print('#'*100)
