@@ -57,8 +57,10 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         print(config.mm_projector_type)
         print('#' * 80)
         # Replace default mm_projector_type with specified in model_args
-        if model_args and hasattr(model_args, 'mm_projector_type'):
-            config.mm_projector_type = model_args.mm_projector_type
+        # if model_args and hasattr(model_args, 'mm_projector_type'):
+        #     config.mm_projector_type = model_args.mm_projector_type
+        if model_args and 'mm_projector_type' in model_args:
+            config.mm_projector_type = model_args['mm_projector_type']            
         super(LlamaForCausalLM, self).__init__(config)
 
         print('#' * 30 + '--Config -> After Replacing--' + '#' * 30)
