@@ -832,6 +832,9 @@ def train(attn_implementation=None):
             #     del bnb_model_from_pretrained_args['device_map']
             # config = AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             model_args_dict = model_args.__dict__
+            print('#' * 30 + '--model_args_dict--' + '#' * 30)
+            print(model_args_dict)
+            print('#' * 80)
 
             model = LlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
