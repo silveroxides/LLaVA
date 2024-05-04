@@ -32,6 +32,14 @@ def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tens
     print('#'*40 + '-gate_logits-' + '#'*40)
     print(gate_logits.shape)
     print('#'*100)
+
+    if gate_logits is None:
+        print("gate_logits is None")
+        return 0
+    
+    if not isinstance(gate_logits, tuple):
+        print("gate_logits is not a tuple")
+        return 0
     
     if gate_logits is None or not isinstance(gate_logits, tuple):
         print("gate_logits is None or not a tuple")
