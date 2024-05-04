@@ -147,6 +147,9 @@ class LLaVATrainer(Trainer):
         # Get the underlying model from the DeepSpeedEngine object
         model = model.module if hasattr(model, "module") else model
 
+        # Print the attributes and methods of the underlying model
+        print("Model attributes and methods:", dir(model))
+
         # Access the gate_logits attribute from the underlying model
         gate_logits = model.gate_logits  # Access the gate_logits        
         print('#'*40 + '-Tracking Gate Logits-' + '#'*40)
