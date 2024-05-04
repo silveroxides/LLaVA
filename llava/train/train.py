@@ -967,7 +967,7 @@ def train(attn_implementation=None):
         model.config.mm_use_im_patch_token = model_args.mm_use_im_patch_token
         model.initialize_vision_tokenizer(model_args, tokenizer=tokenizer)
 
-    print('#'*100 + 'initialize_vision_modules' + '#'*100)
+    print('#'*40 + 'initialize_vision_modules' + '#'*40)
     print('#'*100)
     print(model.get_model())
     print('#'*100)

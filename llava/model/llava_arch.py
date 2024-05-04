@@ -143,8 +143,7 @@ class LlavaMetaForCausalLM(ABC):
 
     def encode_images(self, images):
         
-        model_struc = self.get_model()
-        # print(model_struc)
+        print('#'*40 +f'{self.mm_projector}' + '#'*40)
         image_features = self.get_model().get_vision_tower()(images)
         
         print('*'*100)
