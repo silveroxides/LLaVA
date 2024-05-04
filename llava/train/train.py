@@ -837,7 +837,7 @@ def train(attn_implementation=None):
                 cache_dir=training_args.cache_dir,
                 attn_implementation=attn_implementation,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
-                model_args=model_args,
+                mm_projector_type=model_args.mm_projector_type,
                 **bnb_model_from_pretrained_args
             )
             print('##############################model = LlavaLlamaForCausalLM.from_pretrained#########################')
