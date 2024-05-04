@@ -34,9 +34,9 @@ class LlavaMetaModel:
         if hasattr(config, "mm_vision_tower"):
             self.vision_tower = build_vision_tower(config, delay_load=True)
             self.mm_projector = build_vision_projector(config)
-            print('###############################################################################################################')
+            print('#' * 100)
             print('Vision Projector is Build')
-            print('###############################################################################################################')
+            print('#' * 100)
 
 
             if 'unpad' in getattr(config, 'mm_patch_merge_type', ''):
@@ -147,10 +147,14 @@ class LlavaMetaForCausalLM(ABC):
         # print(model_struc)
         image_features = self.get_model().get_vision_tower()(images)
         
-        print('*******************************************************-Vison Projector Executing-*********************************************************')
+        print('*'*100)
+        print("Image features shape before Projections:", image_features.shape)
+        
         image_features = self.get_model().mm_projector(image_features)
-        print('*********************************************************************--***********************************************************************')
-        # print("Image features shape After SparseMoeBlock:", image_features.shape)
+        
+        print("Image features shape before Projections:", image_features.shape)
+        print('*'*100)
+
 
         return image_features
 

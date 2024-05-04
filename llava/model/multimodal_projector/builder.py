@@ -151,15 +151,17 @@ def build_vision_projector(config, delay_load=False, **kwargs):
     projector_type = getattr(config, 'mm_projector_type', 'linear')
 
     if projector_type == 'linear':
+        print('#' * 100)
+        print('linear Projection executed in BUILDER.PY')
+        print('#' * 100)
         return nn.Linear(config.mm_hidden_size, config.hidden_size)
 
     mlp_gelu_match = re.match(r'^mlp(\d+)x_gelu$', projector_type)
     if mlp_gelu_match:
-        print('###############################################################################################################')
-        print('###############################################################################################################')
-        print('MPL 2X GELU EXECUTED IN BUILDER.PY')
-        print('###############################################################################################################')
-        print('###############################################################################################################')
+        print('#' * 100)
+        print('MPL 2X GELU Projection executed in BUILDER.PY')
+        print('#' * 100)
+        
         mlp_depth = int(mlp_gelu_match.group(1))
         modules = [nn.Linear(config.mm_hidden_size, config.hidden_size)]
         for _ in range(1, mlp_depth):
@@ -171,11 +173,9 @@ def build_vision_projector(config, delay_load=False, **kwargs):
         return IdentityMap()
     
     if projector_type == 'sparse_moe':
-        print('###############################################################################################################')
-        print('###############################################################################################################')
-        print('sparse_moe EXECUTED IN BUILDER.PY')
-        print('###############################################################################################################')
-        print('###############################################################################################################')
+        print('#' * 100)
+        print('sparse_moe Projection executed in BUILDER.PY')
+        print('#' * 100)
         return SparseMoeBlock(config)
     
     raise ValueError(f'Unknown projector type: {projector_type}')
