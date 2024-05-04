@@ -165,6 +165,10 @@ class LLaVATrainer(Trainer):
         print('#'*40 + '-attention_mask-' + '#'*40)
         print(attention_mask.shape)
         print('#'*100)
+
+        print('#'*40 + '-gate_logits-' + '#'*40)
+        print(gate_logits.shape)
+        print('#'*100)
         
 
         # Calculate the load balancing loss using the router_logits, num_experts, num_experts_per_tok, and attention_mask
