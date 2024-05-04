@@ -1,7 +1,7 @@
 import os
 import torch
 import torch.nn as nn
-import llava.model.load_balancing_loss as load_balancing_loss_func
+from llava.model.load_balancing_loss import load_balancing_loss_func
 from torch.utils.data import Sampler
 
 from transformers import Trainer
