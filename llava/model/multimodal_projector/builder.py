@@ -160,9 +160,9 @@ def build_vision_projector(config, delay_load=False, **kwargs):
         return nn.Sequential(
                         nn.Linear(config.mm_hidden_size, config.mm_hidden_size*2),
                         nn.GELU(),
-                        nn.Linear(config.mm_hidden_size*2, config.mm_hidden_size*3),
+                        nn.Linear(config.mm_hidden_size*2, config.hidden_size),
                         nn.GELU(),
-                        nn.Linear(config.mm_hidden_size*3, config.hidden_size)
+                        nn.Linear(config.hidden_size, config.hidden_size)
                         )
     
     mlp_gelu_match = re.match(r'^mlp(\d+)x_gelu$', projector_type)
