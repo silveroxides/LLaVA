@@ -78,7 +78,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
-        self.gate_logits = None
+        self.gate_logits = ()
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         # Initialize weights and apply final processing
@@ -122,7 +122,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 image_sizes
             )
         
-        self.gate_logits = gate_logits
+        self.gate_logits += (gate_logits,)
 
         return super().forward(
             input_ids=input_ids,
