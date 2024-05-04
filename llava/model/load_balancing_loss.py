@@ -30,7 +30,8 @@ def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tens
     print('#'*100)
 
     print('#'*40 + '-gate_logits-' + '#'*40)
-    print(gate_logits.shape)
+    for layer_idx, layer_logits in enumerate(gate_logits):
+        print(f"Layer {layer_idx} shape: {layer_logits.shape}")
     print('#'*100)
 
     if gate_logits is None:

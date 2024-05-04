@@ -65,8 +65,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         if model_args and 'mm_projector_type' in model_args:
             config.mm_projector_type = model_args['mm_projector_type']
                         
-        super(LlamaForCausalLM, self).__init__(config)
-
         print('#' * 30 + '--Config -> After Replacing--' + '#' * 30)
         print(config)
         print('#' * 80)
@@ -74,8 +72,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         print(config.mm_projector_type)
         print('#' * 80)
 
+        super(LlamaForCausalLM, self).__init__(config)
         self.model = LlavaLlamaModel(config)
-        
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         self.gate_logits = ()
