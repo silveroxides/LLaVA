@@ -156,10 +156,19 @@ def build_vision_projector(config, delay_load=False, **kwargs):
         print('#' * 100)
         return nn.Linear(config.mm_hidden_size, config.hidden_size)
     
+    if projector_type == 'custom':
+        return nn.Sequential(
+                        nn.Linear(config.mm_hidden_size, config.mm_hidden_size*2),
+                        nn.GELU(),
+                        nn.Linear(config.mm_hidden_size*2, config.mm_hidden_size*3),
+                        nn.GELU(),
+                        nn.Linear(config.mm_hidden_size*3, config.hidden_size)
+                        )
+    
     mlp_gelu_match = re.match(r'^mlp(\d+)x_gelu$', projector_type)
     if mlp_gelu_match:
         print('#' * 100)
-        print(f'{mlp_gelu_match} Projection executed in BUILDER.PY')
+        print(f'{projector_type} Projection executed in BUILDER.PY')
         print('#' * 100)
         
         mlp_depth = int(mlp_gelu_match.group(1))

@@ -34,6 +34,7 @@ class LlavaMetaModel:
         if hasattr(config, "mm_vision_tower"):
             self.vision_tower = build_vision_tower(config, delay_load=True)
             self.mm_projector = build_vision_projector(config)
+            self.mm_projector_type = config.mm_projector_type
             print('#' * 100)
             print('Vision Projector is Build')
             print('#' * 100)
@@ -143,7 +144,6 @@ class LlavaMetaForCausalLM(ABC):
 
     def encode_images(self, images):
         
-        print('#'*40 +f'{self.mm_projector}' + '#'*40)
         image_features = self.get_model().get_vision_tower()(images)
         
         print('*'*100)
