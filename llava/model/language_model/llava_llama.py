@@ -47,6 +47,9 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
     def __init__(self, config, model_args=None):
 
+        print('#' * 30 + '--model_args--' + '#' * 30)
+        print(model_args)
+        print('#' * 80)
         print('#' * 30 + '--Config -> Before Replacing--' + '#' * 30)
         print(config)
         print('#' * 80)
