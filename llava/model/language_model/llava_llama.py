@@ -26,15 +26,18 @@ from transformers.generation.utils import GenerateOutput
 
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 
-
+# thisis inherating all the attributes of LlamaConfig
+# and adding new attribute called model_type attribute to it
 class LlavaConfig(LlamaConfig):
     model_type = "llava_llama"
 
-
+# this was called by LlavaLlamaForCausalLM
 class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
     config_class = LlavaConfig
 
+    # config: LlamaConfig -> specifying the type of the config argument
     def __init__(self, config: LlamaConfig):
+        # calling the constructor of the parent class LlavaMetaModel and LlamaModel and passing the config argument to it.
         super(LlavaLlamaModel, self).__init__(config)
 
 # LlavaLlamaForCausalLM is a subclass of both LlamaForCausalLM and LlavaMetaForCausalLM.
@@ -43,6 +46,9 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
     def __init__(self, config):
         super(LlamaForCausalLM, self).__init__(config)
+        print('##################################################--AutoConfig--###############################################')
+        print(config)
+        print('###############################################################################################################') 
         print('##################################################--mm_projector_type--####################################################')
         print(config.mm_projector_type)
         print('###############################################################################################################') 
