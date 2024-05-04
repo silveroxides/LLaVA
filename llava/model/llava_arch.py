@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 
 from .multimodal_encoder.builder import build_vision_tower
-from .multimodal_projector.builder import build_vision_projector, build_vision_moe_projector
+from .multimodal_projector.builder import build_vision_projector
 
 from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
 
@@ -33,12 +33,9 @@ class LlavaMetaModel:
 
         if hasattr(config, "mm_vision_tower"):
             self.vision_tower = build_vision_tower(config, delay_load=True)
-            # self.mm_projector = build_vision_projector(config)
-            self.mm_projector = build_vision_moe_projector(config)
-            print('###############################################################################################################')
+            self.mm_projector = build_vision_projector(config)
             print('###############################################################################################################')
             print('Vision Projector is Build')
-            print('###############################################################################################################')
             print('###############################################################################################################')
 
 
