@@ -161,6 +161,10 @@ class LLaVATrainer(Trainer):
         num_experts = model.config.num_experts
         num_experts_per_tok = model.config.num_experts_per_tok
         attention_mask = inputs.get("attention_mask")
+
+        print('#'*40 + '-attention_mask-' + '#'*40)
+        print(attention_mask.shape)
+        print('#'*100)
         
 
         # Calculate the load balancing loss using the router_logits, num_experts, num_experts_per_tok, and attention_mask
