@@ -831,13 +831,14 @@ def train(attn_implementation=None):
             # if 'device_map' in bnb_model_from_pretrained_args:
             #     del bnb_model_from_pretrained_args['device_map']
             # config = AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
+            model_args_dict = model_args.__dict__
 
             model = LlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
                 cache_dir=training_args.cache_dir,
                 attn_implementation=attn_implementation,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
-                model_args=model_args,  # Pass model_args 
+                model_args=model_args_dict,  # Pass model_args 
                 **bnb_model_from_pretrained_args
             )
             print('##############################model = LlavaLlamaForCausalLM.from_pretrained#########################')
