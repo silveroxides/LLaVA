@@ -147,14 +147,39 @@ class LLaVATrainer(Trainer):
         # Get the underlying model from the DeepSpeedEngine object
         model = model.module if hasattr(model, "module") else model
 
-        # Print the attributes and methods of the underlying model
-        print("Model attributes and methods:", dir(model))
+        # # Print the attributes and methods of the underlying model
+        # print("Model attributes and methods:", dir(model))
 
         # Access the gate_logits attribute from the underlying model
         gate_logits = model.gate_logits  # Access the gate_logits        
         print('#'*40 + '-Tracking Gate Logits-' + '#'*40)
         print(gate_logits.shape)
         print('#'*100)
+
+                # Access self.num_experts and self.num_experts_per_tok from the underlying model
+        num_experts = model.num_experts
+        num_experts_per_tok = model.num_experts_per_tok
+
+        print(num_experts)
+        print(num_experts_per_tok)        
+        
+        num_experts = model.config.num_experts
+        num_experts_per_tok = model.config.num_experts_per_tok
+
+        print(num_experts)
+        print(num_experts_per_tok)
+        
+        # Get the attention_mask from the inputs
+        attention_mask = inputs.get("attention_mask")
+        print(attention_mask)
+
+        # # Calculate the load balancing loss using the router_logits, num_experts, num_experts_per_tok, and attention_mask
+        # load_balancing_loss = load_balancing_loss_func(
+        #     router_logits,
+        #     num_experts,
+        #     num_experts_per_tok,
+        #     attention_mask,
+        # )
 
 
 
