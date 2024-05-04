@@ -53,11 +53,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         print('#' * 30 + '--MM Projector Type -> Before Replacing--' + '#' * 30)
         print(config.mm_projector_type)
         print('#' * 80)
-        self.model = LlavaLlamaModel(config)
-
-        print('#' * 30 + '--Model -> Before--' + '#' * 30)
-        print(self.model)
-        print('#' * 80)
         # Replace default mm_projector_type with specified in model_args
         if model_args and hasattr(model_args, 'mm_projector_type'):
             config.mm_projector_type = model_args.mm_projector_type
@@ -71,10 +66,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         print('#' * 80)
 
         self.model = LlavaLlamaModel(config)
-
-        print('#' * 30 + '--Model -> After' + '#' * 30)
-        print(self.model)
-        print('#' * 80)
         
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
