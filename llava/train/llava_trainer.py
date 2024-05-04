@@ -156,12 +156,12 @@ class LLaVATrainer(Trainer):
         print(gate_logits.shape)
         print('#'*100)
 
-                # Access self.num_experts and self.num_experts_per_tok from the underlying model
-        num_experts = model.num_experts
-        num_experts_per_tok = model.num_experts_per_tok
+        #         # Access self.num_experts and self.num_experts_per_tok from the underlying model
+        # num_experts = model.num_experts
+        # num_experts_per_tok = model.num_experts_per_tok
 
-        print(num_experts)
-        print(num_experts_per_tok)        
+        # print(num_experts)
+        # print(num_experts_per_tok)        
         
         num_experts = model.config.num_experts
         num_experts_per_tok = model.config.num_experts_per_tok
