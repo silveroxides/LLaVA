@@ -146,7 +146,7 @@ class LLaVATrainer(Trainer):
         print('#'*100)
         gate_logits = model.gate_logits  # Access the gate logits
         print('#'*40 + '-Tracking Gate Logits-' + '#'*40)
-        print(gate_logits)
+        print(gate_logits.shape)
         print('#'*100)
 
 
