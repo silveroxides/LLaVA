@@ -48,7 +48,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
     def __init__(self, config, model_args=None):
         # Replace mm_projector_type if specified in model_args
         if model_args and 'mm_projector_type' in model_args:
-            config.mm_projector_type = model_args['mm_projector_type']
+            config.mm_projector_type = model_args.mm_projector_type
         print('##################################################--Model Arguments--###############################################')
         print(model_args)
         print('###############################################################################################################')
