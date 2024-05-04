@@ -141,10 +141,10 @@ class LLaVATrainer(Trainer):
         """
         outputs = model(**inputs)
         loss = outputs.loss
+        print('#########################################################-Tracking the compute loss-#########################################################')
+        print(loss)
         print('#'*100)
-        print('Tracking the compute loss')
-        print('Loss:', loss)
-        print('#'*100)
+
         return (loss, outputs) if return_outputs else loss
 
 
