@@ -46,23 +46,36 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
     config_class = LlavaConfig
 
     def __init__(self, config, model_args=None):
-        print('##################################################--Model Arguments--###############################################')
-        print(model_args)
-        print('###############################################################################################################')
+
+        print('#' * 30 + '--Config -> Before Replacing--' + '#' * 30)
+        print(config)
+        print('#' * 80)
+        print('#' * 30 + '--MM Projector Type -> Before Replacing--' + '#' * 30)
+        print(config.mm_projector_type)
+        print('#' * 80)
+        self.model = LlavaLlamaModel(config)
+
+        print('#' * 30 + '--Model -> Before--' + '#' * 30)
+        print(self.model)
+        print('#' * 80)
         # Replace default mm_projector_type with specified in model_args
         if model_args and hasattr(model_args, 'mm_projector_type'):
             config.mm_projector_type = model_args.mm_projector_type
         super(LlamaForCausalLM, self).__init__(config)
-        print('##################################################--Config--###############################################')
+
+        print('#' * 30 + '--Config -> After Replacing--' + '#' * 30)
         print(config)
-        print('###############################################################################################################') 
-        print('##################################################--mm_projector_type--####################################################')
+        print('#' * 80)
+        print('#' * 30 + '--MM Projector Type -> After Replacing--' + '#' * 30)
         print(config.mm_projector_type)
-        print('###############################################################################################################') 
+        print('#' * 80)
+
         self.model = LlavaLlamaModel(config)
-        print('##################################################--Model--####################################################')
+
+        print('#' * 30 + '--Model -> After' + '#' * 30)
         print(self.model)
-        print('###############################################################################################################') 
+        print('#' * 80)
+        
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
