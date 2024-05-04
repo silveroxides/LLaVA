@@ -149,9 +149,10 @@ class LlavaMetaForCausalLM(ABC):
         model_struc = self.get_model()
         # print(model_struc)
         image_features = self.get_model().get_vision_tower()(images)
-        # print("Image features shape Before SparseMoeBlock:", image_features.shape)
-
+        
+        print('*******************************************************-Vison Projector Executing-*********************************************************')
         image_features = self.get_model().mm_projector(image_features)
+        print('*********************************************************************--***********************************************************************')
         # print("Image features shape After SparseMoeBlock:", image_features.shape)
 
         return image_features
