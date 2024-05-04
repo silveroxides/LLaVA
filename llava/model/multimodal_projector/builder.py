@@ -127,8 +127,8 @@ class SparseMoeBlock(nn.Module):
         print('#' * 30 + '--Final Hidden States--' + '#' * 30)
         print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
         print('#' * 100)
-        #         return final_hidden_states, router_logits
-        return final_hidden_states
+        return final_hidden_states, router_logits
+        # return final_hidden_states
 
 
     

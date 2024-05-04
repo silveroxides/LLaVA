@@ -144,6 +144,12 @@ class LLaVATrainer(Trainer):
         print('#'*40 + '-Tracking the compute loss-' + '#'*40)
         print(loss)
         print('#'*100)
+        gate_logits = model.gate_logits  # Access the gate logits
+        print('#'*40 + '-Tracking Gate Logits-' + '#'*40)
+        print(gate_logits)
+        print('#'*100)
+
+
 
         return (loss, outputs) if return_outputs else loss
 
