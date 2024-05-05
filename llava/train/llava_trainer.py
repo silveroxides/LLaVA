@@ -170,10 +170,10 @@ class LLaVATrainer(Trainer):
             num_experts_per_tok,
         )
 
-        aux_loss = aux_loss_coef * load_balancing_loss
+        overall_aux_loss = aux_loss_coef * load_balancing_loss
 
         print('#'*40 + '-Load Balancing Loss / Auxilary loss-' + '#'*40)
-        print(aux_loss)
+        print(overall_aux_loss)
         print('#'*100)
 
 
