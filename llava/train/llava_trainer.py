@@ -1,7 +1,7 @@
 import os
 import torch
 import torch.nn as nn
-from llava.model.load_balancing_loss import load_balancing_loss_func
+from llava.model.load_balancing_loss import *
 from torch.utils.data import Sampler
 
 from transformers import Trainer
@@ -163,7 +163,7 @@ class LLaVATrainer(Trainer):
         attention_mask = inputs.get("attention_mask")
 
         # Calculate the load balancing loss using the router_logits, num_experts, num_experts_per_tok, and attention_mask
-        load_balancing_loss = load_balancing_loss_func(
+        load_balancing_loss = aux_loss(
             gate_logits,
             num_experts,
             num_experts_per_tok,
