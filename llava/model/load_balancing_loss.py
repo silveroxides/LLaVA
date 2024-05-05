@@ -85,5 +85,6 @@ def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tens
             router_per_expert_attention_mask, dim=0
         )
 
+    tokens_per_expert = tokens_per_expert.transpose(0, 1)
     overall_loss = torch.sum(tokens_per_expert * router_prob_per_expert.unsqueeze(0))
     return overall_loss * num_experts
