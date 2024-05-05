@@ -50,9 +50,11 @@ def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tens
     if attention_mask is None:
         # Compute the percentage of tokens routed to each experts
         tokens_per_expert = torch.mean(expert_mask.float(), dim=0)
+        print(f'tokens_per_expert: {tokens_per_expert.shape}')
 
         # Compute the average probability of routing to these experts
         router_prob_per_expert = torch.mean(routing_weights, dim=0)
+        print(f'router_prob_per_expert: {router_prob_per_expert.shape}')
     else:
         batch_size, sequence_length = attention_mask.shape
         num_hidden_layers = concatenated_gate_logits.shape[0] // (batch_size * sequence_length)
