@@ -167,7 +167,6 @@ class LLaVATrainer(Trainer):
             gate_logits,
             num_experts,
             num_experts_per_tok,
-            attention_mask,
         )
 
         print('#'*40 + '-Tracking Load Balancing Loss-' + '#'*40)

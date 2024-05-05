@@ -25,23 +25,14 @@ def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tens
     Returns:
         The auxiliary loss.
     """
-    print('#'*40 + '-attention_mask-' + '#'*40)
-    print(attention_mask.shape)
     print('#'*100)
+    print(f'attention_mask: {attention_mask.shape}')
 
-    print('#'*40 + '-gate_logits-' + '#'*40)
+    print('-gate_logits-')
     for layer_idx, layer_logits in enumerate(gate_logits):
         print(f"Layer {layer_idx} shape: {layer_logits.shape}")
     print('#'*100)
 
-    if gate_logits is None:
-        print("gate_logits is None")
-        return 0
-    
-    if not isinstance(gate_logits, tuple):
-        print("gate_logits is not a tuple")
-        return 0
-    
     if gate_logits is None or not isinstance(gate_logits, tuple):
         print("gate_logits is None or not a tuple")
         return 0
