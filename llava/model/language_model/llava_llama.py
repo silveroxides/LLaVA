@@ -32,6 +32,7 @@ class LlavaConfig(LlamaConfig):
     model_type = "llava_llama"
     num_experts_per_tok = 1
     num_experts = 1
+    aux_loss_coef=0.01
 
 # this was called by LlavaLlamaForCausalLM
 class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
@@ -48,6 +49,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
     def __init__(self, config, model_args=None):
 
+        config.aux_loss_coef = model_args['aux_loss_coef']
         config.num_experts = model_args['num_experts']
         config.num_experts_per_tok = model_args['num_experts_per_tok']
         print('#' * 30 + '--model_args--' + '#' * 30)

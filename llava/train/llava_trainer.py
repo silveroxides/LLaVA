@@ -160,6 +160,7 @@ class LLaVATrainer(Trainer):
         
         num_experts = model.config.num_experts
         num_experts_per_tok = model.config.num_experts_per_tok
+        aux_loss_coef = model.config.aux_loss_coef
         attention_mask = inputs.get("attention_mask")
 
         # Calculate the load balancing loss using the router_logits, num_experts, num_experts_per_tok, and attention_mask
@@ -169,8 +170,10 @@ class LLaVATrainer(Trainer):
             num_experts_per_tok,
         )
 
-        print('#'*40 + '-Tracking Load Balancing Loss-' + '#'*40)
-        print(load_balancing_loss)
+        aux_loss = aux_loss_coef * load_balancing_loss
+
+        print('#'*40 + '-Load Balancing Loss / Auxilary loss-' + '#'*40)
+        print(aux_loss)
         print('#'*100)
 
 
