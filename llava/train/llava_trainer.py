@@ -152,11 +152,6 @@ class LLaVATrainer(Trainer):
 
         # Access the gate_logits attribute from the underlying model
         gate_logits = model.gate_logits  # Access the gate_logits        
-        # print('#'*40 + '-Tracking Gate Logits-' + '#'*40)
-        # print(gate_logits.shape)
-        # print('#'*100)
-
-    
         
         num_experts = model.config.num_experts
         num_experts_per_tok = model.config.num_experts_per_tok
@@ -176,9 +171,20 @@ class LLaVATrainer(Trainer):
         print(overall_aux_loss)
         print('#'*100)
 
+        # Retrieve the main loss from the outputs object
+        main_loss = outputs.loss
+
+        # Add the aux_loss to the main loss
+        combined_loss = main_loss + overall_aux_loss
+        print('#'*40 + '-combined_loss-' + '#'*40)
+        print(combined_loss)
+        print('#'*100)
+
+        return (combined_loss, outputs) if return_outputs else combined_loss
 
 
-        return (loss, outputs) if return_outputs else loss
+
+        # return (loss, outputs) if return_outputs else loss
 
 
     def _get_train_sampler(self) -> Optional[torch.utils.data.Sampler]:
