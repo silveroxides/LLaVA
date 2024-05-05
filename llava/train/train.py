@@ -78,6 +78,7 @@ class DataArguments:
                            metadata={"help": "Path to the training data."})
     lazy_preprocess: bool = False
     is_multimodal: bool = False
+    evaluation_strategy: Optional[str] = field(default="no")
     image_folder: Optional[str] = field(default=None)
     image_aspect_ratio: str = 'square'
     validation_data_path: Optional[str] = field(
