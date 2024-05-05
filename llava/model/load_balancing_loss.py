@@ -26,7 +26,7 @@ def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tens
         The auxiliary loss.
     """
     print('#'*100)
-    print(f'attention_mask: {attention_mask.shape}')
+    # print(f'attention_mask: {attention_mask.shape}')
 
     print('-gate_logits-')
     for layer_idx, layer_logits in enumerate(gate_logits):
