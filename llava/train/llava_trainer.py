@@ -156,35 +156,36 @@ class LLaVATrainer(Trainer):
         num_experts = model.config.num_experts
         num_experts_per_tok = model.config.num_experts_per_tok
         aux_loss_coef = model.config.aux_loss_coef
+        projector = model.config.mm_projector_type
         attention_mask = inputs.get("attention_mask")
+        
+        if projector == 'spase_moe':  # Calculate the load balancing loss using the router_logits, num_experts, num_experts_per_tok, and attention_mask
+            load_balancing_loss = aux_loss(
+                gate_logits,
+                num_experts,
+                num_experts_per_tok,
+            )
 
-        # Calculate the load balancing loss using the router_logits, num_experts, num_experts_per_tok, and attention_mask
-        load_balancing_loss = aux_loss(
-            gate_logits,
-            num_experts,
-            num_experts_per_tok,
-        )
+            overall_aux_loss = aux_loss_coef * load_balancing_loss
 
-        overall_aux_loss = aux_loss_coef * load_balancing_loss
+            print('#'*40 + '-Load Balancing Loss / Auxilary loss-' + '#'*40)
+            print(overall_aux_loss)
+            print('#'*100)
 
-        print('#'*40 + '-Load Balancing Loss / Auxilary loss-' + '#'*40)
-        print(overall_aux_loss)
-        print('#'*100)
+            # Retrieve the main loss from the outputs object
+            main_loss = outputs.loss
 
-        # Retrieve the main loss from the outputs object
-        main_loss = outputs.loss
+            # Add the aux_loss to the main loss
+            combined_loss = main_loss + overall_aux_loss
+            print('#'*40 + '-combined_loss-' + '#'*40)
+            print(combined_loss)
+            print('#'*100)
 
-        # Add the aux_loss to the main loss
-        combined_loss = main_loss + overall_aux_loss
-        print('#'*40 + '-combined_loss-' + '#'*40)
-        print(combined_loss)
-        print('#'*100)
+            return (combined_loss, outputs) if return_outputs else combined_loss
 
-        return (combined_loss, outputs) if return_outputs else combined_loss
-
-
-
-        # return (loss, outputs) if return_outputs else loss
+        else:
+            
+            return (loss, outputs) if return_outputs else loss
 
 
     def _get_train_sampler(self) -> Optional[torch.utils.data.Sampler]:
