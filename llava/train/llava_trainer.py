@@ -164,7 +164,7 @@ class LLaVATrainer(Trainer):
         print(type(projector))
         print('#'*100)
         
-        if projector ==  
+        if projector ==  'sparse_moe':
             load_balancing_loss = aux_loss(
                 gate_logits,
                 num_experts,
