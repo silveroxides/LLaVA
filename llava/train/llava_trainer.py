@@ -159,10 +159,11 @@ class LLaVATrainer(Trainer):
         projector = model.config.mm_projector_type
         attention_mask = inputs.get("attention_mask")
 
-        print('#'*100)
-        print('ProjectorType')
-        print(type(projector))
-        print('#'*100)
+        # print('#'*100)
+        # print('ProjectorType')
+        # print(type(projector))
+        # print('#'*100)
+
         
         if projector ==  'sparse_moe':
             load_balancing_loss = aux_loss(
@@ -177,11 +178,8 @@ class LLaVATrainer(Trainer):
             print(overall_aux_loss)
             print('#'*100)
 
-            # Retrieve the main loss from the outputs object
-            main_loss = outputs.loss
-
             # Add the aux_loss to the main loss
-            combined_loss = main_loss + overall_aux_loss
+            combined_loss = loss + overall_aux_loss
             print('#'*40 + '-combined_loss-' + '#'*40)
             print(combined_loss)
             print('#'*100)
