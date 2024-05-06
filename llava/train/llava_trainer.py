@@ -161,7 +161,7 @@ class LLaVATrainer(Trainer):
 
         print('#'*100)
         print('ProjectorType')
-        print(type(projector)
+        print(type(projector))
         print('#'*100)
         
         if projector ==  
