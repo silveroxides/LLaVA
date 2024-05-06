@@ -161,10 +161,10 @@ class LLaVATrainer(Trainer):
 
         print('#'*100)
         print('ProjectorType')
-        print(projector)
+        print(type(projector)
         print('#'*100)
         
-        if projector == 'spase_moe':  # Calculate the load balancing loss using the router_logits, num_experts, num_experts_per_tok, and attention_mask
+        if projector ==  
             load_balancing_loss = aux_loss(
                 gate_logits,
                 num_experts,
