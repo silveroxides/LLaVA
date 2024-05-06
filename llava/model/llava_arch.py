@@ -149,13 +149,20 @@ class LlavaMetaForCausalLM(ABC):
         print('*'*100)
         print("Image features shape before Projections:", image_features.shape)
         
-        image_features, gate_logits = self.get_model().mm_projector(image_features)
+        image_features = self.get_model().mm_projector(image_features)
+        try:
+            image_features, gate_logits = image_features
+            return image_features, gate_logits
+        except ValueError:
+            # handle the case where only one value is returned
+            gate_logits = None
+            return image_features
         
         print("Image features shape before Projections:", image_features.shape)
         print('*'*100)
 
 
-        return image_features, gate_logits
+        
 
     def prepare_inputs_labels_for_multimodal(
         self, input_ids, position_ids, attention_mask, past_key_values, labels,
