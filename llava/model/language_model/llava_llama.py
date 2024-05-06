@@ -50,16 +50,16 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
     def __init__(self, config, model_args=None):
 
-        if model_args['aux_loss_coef'] != None:      
+        if model_args is not None:
             config.aux_loss_coef = model_args['aux_loss_coef']
-        if model_args['num_experts'] != None:
             config.num_experts = model_args['num_experts']
-        if model_args['num_experts_per_tok'] != None:
             config.num_experts_per_tok = model_args['num_experts_per_tok']
-            
-        print('#' * 30 + '--model_args--' + '#' * 30)
-        print(model_args)
-        print('#' * 80)
+            if model_args and 'mm_projector_type' in model_args:
+                config.mm_projector_type = model_args['mm_projector_type']
+
+            print('#' * 30 + '--model_args--' + '#' * 30)
+            print(model_args)
+            print('#' * 80)
         print('#' * 30 + '--Config -> Before Replacing--' + '#' * 30)
         print(config)
         print('#' * 80)
@@ -69,8 +69,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         # Replace default mm_projector_type with specified in model_args
         # if model_args and hasattr(model_args, 'mm_projector_type'):
         #     config.mm_projector_type = model_args.mm_projector_type
-        if model_args and 'mm_projector_type' in model_args:
-            config.mm_projector_type = model_args['mm_projector_type']
+
                         
         print('#' * 30 + '--Config -> After Replacing--' + '#' * 30)
         print(config)
