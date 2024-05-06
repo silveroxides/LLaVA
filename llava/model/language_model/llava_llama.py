@@ -33,6 +33,7 @@ class LlavaConfig(LlamaConfig):
     num_experts_per_tok = 1
     num_experts = 1
     aux_loss_coef=0.01
+    mm_projector_type = 'linear'
 
 # this was called by LlavaLlamaForCausalLM
 class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
