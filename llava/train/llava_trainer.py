@@ -164,8 +164,12 @@ class LLaVATrainer(Trainer):
         # print(type(projector))
         # print('#'*100)
 
-        
+        print('#'*40 + '-Main Loss-' + '#'*40)
+        print(loss)
+        print('#'*100)
+
         if projector ==  'sparse_moe':
+
             load_balancing_loss = aux_loss(
                 gate_logits,
                 num_experts,
@@ -180,6 +184,7 @@ class LLaVATrainer(Trainer):
 
             # Add the aux_loss to the main loss
             combined_loss = loss + overall_aux_loss
+
             print('#'*40 + '-combined_loss-' + '#'*40)
             print(combined_loss)
             print('#'*100)
