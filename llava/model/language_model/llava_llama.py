@@ -50,9 +50,13 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
     def __init__(self, config, model_args=None):
 
-        config.aux_loss_coef = model_args['aux_loss_coef']
-        config.num_experts = model_args['num_experts']
-        config.num_experts_per_tok = model_args['num_experts_per_tok']
+        if model_args['aux_loss_coef'] != None:      
+            config.aux_loss_coef = model_args['aux_loss_coef']
+        if model_args['num_experts'] != None:
+            config.num_experts = model_args['num_experts']
+        if model_args['num_experts_per_tok'] != None:
+            config.num_experts_per_tok = model_args['num_experts_per_tok']
+            
         print('#' * 30 + '--model_args--' + '#' * 30)
         print(model_args)
         print('#' * 80)
