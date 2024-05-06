@@ -70,6 +70,9 @@ class ModelArguments:
     mm_use_im_patch_token: bool = field(default=True)
     mm_patch_merge_type: Optional[str] = field(default='flat')
     mm_vision_select_feature: Optional[str] = field(default="patch")
+    num_experts: Optional[int] = field(default=1)
+    num_experts_per_tok: Optional[int] = field(default=1)
+    aux_loss_coef: Optional[float] = field(default=0.01)
 
 
 @dataclass
