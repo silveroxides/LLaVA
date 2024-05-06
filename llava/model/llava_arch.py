@@ -76,6 +76,9 @@ class LlavaMetaModel:
 
         self.config.use_mm_proj = True
         self.config.mm_projector_type = getattr(model_args, 'mm_projector_type', 'linear')
+        self.config.num_experts = getattr(model_args, 'num_experts', 1)
+        self.config.num_experts_per_tok = getattr(model_args, 'num_experts_per_tok', 1)
+        self.config.aux_loss_coef = getattr(model_args, 'aux_loss_coef', 0.01)
         self.config.mm_hidden_size = vision_tower.hidden_size
         self.config.mm_vision_select_layer = mm_vision_select_layer
         self.config.mm_vision_select_feature = mm_vision_select_feature
