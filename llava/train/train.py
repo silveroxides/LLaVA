@@ -1041,7 +1041,7 @@ def train(attn_implementation=None):
                         torch.save(non_lora_state_dict, os.path.join(best_model_dir, 'non_lora_trainables.bin'))
 
     training_args.do_eval = True  
-    training_args.evaluation_strategy = "epoch"  # Evaluate at the end of each epoch
+    # training_args.evaluation_strategy = "epoch"  # Evaluate at the end of each epoch
     training_args.per_device_eval_batch_size = training_args.train_batch_size  # Set batch size for evaluation
     # training_args.eval_steps = 10  # If using "steps" strategy, evaluate every 500 steps
 
