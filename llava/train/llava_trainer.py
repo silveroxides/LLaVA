@@ -158,6 +158,11 @@ class LLaVATrainer(Trainer):
         aux_loss_coef = model.config.aux_loss_coef
         projector = model.config.mm_projector_type
         attention_mask = inputs.get("attention_mask")
+
+        print('#'*100)
+        print('ProjectorType')
+        print(projector)
+        print('#'*100)
         
         if projector == 'spase_moe':  # Calculate the load balancing loss using the router_logits, num_experts, num_experts_per_tok, and attention_mask
             load_balancing_loss = aux_loss(
