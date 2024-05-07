@@ -141,9 +141,7 @@ class LLaVATrainer(Trainer):
         """
         outputs = model(**inputs)
         loss = outputs.loss
-        print('#'*40 + '-Tracking the compute loss-' + '#'*40)
-        print(loss)
-        print('#'*100)
+        print('-'*100)
         # Get the underlying model from the DeepSpeedEngine object
         model = model.module if hasattr(model, "module") else model
 
