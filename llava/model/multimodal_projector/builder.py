@@ -61,10 +61,10 @@ class SparseMoeBlock(nn.Module):
         if self.training and self.jitter_noise > 0:
             hidden_states *= torch.empty_like(hidden_states).uniform_(1.0 - self.jitter_noise, 1.0 + self.jitter_noise)
 
-        print('#' * 30 + '--Hidden States--' + '#' * 30)
-        print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
-        # print(f'Hidden States Shape: {hidden_states.shape}')
-        print('#' * 100)
+        # print('#' * 30 + '--Hidden States--' + '#' * 30)
+        # print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
+        # # print(f'Hidden States Shape: {hidden_states.shape}')
+        # print('#' * 100)
         # hidden_states = hidden_states.view(-1, hidden_dim)
         hidden_states = hidden_states.reshape(-1, hidden_dim)
 
@@ -96,7 +96,7 @@ class SparseMoeBlock(nn.Module):
 
         # Loop over all available experts in the model and perform the computation on each expert
         for expert_idx in range(self.num_experts):
-            print(f'Expert: {expert_idx}')
+            # print(f'Expert: {expert_idx}')
             expert_layer = self.experts[expert_idx]
             idx, top_x = torch.where(expert_mask[expert_idx])
 
@@ -125,9 +125,9 @@ class SparseMoeBlock(nn.Module):
         final_hidden_states = final_hidden_states.reshape(batch_size, sequence_length, self.ffn_dim)
         # router_logits = router_logits.reshape(batch_size, sequence_length, self.num_experts)
         batch_size, sequence_length, hidden_dim = final_hidden_states.shape
-        print('#' * 30 + '--Final Hidden States--' + '#' * 30)
-        print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
-        print('#' * 100)
+        # print('#' * 30 + '--Final Hidden States--' + '#' * 30)
+        # print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
+        # print('#' * 100)
         return final_hidden_states, router_logits
         # return final_hidden_states
 
@@ -183,9 +183,8 @@ def build_vision_projector(config, delay_load=False, **kwargs):
         return IdentityMap()
     
     if projector_type == 'sparse_moe':
-        print('#' * 100)
         print('sparse_moe Projection executed in BUILDER.PY')
-        print('#' * 100)
+        print('-' * 100)
         return SparseMoeBlock(config)
     
     raise ValueError(f'Unknown projector type: {projector_type}')

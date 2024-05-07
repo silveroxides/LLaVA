@@ -154,8 +154,7 @@ class LlavaMetaForCausalLM(ABC):
         
         image_features = self.get_model().get_vision_tower()(images)
         
-        print('*'*100)
-        print("Image features shape before Projections:", image_features.shape)
+
         
         image_features = self.get_model().mm_projector(image_features)
         try:
@@ -166,8 +165,6 @@ class LlavaMetaForCausalLM(ABC):
             gate_logits = None
             return image_features
         
-        print("Image features shape before Projections:", image_features.shape)
-        print('*'*100)
 
 
         
