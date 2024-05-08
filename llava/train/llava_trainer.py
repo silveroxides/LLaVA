@@ -179,18 +179,18 @@ class LLaVATrainer(Trainer):
         print(f'Main Loss: {loss}')
 
         # Add the aux_loss to the main loss
-        combined_loss = loss + load_balancing_loss
+        loss += load_balancing_loss
         # combined_loss.backward(retain_graph=True)
 
 
-        print(f'Total Loss: {combined_loss}')
+        print(f'Total Loss: {loss}')
         print('-'*100)
 
-        return (combined_loss, outputs) if return_outputs else combined_loss
+        # return (combined_loss, outputs) if return_outputs else combined_loss
 
         # else:
             
-        #     return (loss, outputs) if return_outputs else loss
+        return (loss, outputs) if return_outputs else loss
 
 
     def _get_train_sampler(self) -> Optional[torch.utils.data.Sampler]:
