@@ -175,7 +175,7 @@ class LLaVATrainer(Trainer):
 
         # overall_aux_loss = aux_loss_coef * load_balancing_loss.detach()
 
-        print(f'Overall Aux Loss: {load_balancing_loss}')
+        print(f'load_balancing_loss: {aux_loss_coef * load_balancing_loss}')
         print(f'Main Loss: {loss}')
 
         # Add the aux_loss to the main loss

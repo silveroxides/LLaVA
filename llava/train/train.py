@@ -851,10 +851,10 @@ def train(attn_implementation=None):
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
                 **bnb_model_from_pretrained_args
             )
-            print('#'*40 + 'LlavaLlamaForCausalLM.from_pretrained' + '#'*40)
-            print('#'*100)
-            print(model)
-            print('#'*100)
+            # print('#'*40 + 'LlavaLlamaForCausalLM.from_pretrained' + '#'*40)
+            # print('#'*100)
+            # print(model)
+            # print('#'*100)
 
     else:
         model = transformers.LlamaForCausalLM.from_pretrained(
@@ -1074,6 +1074,7 @@ def train(attn_implementation=None):
             model.config.save_pretrained(training_args.output_dir)
             model.save_pretrained(training_args.output_dir, state_dict=state_dict)
             torch.save(non_lora_state_dict, os.path.join(training_args.output_dir, 'non_lora_trainables.bin'))
+            torch.save(model.all_gate_logits, os.path.join(training_args.output_dir, 'gate_Logits.bin'))
     else:
         safe_save_model_for_hf_trainer(trainer=trainer,
                                        output_dir=training_args.output_dir)
