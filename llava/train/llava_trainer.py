@@ -142,6 +142,7 @@ class LLaVATrainer(Trainer):
         outputs = model(**inputs)
         loss = outputs.loss
         print('-'*100)
+
         # Get the underlying model from the DeepSpeedEngine object
         model = model.module if hasattr(model, "module") else model
 
@@ -164,30 +165,30 @@ class LLaVATrainer(Trainer):
 
 
 
-        if projector ==  'sparse_moe':
+        # if projector ==  'sparse_moe':
 
-            load_balancing_loss = aux_loss(
-                gate_logits,
-                num_experts,
-                num_experts_per_tok,
-            )
+        load_balancing_loss = aux_loss(
+            gate_logits,
+            num_experts,
+            num_experts_per_tok,
+        )
 
-            overall_aux_loss = aux_loss_coef * load_balancing_loss
+        overall_aux_loss = aux_loss_coef * load_balancing_loss.detach()
 
-            print(f'Overall Aux Loss: {overall_aux_loss}')
-            print(f'Main Loss: {loss}')
+        print(f'Overall Aux Loss: {overall_aux_loss}')
+        print(f'Main Loss: {loss}')
 
-            # Add the aux_loss to the main loss
-            combined_loss = loss + overall_aux_loss
+        # Add the aux_loss to the main loss
+        combined_loss = loss + overall_aux_loss
 
-            print(f'Total Loss: {combined_loss}')
-            print('-'*100)
+        print(f'Total Loss: {combined_loss}')
+        print('-'*100)
 
-            return (combined_loss, outputs) if return_outputs else combined_loss
+        return (combined_loss, outputs) if return_outputs else combined_loss
 
-        else:
+        # else:
             
-            return (loss, outputs) if return_outputs else loss
+        #     return (loss, outputs) if return_outputs else loss
 
 
     def _get_train_sampler(self) -> Optional[torch.utils.data.Sampler]:
