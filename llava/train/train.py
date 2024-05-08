@@ -212,8 +212,10 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer,
                 mm_projector_folder = os.path.join(parent_folder, "mm_projector")
                 os.makedirs(mm_projector_folder, exist_ok=True)
                 torch.save(weight_to_save, os.path.join(mm_projector_folder, f'{current_folder}.bin'))
+
             else:
                 torch.save(weight_to_save, os.path.join(output_dir, f'mm_projector.bin'))
+
         return
 
     if trainer.deepspeed:
@@ -229,6 +231,7 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer,
         }
         del state_dict
         trainer._save(output_dir, state_dict=cpu_state_dict)  # noqa
+        torch.save(trainer.model.all_gate_logits, os.path.join(output_dir, 'gate_Logits.bin'))
 
 
 def smart_tokenizer_and_embedding_resize(
