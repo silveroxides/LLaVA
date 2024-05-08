@@ -123,13 +123,13 @@ class SparseMoeBlock(nn.Module):
             final_hidden_states.index_add_(0, top_x, current_hidden_states.to(hidden_states.dtype))
 
         final_hidden_states = final_hidden_states.reshape(batch_size, sequence_length, self.ffn_dim)
-        # router_logits = router_logits.reshape(batch_size, sequence_length, self.num_experts)
+        reshapeed_router_logits = router_logits.reshape(batch_size, sequence_length, self.num_experts)
         batch_size, sequence_length, hidden_dim = final_hidden_states.shape
         # print('#' * 30 + '--Final Hidden States--' + '#' * 30)
         # print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
         print('#' * 100)
-        print(f'router_logits.shape: {router_logits.shape}')
-        return final_hidden_states, router_logits
+        print(f'reshapeed_router_logits: {reshapeed_router_logits.shape}')
+        return final_hidden_states, reshapeed_router_logits
         # return final_hidden_states
 
 
