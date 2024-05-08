@@ -47,7 +47,7 @@ def aux_loss(gate_logits, num_experts, top_k=2, temperature=1.0, hard=True):
     mean_router_prob_per_expert = router_prob_per_group_and_expert.mean(dim=-2)
 
     # Compute the load balancing loss
-    overall_loss = ((mean_router_prob_per_expert - tokens_per_group_and_expert) ** 2).mean()
+    overall_loss = torch.sum(mean_router_prob_per_expert - tokens_per_group_and_expert) * num_experts
 
     return overall_loss
 
