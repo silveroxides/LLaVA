@@ -3,29 +3,53 @@ from typing import Optional
 from torch import nn
 from torch.nn import functional as F
 
-def aux_loss(router_logits: torch.Tensor, num_experts:torch.Tensor, top_k=2):
+def aux_loss(gate_logits: torch.Tensor, num_experts: torch.Tensor = None, top_k=2) -> float:
 
-      # getting the probability distribution over the experts
-      routing_weights = F.softmax(router_logits, dim=1, dtype=torch.float)
+    if gate_logits is None or not isinstance(gate_logits, tuple):
+        return 0
 
-      # selecting the top-k experts for each token in the sequence
-      _, selected_experts = torch.topk(routing_weights, top_k, dim=-1)
+    # got a tuple of len n
+    # each of them have a shape of (batch_size, seq_length, num_experts)
+    # upon checking the tuple we will just concat them in the o dimension
+    # we will get (n*batch_size, sequence_Length, num_experts)
+    if isinstance(gate_logits, tuple):
+        # cat along the layers?
+        compute_device = gate_logits[0].device
+        gate_logits = torch.cat([gate.to(compute_device) for gate in gate_logits], dim=0) # (n*batch_size, sequence_Length, num_experts) -> type: tensor
+        print(f'gate_logits: {gate_logits.shape}')
+
+    _, selected_experts = torch.topk(gate_logits, top_k, dim=-1)
 
 
-      expert_mask = torch.nn.functional.one_hot(selected_experts, num_classes=num_experts).permute(2, 1, 0)
+    routing_weights = gate_logits.softmax(dim=-1)
 
-      # Sum over the topK and sequence_length dimensions
-      tokens_per_expert = expert_mask.sum(dim=(1, 2))
-      
-      num_tokens = expert_mask.shape[-1]  # (batch_size * sequence_length)
-      
-      # Divide by the total number of tokens to get the fraction
-      fraction_of_tokens = tokens_per_expert / num_tokens
 
-      router_prob_per_expert = torch.mean(routing_weights, dim=0)
+    # cast the expert indices to int64, otherwise one-hot encoding will fail
+    if selected_experts.dtype != torch.int64:
+        selected_experts = selected_experts.to(torch.int64)
 
-      overall_loss = torch.sum(fraction_of_tokens * router_prob_per_expert)
-      return overall_loss*num_experts
+    if len(selected_experts.shape) == 2:
+        selected_experts = selected_experts.unsqueeze(2)
+
+    expert_mask = torch.nn.functional.one_hot(selected_experts, num_experts)
+
+
+    # For a given token, determine if it was routed to a given expert.
+    expert_mask = torch.max(expert_mask, axis=-2).values
+
+    # cast to float32 otherwise mean will fail
+    expert_mask = expert_mask.to(torch.float32)
+
+    # each row is a steps that correspondens to the fractions(percentage) of tokens in that steps experts has processed
+    # [0.3333, 0.6667, 0.6667, 0.3333],
+    # this one saying that expert one has process 33% of tokens the steps this assosiate with. simillarly experts 2, 3, and 4 has processed 66%, 66%, and 33% of tokens respectively!!!! 
+    tokens_per_group_and_expert = torch.mean(expert_mask, axis=-2)
+    router_prob_per_group_and_expert = torch.mean(routing_weights, dim=1)
+
+
+    return torch.sum(tokens_per_group_and_expert * router_prob_per_group_and_expert) * (num_experts)
+
+
 
 def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tensor = None, top_k=2, attention_mask: Optional[torch.Tensor] = None
                             ) -> float:
