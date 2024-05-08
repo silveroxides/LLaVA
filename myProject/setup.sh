@@ -3,6 +3,9 @@
 # Store the current directory
 previous_dir=$(pwd)
 
+# Go up one directory to the main directory
+cd ..
+
 # Create a folder
 folder_name="dataset"
 mkdir -p "$folder_name"
