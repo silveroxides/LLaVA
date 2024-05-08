@@ -1,6 +1,6 @@
 #!/bin/bash
 
-deepspeed /kaggle/working/LLaVA/llava/train/train_xformers.py \
+deepspeed ./llava/train/train_xformers.py \
     --deepspeed ./scripts/zero2.json \
     --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --bits 4 \
