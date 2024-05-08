@@ -3,53 +3,53 @@ from typing import Optional
 from torch import nn
 from torch.nn import functional as F
 
-def aux_loss(gate_logits: torch.Tensor, num_experts: torch.Tensor = None, top_k=2) -> float:
+def gumbel_softmax(logits, temperature, hard=False):
+    """
+    Sample from the Gumbel-Softmax distribution and optionally apply the straight-through estimator.
+    Args:
+      logits: [batch_size, num_classes] unnormalized log-probs
+      temperature: non-negative scalar
+      hard: whether to apply the straight-through estimator
+    Returns:
+      [batch_size, num_classes] sample from the Gumbel-Softmax distribution
+    """
+    u = torch.rand_like(logits)
+    gumbel_noise = -torch.log(-torch.log(u + 1e-9))
+    gumbel_dist = (logits + gumbel_noise) / temperature
+    y_soft = F.softmax(gumbel_dist, dim=-1)
+    if hard:
+        _, indices = torch.topk(y_soft, k=1, dim=-1)
+        y_hard = torch.zeros_like(y_soft).scatter_(dim=-1, index=indices, value=1.0)
+        y = y_hard - y_soft.detach() + y_soft
+    else:
+        y = y_soft
+    return y
 
+def aux_loss(gate_logits, num_experts, top_k=2, temperature=1.0, hard=True):
     if gate_logits is None or not isinstance(gate_logits, tuple):
         return 0
 
-    # got a tuple of len n
-    # each of them have a shape of (batch_size, seq_length, num_experts)
-    # upon checking the tuple we will just concat them in the o dimension
-    # we will get (n*batch_size, sequence_Length, num_experts)
-    if isinstance(gate_logits, tuple):
-        # cat along the layers?
-        compute_device = gate_logits[0].device
-        gate_logits = torch.cat([gate.to(compute_device) for gate in gate_logits], dim=0) # (n*batch_size, sequence_Length, num_experts) -> type: tensor
-        print(f'gate_logits: {gate_logits.shape}')
+    # Concatenate gate logits along the batch dimension
+    gate_logits = torch.cat(gate_logits, dim=0)
 
-    _, selected_experts = torch.topk(gate_logits, top_k, dim=-1)
+    # Sample from the Gumbel-Softmax distribution and apply straight-through estimator
+    routing_weights = gumbel_softmax(gate_logits, temperature=temperature, hard=hard)
 
+    # Select top-k experts using the sampled routing weights
+    _, selected_experts = torch.topk(routing_weights, k=top_k, dim=-1)
 
-    routing_weights = gate_logits.softmax(dim=-1)
+    # Compute the expert mask and mean number of tokens per expert
+    expert_mask = F.one_hot(selected_experts, num_classes=num_experts).float()
+    tokens_per_group_and_expert = expert_mask.mean(dim=-2)
 
+    # Compute the routing probability per expert and mean routing probability per expert
+    router_prob_per_group_and_expert = routing_weights.mean(dim=-2)
+    mean_router_prob_per_expert = router_prob_per_group_and_expert.mean(dim=-2)
 
-    # cast the expert indices to int64, otherwise one-hot encoding will fail
-    if selected_experts.dtype != torch.int64:
-        selected_experts = selected_experts.to(torch.int64)
+    # Compute the load balancing loss
+    load_balancing_loss = ((mean_router_prob_per_expert - tokens_per_group_and_expert) ** 2).mean()
 
-    if len(selected_experts.shape) == 2:
-        selected_experts = selected_experts.unsqueeze(2)
-
-    expert_mask = torch.nn.functional.one_hot(selected_experts, num_experts)
-
-
-    # For a given token, determine if it was routed to a given expert.
-    expert_mask = torch.max(expert_mask, axis=-2).values
-
-    # cast to float32 otherwise mean will fail
-    expert_mask = expert_mask.to(torch.float32)
-
-    # each row is a steps that correspondens to the fractions(percentage) of tokens in that steps experts has processed
-    # [0.3333, 0.6667, 0.6667, 0.3333],
-    # this one saying that expert one has process 33% of tokens the steps this assosiate with. simillarly experts 2, 3, and 4 has processed 66%, 66%, and 33% of tokens respectively!!!! 
-    tokens_per_group_and_expert = torch.mean(expert_mask, axis=-2)
-    router_prob_per_group_and_expert = torch.mean(routing_weights, dim=1)
-
-    overall_loss = torch.sum(tokens_per_group_and_expert * router_prob_per_group_and_expert) * num_experts
-
-    return overall_loss
-
+    return load_balancing_loss
 
 
 def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tensor = None, top_k=2, attention_mask: Optional[torch.Tensor] = None
