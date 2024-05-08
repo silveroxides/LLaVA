@@ -5,7 +5,6 @@
 previous_dir=$(pwd)
 
 # Go up one directory to the main directory
-cd ..
 
 
 # Set up environment variables using Python
@@ -25,5 +24,3 @@ pip install -e ".[train]"
 pip install flash-attn --no-build-isolation
 
 
-# Go back to the previous directory
-cd "$previous_dir"
