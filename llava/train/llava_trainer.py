@@ -167,7 +167,7 @@ class LLaVATrainer(Trainer):
 
         # if projector ==  'sparse_moe':
 
-        load_balancing_loss = aux_loss_coef * aux_loss(
+        load_balancing_loss = aux_loss(
             gate_logits,
             num_experts,
             num_experts_per_tok,
