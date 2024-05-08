@@ -167,7 +167,7 @@ class LLaVATrainer(Trainer):
 
         # if projector ==  'sparse_moe':
 
-        load_balancing_loss = aux_loss_coef * load_balancing_loss_func(
+        load_balancing_loss = load_balancing_loss_func(
             gate_logits,
             num_experts,
             num_experts_per_tok,
@@ -179,7 +179,7 @@ class LLaVATrainer(Trainer):
         print(f'Main Loss: {loss}')
 
         # Add the aux_loss to the main loss
-        loss += load_balancing_loss
+        loss += aux_loss_coef * load_balancing_loss.to(loss.device) # loss += self.router_aux_loss_coef * aux_loss.to(loss.device)
         # combined_loss.backward(retain_graph=True)
 
 

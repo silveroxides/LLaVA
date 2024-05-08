@@ -96,7 +96,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             )
         
         # self.gate_logits = gate_logits
-        self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
+        self.gate_logits += (gate_logits,) # tuple of gate logits for each layer
 
 
         return super().forward(
