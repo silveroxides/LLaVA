@@ -52,6 +52,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         self.vocab_size = config.vocab_size
         # self.gate_logits = None
         self.gate_logits = () # tuple of gate logits for each layer
+        self.all_gate_logits = () # tuple of gate logits for each layer
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         # Initialize weights and apply final processing
@@ -96,7 +97,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             )
         
         # self.gate_logits = gate_logits
-        self.gate_logits += (gate_logits,) # tuple of gate logits for each layer
+        self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
+        self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
 
 
         return super().forward(
