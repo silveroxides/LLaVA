@@ -46,8 +46,9 @@ def aux_loss(gate_logits: torch.Tensor, num_experts: torch.Tensor = None, top_k=
     tokens_per_group_and_expert = torch.mean(expert_mask, axis=-2)
     router_prob_per_group_and_expert = torch.mean(routing_weights, dim=1)
 
+    overall_loss = torch.sum(tokens_per_group_and_expert * router_prob_per_group_and_expert) * num_experts
 
-    return torch.sum(tokens_per_group_and_expert * router_prob_per_group_and_expert) * (num_experts)
+    return overall_loss
 
 
 
