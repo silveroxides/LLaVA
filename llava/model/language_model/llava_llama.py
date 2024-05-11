@@ -51,7 +51,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         # self.gate_logits = None
-        self.gate_logits = () # tuple of gate logits for each layer
+        # self.gate_logits = () # tuple of gate logits for each layer
+        self.gate_logits = None
         self.all_gate_logits = () # tuple of gate logits for each layer
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
@@ -97,7 +98,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             )
         
         # self.gate_logits = gate_logits
-        self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
+        # self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
+        self.gate_logits = gate_logits # tuple of gate logits for each layer
         self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
 
 

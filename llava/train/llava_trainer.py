@@ -151,7 +151,6 @@ class LLaVATrainer(Trainer):
 
         # Access the gate_logits attribute from the underlying model
         gate_logits = model.gate_logits  # Access the gate_logits        
-        
         num_experts = model.config.num_experts
         num_experts_per_tok = model.config.num_experts_per_tok
         aux_loss_coef = model.config.aux_loss_coef
@@ -167,7 +166,7 @@ class LLaVATrainer(Trainer):
 
         # if projector ==  'sparse_moe':
 
-        load_balancing_loss = load_balancing_loss_func(
+        load_balancing_loss = aux_loss(
             gate_logits,
             num_experts,
             num_experts_per_tok,
