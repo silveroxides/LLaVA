@@ -22,13 +22,14 @@ def convert_to_llava(base_dir, split, prompt_format="QCM-LEA"):
 
         raw_prob_data = problems[prob_id]
         if raw_prob_data['image'] is None:
-            target_format.append({
-                "id": prob_id,
-                "conversations": [
-                    {'from': 'human', 'value': f"{input}"},
-                    {'from': 'gpt', 'value': f"{output}"},
-                ],
-            })
+            # target_format.append({
+            #     "id": prob_id,
+            #     "conversations": [
+            #         {'from': 'human', 'value': f"{input}"},
+            #         {'from': 'gpt', 'value': f"{output}"},
+            #     ],
+            # })
+            continue
 
         else:
             target_format.append({
