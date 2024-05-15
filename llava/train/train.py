@@ -815,7 +815,9 @@ def train(attn_implementation=None):
     
 
     bnb_model_from_pretrained_args = {}
+    print(type(bnb_model_from_pretrained_args))
     if training_args.bits in [4, 8]:
+
         bnb_model_from_pretrained_args.update(dict(
             device_map={"": training_args.device},
             load_in_4bit=training_args.bits == 4,
@@ -831,6 +833,7 @@ def train(attn_implementation=None):
                 bnb_4bit_quant_type=training_args.quant_type # {'fp4', 'nf4'}
             )
         ))
+    print('bnb_model_from_pretrained_args:')
 
     if model_args.vision_tower is not None:
         if 'mpt' in model_args.model_name_or_path:
