@@ -810,6 +810,9 @@ def train(attn_implementation=None):
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
     local_rank = training_args.local_rank
     compute_dtype = (torch.float16 if training_args.fp16 else (torch.bfloat16 if training_args.bf16 else torch.float32))
+    print('-'*100)
+    print(f'Compute Type: {compute_dtype}')
+    
 
     bnb_model_from_pretrained_args = {}
     if training_args.bits in [4, 8]:
@@ -840,12 +843,6 @@ def train(attn_implementation=None):
                 **bnb_model_from_pretrained_args
             )
         else:
-          # Remove the problematic arguments from bnb_model_from_pretrained_args
-            # if 'low_cpu_mem_usage' in bnb_model_from_pretrained_args:
-            #     del bnb_model_from_pretrained_args['low_cpu_mem_usage']
-            # if 'device_map' in bnb_model_from_pretrained_args:
-            #     del bnb_model_from_pretrained_args['device_map']
-            # config = AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             model_args_dict = model_args.__dict__
             model = LlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
