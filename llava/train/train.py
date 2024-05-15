@@ -834,6 +834,7 @@ def train(attn_implementation=None):
             )
         ))
     print('bnb_model_from_pretrained_args:')
+    print(bnb_model_from_pretrained_args)
 
     if model_args.vision_tower is not None:
         if 'mpt' in model_args.model_name_or_path:
