@@ -1,19 +1,17 @@
 #!/bin/bash
 
-deepspeed ./llava/train/train_xformers.py \
+deepspeed llava/train/train_mem.py \
     --deepspeed ./scripts/zero2.json \
-    --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
-    --bits 4 \
     --model_name_or_path lmsys/vicuna-13b-v1.5 \
     --version plain \
     --data_path ./dataset/chat.json \
     --image_folder ./dataset \
-    --vision_tower openai/clip-vit-large-patch14 \
+    --vision_tower openai/clip-vit-large-patch14-336 \
     --tune_mm_mlp_adapter True \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end False \
     --mm_use_im_patch_token False \
-    --fp16 True \
+    --bf16 True \
     --output_dir ./checkpoints/llava-vicuna-v5-3-7b \
     --max_steps 50 \
     --num_experts_per_tok 2 \
@@ -38,4 +36,3 @@ deepspeed ./llava/train/train_xformers.py \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
     --report_to wandb \
-    --run_name "train_xformers"
