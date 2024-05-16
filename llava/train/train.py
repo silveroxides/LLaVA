@@ -815,7 +815,8 @@ def train(attn_implementation=None):
     
 
     bnb_model_from_pretrained_args = {}
-    print(type(bnb_model_from_pretrained_args))
+    # print(type(bnb_model_from_pretrained_args))
+    
     if training_args.bits in [4, 8]:
 
         bnb_model_from_pretrained_args.update(dict(
@@ -836,6 +837,11 @@ def train(attn_implementation=None):
     print('bnb_model_from_pretrained_args:')
     print(bnb_model_from_pretrained_args)
 
+    # vision_tower = openai/clip-vit-large-patch14
+    print('*'*100)
+    torch_dtype = (torch.bfloat16 if training_args.bf16 else None)
+    print(f'Torch Type: {torch_dtype}')
+
     if model_args.vision_tower is not None:
         if 'mpt' in model_args.model_name_or_path:
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
@@ -846,6 +852,7 @@ def train(attn_implementation=None):
                 cache_dir=training_args.cache_dir,
                 **bnb_model_from_pretrained_args
             )
+        
         else:
             model_args_dict = model_args.__dict__
             model = LlavaLlamaForCausalLM.from_pretrained(
