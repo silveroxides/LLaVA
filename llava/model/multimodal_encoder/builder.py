@@ -13,6 +13,7 @@ def build_vision_tower(vision_tower_cfg, **kwargs):
             print('using useS2')
             return CLIPVisionTowerS2(vision_tower, args=vision_tower_cfg, **kwargs)
         else:
+            print('not using useS2')
             return CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
 
     raise ValueError(f'Unknown vision tower: {vision_tower}')
