@@ -101,6 +101,11 @@ class CLIPVisionTowerS2(CLIPVisionTower):
         self.s2_split_size = self.s2_scales[0]
         self.s2_image_size = self.s2_scales[-1]
 
+        # optional
+        self.cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
+        print('*'*40+'vision config'+'*'*40)
+        print(self.cfg_only)
+
         try:
             from s2wrapper import forward as multiscale_forward
         except ImportError:
