@@ -97,7 +97,7 @@ class LlavaMetaModel:
         print('#' * 100)
 
         if getattr(self, 'mm_projector', None) is None:
-            print('-' * 200)
+            print('-' * 100)
             print('*'*40+'build viison projector'+'*'*40)
 
             self.mm_projector = build_vision_projector(self.config)
