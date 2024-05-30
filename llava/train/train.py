@@ -863,7 +863,6 @@ def train(attn_implementation=None):
                 **bnb_model_from_pretrained_args
             )
             print('#'*40 + 'LlavaLlamaForCausalLM.from_pretrained' + '#'*40)
-            print('#'*100)
             print(model)
             print('#'*100)
 
@@ -954,12 +953,18 @@ def train(attn_implementation=None):
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
     if model_args.vision_tower is not None:
+        print('Inside model.vision_tower')
         model.get_model().initialize_vision_modules(
             model_args=model_args,
             fsdp=training_args.fsdp
         )
-        
+        print('Initializing Vison MOdel')
+        print(model)
+
         vision_tower = model.get_vision_tower()
+        print('Get Vison MOdel')
+        print(vision_tower)
+
         vision_tower.to(dtype=torch.bfloat16 if training_args.bf16 else torch.float16, device=training_args.device)
 
         data_args.image_processor = vision_tower.image_processor

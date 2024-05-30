@@ -52,7 +52,9 @@ class LlavaMetaModel:
         return vision_tower
 
     def initialize_vision_modules(self, model_args, fsdp=None):
+        print('Inside initialize_vision_modules')
         vision_tower = model_args.vision_tower
+        print(f'vision tower: {vision_tower}')
         mm_vision_select_layer = model_args.mm_vision_select_layer
         mm_vision_select_feature = model_args.mm_vision_select_feature
         pretrain_mm_mlp_adapter = model_args.pretrain_mm_mlp_adapter
@@ -61,7 +63,9 @@ class LlavaMetaModel:
         self.config.mm_vision_tower = vision_tower
 
         if self.get_vision_tower() is None:
+            print('build vision tower')
             vision_tower = build_vision_tower(model_args)
+            print(vision_tower)
 
             if fsdp is not None and len(fsdp) > 0:
                 self.vision_tower = [vision_tower]
@@ -90,7 +94,9 @@ class LlavaMetaModel:
         print('#' * 100)
 
         if getattr(self, 'mm_projector', None) is None:
+            print('build viison projector')
             self.mm_projector = build_vision_projector(self.config)
+            print(self.mm_projector)
 
             if 'unpad' in mm_patch_merge_type:
                 embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
@@ -102,12 +108,15 @@ class LlavaMetaModel:
             for p in self.mm_projector.parameters():
                 p.requires_grad = True
 
+
         if pretrain_mm_mlp_adapter is not None:
+            print('using pretrain mlp adapter')
             mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
             def get_w(weights, keyword):
                 return {k.split(keyword + '.')[1]: v for k, v in weights.items() if keyword in k}
 
             self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'))
+            print(self.mm_projector)
 
 
 def unpad_image(tensor, original_size):
