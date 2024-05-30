@@ -20,6 +20,8 @@ class CLIPVisionTower(nn.Module):
             self.load_model()
         else:
             self.cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
+            print('*'*40+'vision config'+'*'*40)
+            print(self.cfg_only)
 
     def load_model(self, device_map=None):
         if self.is_loaded:
