@@ -1000,9 +1000,9 @@ def train(attn_implementation=None):
         training_args.use_im_start_end = model_args.mm_use_im_start_end
         model.config.mm_use_im_patch_token = model_args.mm_use_im_patch_token
         model.initialize_vision_tokenizer(model_args, tokenizer=tokenizer)
-
-    print('#'*40 + 'initialize_vision_modules' + '#'*40)
+    
     print('#'*100)
+    print('#'*40 + 'initialize_vision_modules' + '#'*40)
     print(model.get_model())
     print('#'*100)
 

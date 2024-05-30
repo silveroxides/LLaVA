@@ -64,7 +64,8 @@ class LlavaMetaModel:
         self.config.mm_vision_tower = vision_tower
 
         if self.get_vision_tower() is None:
-            print('build vision tower')
+            print('-' * 200)
+            print('*'*40+'build vision tower'+'*'*40)
             vision_tower = build_vision_tower(model_args)
             print(vision_tower)
 
@@ -89,13 +90,15 @@ class LlavaMetaModel:
         self.config.mm_vision_select_feature = mm_vision_select_feature
         self.config.mm_patch_merge_type = mm_patch_merge_type
 
-        print('#' * 100)
-        print('Modified Config')
+        print('-' * 200)
+        print('*'*40+'Modified Config'+'*'*40)
         print(self.config)
         print('#' * 100)
 
         if getattr(self, 'mm_projector', None) is None:
-            print('build viison projector')
+            print('-' * 200)
+            print('*'*40+'build viison projector'+'*'*40)
+
             self.mm_projector = build_vision_projector(self.config)
             print(self.mm_projector)
 
