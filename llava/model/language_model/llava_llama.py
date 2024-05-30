@@ -29,6 +29,7 @@ from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 # thisis inherating all the attributes of LlamaConfig
 # and adding new attribute called model_type attribute to it
 class LlavaConfig(LlamaConfig):
+    print('inside LlavaConfig')
     model_type = "llava_llama"
 
 
@@ -38,16 +39,24 @@ class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
 
     # config: LlamaConfig -> specifying the type of the config argument
     def __init__(self, config: LlamaConfig):
+        print('inside LlavaLlamaModel __init__')
         # calling the constructor of the parent class LlavaMetaModel and LlamaModel and passing the config argument to it.
         super(LlavaLlamaModel, self).__init__(config)
 
-# LlavaLlamaForCausalLM is a subclass of both LlamaForCausalLM and LlavaMetaForCausalLM.
+# LlavaLlamaForCausalLM (child class) is a subclass of both LlamaForCausalLM (parent class) and LlavaMetaForCausalLM.
+# LlamaForCausalLM is the main class which is inharited by LlavaLlamaForCausalLM
+# now we can access all the functions of the parent class
 class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
+    print('inside LlavaLlamaForCausalLM')
     config_class = LlavaConfig
 
     def __init__(self, config):
+        print('inside LlavaLlamaForCausalLM __init__')
         super(LlamaForCausalLM, self).__init__(config)
         self.model = LlavaLlamaModel(config)
+        print('*'*100)
+        print('*'*40+'Model'+'*'*40)
+        print(self.model)
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         # self.gate_logits = None

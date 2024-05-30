@@ -854,7 +854,7 @@ def train(attn_implementation=None):
             )
         
         else:
-            model_args_dict = model_args.__dict__
+            print('Calling the llama model > refered to LlavaLlamaForCausalLM class ')
             model = LlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
                 cache_dir=training_args.cache_dir,
@@ -862,10 +862,10 @@ def train(attn_implementation=None):
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
                 **bnb_model_from_pretrained_args
             )
-            # print('#'*40 + 'LlavaLlamaForCausalLM.from_pretrained' + '#'*40)
-            # print('#'*100)
-            # print(model)
-            # print('#'*100)
+            print('#'*40 + 'LlavaLlamaForCausalLM.from_pretrained' + '#'*40)
+            print('#'*100)
+            print(model)
+            print('#'*100)
 
     else:
         model = transformers.LlamaForCausalLM.from_pretrained(
