@@ -953,16 +953,23 @@ def train(attn_implementation=None):
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
     if model_args.vision_tower is not None:
+        
+        print('*'*100)
         print('Inside model.vision_tower')
+        
         model.get_model().initialize_vision_modules(
             model_args=model_args,
             fsdp=training_args.fsdp
         )
+        
+        print('*'*100)
         print('Initializing Vison MOdel')
         print(model)
 
         vision_tower = model.get_vision_tower()
-        print('Get Vison MOdel')
+
+        print('*'*100)
+        print('Get Vison tower')
         print(vision_tower)
 
         vision_tower.to(dtype=torch.bfloat16 if training_args.bf16 else torch.float16, device=training_args.device)

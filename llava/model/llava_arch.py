@@ -53,6 +53,7 @@ class LlavaMetaModel:
 
     def initialize_vision_modules(self, model_args, fsdp=None):
         print('Inside initialize_vision_modules')
+        # vision_tower = openai/clip-vit-large-patch14
         vision_tower = model_args.vision_tower
         print(f'vision tower: {vision_tower}')
         mm_vision_select_layer = model_args.mm_vision_select_layer
