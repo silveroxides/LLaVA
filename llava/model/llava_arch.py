@@ -63,15 +63,6 @@ class LlavaMetaModel:
         mm_patch_merge_type = model_args.mm_patch_merge_type
 
         self.config.mm_vision_tower = vision_tower
-        self.config.use_mm_proj = True
-        self.config.mm_projector_type = getattr(model_args, 'mm_projector_type', 'linear')
-        self.config.num_experts = getattr(model_args, 'num_experts', 1)
-        self.config.num_experts_per_tok = getattr(model_args, 'num_experts_per_tok', 1)
-        self.config.aux_loss_coef = getattr(model_args, 'aux_loss_coef', 0.01)
-        self.config.mm_hidden_size = vision_tower.hidden_size
-        self.config.mm_vision_select_layer = mm_vision_select_layer
-        self.config.mm_vision_select_feature = mm_vision_select_feature
-        self.config.mm_patch_merge_type = mm_patch_merge_type
 
         if self.get_vision_tower() is None:
             print('-' * 200)
@@ -81,6 +72,7 @@ class LlavaMetaModel:
 
             print('-'*100)
             print(vision_tower.encoder.layers[0].mlp)
+            print('-'*100)
 
             if fsdp is not None and len(fsdp) > 0:
                 self.vision_tower = [vision_tower]
@@ -93,6 +85,15 @@ class LlavaMetaModel:
                 vision_tower = self.vision_tower
             vision_tower.load_model()
 
+        self.config.use_mm_proj = True
+        self.config.mm_projector_type = getattr(model_args, 'mm_projector_type', 'linear')
+        self.config.num_experts = getattr(model_args, 'num_experts', 1)
+        self.config.num_experts_per_tok = getattr(model_args, 'num_experts_per_tok', 1)
+        self.config.aux_loss_coef = getattr(model_args, 'aux_loss_coef', 0.01)
+        self.config.mm_hidden_size = vision_tower.hidden_size
+        self.config.mm_vision_select_layer = mm_vision_select_layer
+        self.config.mm_vision_select_feature = mm_vision_select_feature
+        self.config.mm_patch_merge_type = mm_patch_merge_type
 
         print('-' * 200)
         print('*'*40+'Modified Config'+'*'*40)
