@@ -71,7 +71,7 @@ class LlavaMetaModel:
             print(vision_tower)
 
             print('-'*100)
-            print(vision_tower.vision_model.encoder.layers[0].mlp)
+            print(vision_tower.vision_tower.encoder.layers[0].mlp)
             print('-'*100)
 
             if fsdp is not None and len(fsdp) > 0:
