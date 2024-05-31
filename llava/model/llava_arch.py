@@ -92,6 +92,7 @@ class LlavaMetaModel:
         self.config.num_experts_per_tok = getattr(model_args, 'num_experts_per_tok', 1)
         self.config.aux_loss_coef = getattr(model_args, 'aux_loss_coef', 0.01)
         self.config.mm_hidden_size = vision_tower.hidden_size
+        self.hidden_size = self.config.hidden_size
         self.config.mm_vision_select_layer = mm_vision_select_layer
         self.config.mm_vision_select_feature = mm_vision_select_feature
         self.config.mm_patch_merge_type = mm_patch_merge_type
@@ -111,6 +112,9 @@ class LlavaMetaModel:
             # Replace the (mlp): CLIPMLP with the sparse_moe
             for encoder_layer in vision_tower.vision_tower.vision_model.encoder.layers:
                 encoder_layer.mlp = self.mm_projector
+                encoder_layer.layer_norm1 = nn.LayerNorm(self.hidden_size)
+                encoder_layer.linear1 = nn.linear(self.hidden_size, self.mm_hidden_size)
+                encoder_layer.layer_norm2 = nn.LayerNorm(self.mm_hidden_size)
 
             if 'unpad' in mm_patch_merge_type:
                 embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
