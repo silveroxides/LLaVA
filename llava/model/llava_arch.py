@@ -96,7 +96,7 @@ class LlavaMetaModel:
         self.config.mm_patch_merge_type = mm_patch_merge_type
         self.moe = build_vision_projector(self.config)
 
-        vision_tower.vision_tower.vision_model.encoder.layers[0].mlp = self.moe
+        vision_tower.vision_tower.vision_model.encoder.layers[-1].mlp = self.moe
 
         print('-' * 200)
         print('*'*40+'Modified Config'+'*'*40)
