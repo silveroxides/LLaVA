@@ -59,6 +59,11 @@ class CLIPVisionTower(nn.Module):
         
         # image is not a list but tensor
         else:
+            print('*'*100)
+            print('INside clipEncoder.py')
+            print('*'*100)
+            print(self.vision_tower)
+            print('-'*100)
             image_forward_outs, router_logits = self.vision_tower(images.to(device=self.device, dtype=self.dtype), output_hidden_states=True)
             image_feature = self.feature_select(image_forward_outs).to(images.dtype)
 
