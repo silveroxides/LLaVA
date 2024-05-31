@@ -121,6 +121,9 @@ class LlavaMetaModel:
                 self.image_newline = nn.Parameter(
                     torch.randn(self.config.hidden_size, dtype=self.dtype) * embed_std
                 )
+
+            print('*'*40+'Modified vision tower'+'*'*40)
+            print(vision_tower)
         else:
             # In case it is frozen by LoRA
             for p in self.mm_projector.parameters():
