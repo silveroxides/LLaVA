@@ -109,8 +109,8 @@ class LlavaMetaModel:
             print(self.mm_projector)
 
             # Replace the (mlp): CLIPMLP with the sparse_moe
-            for encoder_layer in enumerate(vision_tower.vision_tower.vision_model.encoder.layers):
-                setattr(encoder_layer, 'mlp', copy.deepcopy(self.mm_projector))
+            for encoder_layer in vision_tower.vision_tower.vision_model.encoder.layers:
+                encoder_layer.mlp = self.mm_projector
 
             if 'unpad' in mm_patch_merge_type:
                 embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
