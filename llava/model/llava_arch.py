@@ -113,7 +113,7 @@ class LlavaMetaModel:
             for encoder_layer in vision_tower.vision_tower.vision_model.encoder.layers:
                 encoder_layer.mlp = self.mm_projector
                 encoder_layer.layer_norm1 = nn.LayerNorm(self.hidden_size)
-                encoder_layer.linear1 = nn.linear(self.hidden_size, self.mm_hidden_size)
+                encoder_layer.linear1 = nn.Linear(self.hidden_size, self.mm_hidden_size)
                 encoder_layer.layer_norm2 = nn.LayerNorm(self.mm_hidden_size)
 
             if 'unpad' in mm_patch_merge_type:
