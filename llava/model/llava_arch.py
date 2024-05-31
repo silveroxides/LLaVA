@@ -17,6 +17,7 @@ from abc import ABC, abstractmethod
 
 import torch
 import torch.nn as nn
+import copy
 
 from .multimodal_encoder.builder import build_vision_tower
 from .multimodal_projector.builder import build_vision_projector
@@ -105,8 +106,11 @@ class LlavaMetaModel:
             print('*'*40+'build viison projector'+'*'*40)
 
             self.mm_projector = build_vision_projector(self.config)
-            vision_tower.vision_tower.vision_model.encoder.layers[-1].mlp = self.mm_projector
             print(self.mm_projector)
+
+            # Replace the (mlp): CLIPMLP with the sparse_moe
+            for encoder_layer in enumerate(vision_tower.vision_tower.vision_model.encoder.layers):
+                setattr(encoder_layer, 'mlp', copy.deepcopy(self.mm_projector))
 
             if 'unpad' in mm_patch_merge_type:
                 embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
