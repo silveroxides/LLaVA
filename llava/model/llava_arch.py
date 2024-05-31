@@ -94,9 +94,6 @@ class LlavaMetaModel:
         self.config.mm_vision_select_layer = mm_vision_select_layer
         self.config.mm_vision_select_feature = mm_vision_select_feature
         self.config.mm_patch_merge_type = mm_patch_merge_type
-        self.moe = build_vision_projector(self.config)
-
-        vision_tower.vision_tower.vision_model.encoder.layers[-1].mlp = self.moe
 
         print('-' * 200)
         print('*'*40+'Modified Config'+'*'*40)
@@ -107,9 +104,8 @@ class LlavaMetaModel:
             print('-' * 100)
             print('*'*40+'build viison projector'+'*'*40)
 
-            # self.mm_projector = build_vision_projector(self.config)
-            
-            self.mm_projector = self.moe
+            self.mm_projector = build_vision_projector(self.config)
+            vision_tower.vision_tower.vision_model.encoder.layers[-1].mlp = self.mm_projector
             print(self.mm_projector)
 
             if 'unpad' in mm_patch_merge_type:
