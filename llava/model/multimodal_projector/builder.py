@@ -127,7 +127,7 @@ class SparseMoeBlock(nn.Module):
         reshapeed_router_logits = router_logits.reshape(batch_size, sequence_length, self.num_experts)
         batch_size, sequence_length, hidden_dim = final_hidden_states.shape
         print('#' * 30 + '--Final Hidden States--' + '#' * 30)
-        print(f'Final Hiddens states shape: {final_hidden_states}')
+        print(f'Final Hiddens states shape: {final_hidden_states.shape}')
         print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')    
         print('#' * 100)
         # print(f'reshapeed_router_logits: {reshapeed_router_logits.shape}')
