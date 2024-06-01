@@ -114,7 +114,7 @@ class LlavaMetaModel:
                 encoder_layer.mlp = self.mm_projector
                 # encoder_layer.layer_norm2 = nn.LayerNorm(self.hidden_size)
                 encoder_layer.linear1 = nn.Linear(self.hidden_size, self.config.mm_hidden_size)
-                # encoder_layer.layer_norm3 = nn.LayerNorm(self.config.mm_hidden_size)
+                encoder_layer.layer_norm2 = nn.LayerNorm(self.config.mm_hidden_size)
 
             if 'unpad' in mm_patch_merge_type:
                 embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
