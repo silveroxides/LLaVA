@@ -59,10 +59,10 @@ class CLIPVisionTower(nn.Module):
         
         # image is not a list but tensor
         else:
-            print('*'*100)
-            print('INside clipEncoder.py')
-            print('*'*100)
-            print(self.vision_tower)
+            # print('*'*100)
+            # print('INside clipEncoder.py')
+            # print('*'*100)
+            # print(self.vision_tower)
             print('-'*100)
             print(f'Image shape: {images.shape}')
             print('-'*100)

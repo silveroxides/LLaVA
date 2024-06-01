@@ -61,10 +61,10 @@ class SparseMoeBlock(nn.Module):
         if self.training and self.jitter_noise > 0:
             hidden_states *= torch.empty_like(hidden_states).uniform_(1.0 - self.jitter_noise, 1.0 + self.jitter_noise)
 
-        # print('#' * 30 + '--Hidden States--' + '#' * 30)
-        # print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
-        # # print(f'Hidden States Shape: {hidden_states.shape}')
-        # print('#' * 100)
+        print('#' * 30 + '--Hidden States--' + '#' * 30)
+        print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
+        # print(f'Hidden States Shape: {hidden_states.shape}')
+        print('#' * 100)
         # hidden_states = hidden_states.view(-1, hidden_dim)
         hidden_states = hidden_states.reshape(-1, hidden_dim)
 
