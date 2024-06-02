@@ -966,7 +966,7 @@ def train(attn_implementation=None):
         # gettting the config for the vision tower
         vision_tower = getattr(model_args, 'vision_tower', 'openai/clip-vit-large-patch14')
         vision_tower_config = CLIPConfig.from_pretrained(vision_tower)
-        config.mm_hidden_size = vision_tower_config.vison_config.hidden_size
+        config.mm_hidden_size = vision_tower_config.vision_config.hidden_size
 
         print('*'*100)
         print('modfied model config')
