@@ -956,6 +956,7 @@ def train(attn_implementation=None):
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
+    # initializing the MoE. This is going to be shared accross the modality
     def initialize_moe(config, model_args):
         
         config.mm_projector_type = getattr(model_args, 'mm_projector_type', 'linear')
@@ -964,13 +965,9 @@ def train(attn_implementation=None):
         config.aux_loss_coef = getattr(model_args, 'aux_loss_coef', 0.01)
         
         # gettting the config for the vision tower
-        vision_tower = getattr(model_args, 'vision_tower', 'openai/clip-vit-large-patch14')
-        vision_tower_config = CLIPConfig.from_pretrained(vision_tower)
+        vision_tower_name = getattr(model_args, 'vision_tower', 'openai/clip-vit-large-patch14')
+        vision_tower_config = CLIPConfig.from_pretrained(vision_tower_name)
         config.mm_hidden_size = vision_tower_config.vision_config.hidden_size
-
-        print('*'*100)
-        print('modfied model config')
-        print(model.config)
 
         sparseMoE = build_vision_projector(config)
 
@@ -988,6 +985,7 @@ def train(attn_implementation=None):
         
         model.get_model().initialize_vision_modules(
             model_args=model_args,
+            sparseMoE = sparseMoE,
             fsdp=training_args.fsdp
         )
         

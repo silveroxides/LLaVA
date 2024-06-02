@@ -108,15 +108,16 @@ class CLIPMLP(nn.Module):
         return hidden_states
 
 class CLIPEncoderMoELayer(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, sparseMoE):
         super().__init__()
         self.embed_dim = config.hidden_size
         self.self_attn = CLIPAttention(config)
         self.layer_norm1 = nn.LayerNorm(self.embed_dim, eps=config.layer_norm_eps)
-        self.num_of_experts = config.num_of_experts
-        self.num_selected = config.num_selected
-        self.gate = nn.Linear(self.embed_dim, self.num_of_experts, bias=False)
-        self.experts = nn.ModuleList([CLIPMLP(config) for _ in range(self.num_of_experts)])
+        # self.num_of_experts = config.num_of_experts
+        # self.num_selected = config.num_selected
+        # self.gate = nn.Linear(self.embed_dim, self.num_of_experts, bias=False)
+        # self.experts = nn.ModuleList([CLIPMLP(config) for _ in range(self.num_of_experts)])
+        self.CLIPMoE = sparseMoE
         self.layer_norm2 = nn.LayerNorm(self.embed_dim, eps=config.layer_norm_eps)
     
     def forward(
@@ -162,10 +163,10 @@ class CLIPEncoderMoELayer(nn.Module):
         return outputs
 
 class CLIPEncoder(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, sparseMoE):
         super().__init__()
         self.config = config
-        self.layers = nn.ModuleList([CLIPEncoderMoELayer(config) for _ in range(config.num_hidden_layers)])
+        self.layers = nn.ModuleList([CLIPEncoderMoELayer(config, sparseMoE) for _ in range(config.num_hidden_layers)])
     
     def forward(
         self,
@@ -219,7 +220,7 @@ class CLIPVisionEmbeddings(nn.Module):
         return embeddings
 
 class CLIPSMoEVisionTransformer(nn.Module):
-    def __init__(self, config, num_experts=4, num_selected=2):
+    def __init__(self, config, sparseMoE, num_experts=4, num_selected=2):
         super().__init__()
         self.config = config
         embed_dim = config.hidden_size
@@ -227,7 +228,7 @@ class CLIPSMoEVisionTransformer(nn.Module):
         config.num_selected = num_selected
         self.embeddings = CLIPVisionEmbeddings(config)
         self.pre_layrnorm = nn.LayerNorm(embed_dim, eps=config.layer_norm_eps)
-        self.encoder = CLIPEncoder(config)
+        self.encoder = CLIPEncoder(config, sparseMoE)
         #self.post_layernorm = nn.LayerNorm(embed_dim, eps=config.layer_norm_eps)
 
     def forward(self, pixel_values):

@@ -53,7 +53,7 @@ class LlavaMetaModel:
             vision_tower = vision_tower[0]
         return vision_tower
 
-    def initialize_vision_modules(self, model_args, fsdp=None):
+    def initialize_vision_modules(self, model_args, sparseMoE, fsdp=None):
         print('Inside initialize_vision_modules')
         # vision_tower = openai/clip-vit-large-patch14
         vision_tower = model_args.vision_tower
@@ -68,12 +68,8 @@ class LlavaMetaModel:
         if self.get_vision_tower() is None:
             print('-' * 200)
             print('*'*40+'build vision tower'+'*'*40)
-            vision_tower = build_vision_tower(model_args)
+            vision_tower = build_vision_tower(model_args, sparseMoE)
             print(vision_tower)
-
-            print('-'*100)
-            print(vision_tower.vision_tower.vision_model.encoder.layers[0].mlp)
-            print('-'*100)
 
             if fsdp is not None and len(fsdp) > 0:
                 self.vision_tower = [vision_tower]
@@ -106,15 +102,19 @@ class LlavaMetaModel:
             print('-' * 100)
             print('*'*40+'build viison projector'+'*'*40)
 
-            self.mm_projector = build_vision_projector(self.config)
+            # self.mm_projector = build_vision_projector(self.config)
+            self.mm_projector = sparseMoE
             print(self.mm_projector)
 
-            # Replace the (mlp): CLIPMLP with the sparse_moe
-            for encoder_layer in vision_tower.vision_tower.vision_model.encoder.layers:
-                encoder_layer.mlp = self.mm_projector
-                # encoder_layer.layer_norm2 = nn.LayerNorm(self.hidden_size)
-                # encoder_layer.linear = nn.Linear(self.hidden_size, self.config.mm_hidden_size)
-                # encoder_layer.layer_norm2 = nn.LayerNorm(self.config.mm_hidden_size)
+            #############################################################################################
+            # # Replace the (mlp): CLIPMLP with the sparse_moe
+            #############################################################################################
+            
+            # for encoder_layer in vision_tower.vision_tower.vision_model.encoder.layers:
+            #     encoder_layer.mlp = self.mm_projector
+            #     # encoder_layer.layer_norm2 = nn.LayerNorm(self.hidden_size)
+            #     # encoder_layer.linear = nn.Linear(self.hidden_size, self.config.mm_hidden_size)
+            #     # encoder_layer.layer_norm2 = nn.LayerNorm(self.config.mm_hidden_size)
 
             if 'unpad' in mm_patch_merge_type:
                 embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
@@ -187,7 +187,7 @@ class LlavaMetaForCausalLM(ABC):
         
         # from the projector
         image_features = self.get_model().mm_projector(image_features)
-        
+
         try:
             image_features, gate_logits = image_features
             return image_features, gate_logits
