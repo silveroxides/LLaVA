@@ -66,10 +66,12 @@ class LlavaMetaModel:
         self.config.mm_vision_tower = vision_tower
 
         if self.get_vision_tower() is None:
-            print('-' * 200)
+
+            print('-' * 140)
             print('*'*40+'build vision tower'+'*'*40)
             vision_tower = build_vision_tower(model_args, sparseMoE)
             print(vision_tower)
+            print('-' * 140)
 
             if fsdp is not None and len(fsdp) > 0:
                 self.vision_tower = [vision_tower]
@@ -93,11 +95,6 @@ class LlavaMetaModel:
         self.config.mm_vision_select_feature = mm_vision_select_feature
         self.config.mm_patch_merge_type = mm_patch_merge_type
 
-        print('-' * 200)
-        print('*'*40+'Modified Config'+'*'*40)
-        print(self.config)
-        print('#' * 100)
-
         if getattr(self, 'mm_projector', None) is None:
             print('-' * 100)
             print('*'*40+'build viison projector'+'*'*40)
@@ -105,11 +102,12 @@ class LlavaMetaModel:
             # self.mm_projector = build_vision_projector(self.config)
             self.mm_projector = sparseMoE
             print(self.mm_projector)
+            print('-'*120)
 
             #############################################################################################
             # # Replace the (mlp): CLIPMLP with the sparse_moe
             #############################################################################################
-            
+
             # for encoder_layer in vision_tower.vision_tower.vision_model.encoder.layers:
             #     encoder_layer.mlp = self.mm_projector
             #     # encoder_layer.layer_norm2 = nn.LayerNorm(self.hidden_size)
@@ -122,8 +120,10 @@ class LlavaMetaModel:
                     torch.randn(self.config.hidden_size, dtype=self.dtype) * embed_std
                 )
 
+            print('-' * 140)
             print('*'*40+'Modified vision tower'+'*'*40)
             print(vision_tower)
+            print('-' * 140)
         else:
             # In case it is frozen by LoRA
             for p in self.mm_projector.parameters():

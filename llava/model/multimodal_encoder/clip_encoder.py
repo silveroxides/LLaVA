@@ -13,7 +13,6 @@ class CLIPVisionTower(nn.Module):
         self.is_loaded = False
         self.vision_tower_name = vision_tower
         self.select_layer = args.mm_vision_select_layer
-        self.sparseMoE = sparseMoE
         self.select_feature = getattr(args, 'mm_vision_select_feature', 'patch')
         self.mlp_type = getattr(args, 'mm_projector_type', 'linear')
         self.num_experts = getattr(args, 'num_experts', 'linear')
@@ -21,15 +20,15 @@ class CLIPVisionTower(nn.Module):
         
 
         if not delay_load:
-            self.load_model()
+            self.load_model(sparseMoE)
             
         elif getattr(args, 'unfreeze_mm_vision_tower', False):
-            self.load_model()
+            self.load_model(sparseMoE)
         else:
             self.cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
 
 
-    def load_model(self, device_map=None):
+    def load_model(self, sparseMoE, device_map=None):
         if self.is_loaded:
             print('{} is already loaded, `load_model` called again, skipping.'.format(self.vision_tower_name))
             return
@@ -38,7 +37,7 @@ class CLIPVisionTower(nn.Module):
 
         if self.mlp_type == 'sparse_moe':
             cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
-            self.vision_tower = CLIPSMoEVisionTransformer(cfg_only, self.sparseMoE, self.num_experts, self.num_selected)
+            self.vision_tower = CLIPSMoEVisionTransformer(cfg_only, sparseMoE, self.num_experts, self.num_selected)
         else:
             self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name, device_map=device_map)
         self.vision_tower.requires_grad_(False)
