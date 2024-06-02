@@ -270,10 +270,9 @@ class CLIPSMoEVisionTransformer(nn.Module):
 
         print('-'*100)
         print(f'Clip Encoder Last layer Shape: {encoder_outputs[-1].shape}')
-        print(f'Router Logits Mean Shape: {torch.stack(router_logits).mean().shape}')
         print('-'*100)
 
-        return encoder_outputs[-1], torch.stack(router_logits).mean()
+        return encoder_outputs[-1], router_logits
     
         # encoder_outputs, balance_losses, router_z_losses = self.encoder(hidden_states)
         # return encoder_outputs[-1], torch.stack(balance_losses).mean(), torch.stack(router_z_losses).mean()

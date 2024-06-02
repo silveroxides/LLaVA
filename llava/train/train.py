@@ -975,13 +975,14 @@ def train(attn_implementation=None):
 
     if model_args.vision_tower is not None:
 
-        print('*'*100)
+        print('-'*100)
         print('Inside initialize_vision_modules')       
 
         sparseMoE = initialize_moe(model.config, model_args)
-        print('*'*100)
+        print('-'*100)
         print('Initializing initialize_moe')
         print(sparseMoE)
+        print('-'*100)
         
         model.get_model().initialize_vision_modules(
             model_args=model_args,
@@ -989,15 +990,13 @@ def train(attn_implementation=None):
             fsdp=training_args.fsdp
         )
         
-        print('*'*100)
-        print('Initializing Vison MOdel')
+        print('-'*100)
+        print('-'*40+'Model After Initializing vision Module'+'-'*40)
         print(model)
+        print('-'*100)
 
         vision_tower = model.get_vision_tower()
 
-        print('*'*100)
-        print('Get Vison tower')
-        print(vision_tower)
 
         vision_tower.to(dtype=torch.bfloat16 if training_args.bf16 else torch.float16, device=training_args.device)
 
@@ -1028,10 +1027,6 @@ def train(attn_implementation=None):
         model.config.mm_use_im_patch_token = model_args.mm_use_im_patch_token
         model.initialize_vision_tokenizer(model_args, tokenizer=tokenizer)
     
-    print('#'*100)
-    print('#'*40 + 'initialize_vision_modules' + '#'*40)
-    print(model.get_model())
-    print('#'*100)
 
     if training_args.bits in [4, 8]:
         from peft.tuners.lora import LoraLayer
