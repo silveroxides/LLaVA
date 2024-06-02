@@ -138,8 +138,13 @@ class CLIPEncoderMoELayer(nn.Module):
         hidden_states = self.layer_norm2(hidden_states)
         hidden_states, router_Logits = self.CLIPMoE(hidden_states)
 
-        hidden_states =  hidden_states + self.residual_projection(residual)
-        hidden_states = self.linear_projection(hidden_states)
+        # project expert to embed_dim
+        hidden_states =  self.linear_projection(hidden_states) + residual
+ 
+
+        # # project residual to expert_dim then project into embed_dim
+        # hidden_states =  hidden_states + self.residual_projection(residual)
+        # hidden_states = self.linear_projection(hidden_states)
         
         outputs = (hidden_states, router_Logits)
         return outputs
