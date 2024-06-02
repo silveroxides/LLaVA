@@ -111,7 +111,6 @@ class CLIPEncoderMoELayer(nn.Module):
     def __init__(self, config, sparseMoE):
         super().__init__()
         self.embed_dim = config.hidden_size
-        self.moe_dim = config.mm_hidden_size
         self.self_attn = CLIPAttention(config)
         self.layer_norm1 = nn.LayerNorm(self.embed_dim, eps=config.layer_norm_eps)
         # self.num_of_experts = config.num_of_experts
