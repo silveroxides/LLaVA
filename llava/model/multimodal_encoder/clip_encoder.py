@@ -77,7 +77,8 @@ class CLIPVisionTower(nn.Module):
             image_features.append(image_feature)
             router_logits.append(router_logits)
 
-        return image_features, router_logits
+        # return image_features, router_logits
+        return image_features
 
     @property
     def dummy_feature(self):
