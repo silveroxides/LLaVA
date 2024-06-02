@@ -60,9 +60,8 @@ class CLIPVisionTower(nn.Module):
             image_features = []
             router_logits = []
             for image in images:
-                # image_forward_out = self.vision_tower(image.to(device=self.device, dtype=self.dtype).unsqueeze(0), output_hidden_states=True)
-                image_forward_out, router_logits = self.vision_tower(image)
-                image_feature = self.feature_select(image_forward_out).to(image.dtype)
+                image_forward_out = self.vision_tower(image.to(device=self.device, dtype=self.dtype).unsqueeze(0), output_hidden_states=True)
+                image_feature, router_logits = self.feature_select(image_forward_out).to(image.dtype)
                 image_features.append(image_feature)
                 router_logits.append(router_logits)
         
@@ -72,8 +71,10 @@ class CLIPVisionTower(nn.Module):
             print(f'Image shape: {images.shape}')
             print('-'*100)
 
-            image_forward_outs, router_logits = self.vision_tower(images.to(device=self.device, dtype=self.dtype), output_hidden_states=True)
-            image_feature = self.feature_select(image_forward_outs).to(images.dtype)
+            image_forward_out, router_logits = self.vision_tower(images)
+            image_feature = self.feature_select(image_forward_out).to(images.dtype)
+            image_features.append(image_feature)
+            router_logits.append(router_logits)
 
         return image_features, router_logits
 
