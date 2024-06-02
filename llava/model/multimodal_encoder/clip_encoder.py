@@ -71,7 +71,8 @@ class CLIPVisionTower(nn.Module):
             print('-'*100)
             print(f'Image shape: {images.shape}')
             print('-'*100)
-
+            image_features = []
+            router_logits = []
             image_forward_out, router_logits = self.vision_tower(images)
             image_feature = self.feature_select(image_forward_out).to(images.dtype)
             image_features.append(image_feature)
