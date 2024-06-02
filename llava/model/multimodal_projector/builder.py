@@ -64,10 +64,10 @@ class SparseMoeBlock(nn.Module):
         if self.training and self.jitter_noise > 0:
             hidden_states *= torch.empty_like(hidden_states).uniform_(1.0 - self.jitter_noise, 1.0 + self.jitter_noise)
 
-        print('-' * 40 + '--Hidden States: Experts--' + '-' * 40)
-        print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
-        # print(f'Hidden States Shape: {hidden_states.shape}')
-        print('-' * 100)
+        # print('-' * 40 + '--Hidden States: Experts--' + '-' * 40)
+        # print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')
+        # # print(f'Hidden States Shape: {hidden_states.shape}')
+        # print('-' * 100)
         # hidden_states = hidden_states.view(-1, hidden_dim)
         hidden_states = hidden_states.reshape(-1, hidden_dim)
 
@@ -129,10 +129,10 @@ class SparseMoeBlock(nn.Module):
         final_hidden_states = final_hidden_states.reshape(batch_size, sequence_length, self.ffn_dim)
         reshapeed_router_logits = router_logits.reshape(batch_size, sequence_length, self.num_experts)
         batch_size, sequence_length, hidden_dim = final_hidden_states.shape
-        print('-' * 40 + '--Final Hidden States--' + '-' * 40)
-        print(f'Final Hiddens states shape: {final_hidden_states.shape}')
-        print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')    
-        print('-' * 100)
+        # print('-' * 40 + '--Final Hidden States--' + '-' * 40)
+        # print(f'Final Hiddens states shape: {final_hidden_states.shape}')
+        # print(f'Batch Size: {batch_size}, Sequence Length: {sequence_length}, Hidden Dim: {hidden_dim}')    
+        # print('-' * 100)
         # print(f'reshapeed_router_logits: {reshapeed_router_logits.shape}')
         return final_hidden_states, router_logits
         # return final_hidden_states
