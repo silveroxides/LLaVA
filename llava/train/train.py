@@ -953,7 +953,7 @@ def train(attn_implementation=None):
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
-    def initialize_moe(model_args):
+    def initialize_moe():
         sparseMoE = build_vision_projector(model_args)
         return sparseMoE
 
@@ -961,6 +961,9 @@ def train(attn_implementation=None):
         
         print('*'*100)
         print('Inside model.vision_tower')
+        print(model.config)
+        print('-'*100)
+        print(model_args)
         sparseMoE = initialize_moe(model_args)
         print('*'*100)
         print('Initializing initialize_moe')
