@@ -63,9 +63,6 @@ class LlavaMetaModel:
         pretrain_mm_mlp_adapter = model_args.pretrain_mm_mlp_adapter
         mm_patch_merge_type = model_args.mm_patch_merge_type
 
-        # adding this for sake of clipMOE
-        model_args.mm_hidden_size = self.config.hidden_size
-
         self.config.mm_vision_tower = vision_tower
 
         if self.get_vision_tower() is None:

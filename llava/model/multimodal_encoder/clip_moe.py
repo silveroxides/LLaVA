@@ -119,7 +119,9 @@ class CLIPEncoderMoELayer(nn.Module):
         # self.gate = nn.Linear(self.embed_dim, self.num_of_experts, bias=False)
         # self.experts = nn.ModuleList([CLIPMLP(config) for _ in range(self.num_of_experts)])
         self.CLIPMoE = sparseMoE
-        self.projection = nn.Linear(self.moe_dim , self.embed_dim)
+        self.experts_out_dim = sparseMoE.experts[0].fc2.out_features
+        self.projection = nn.Linear(self.self.embed_dim , self.experts_out_dim)
+        # self.projection2 = nn.Linear(self.self.embed_dim , self.experts_out_dim)
         self.layer_norm2 = nn.LayerNorm(self.embed_dim, eps=config.layer_norm_eps)
     
     def forward(
@@ -136,9 +138,8 @@ class CLIPEncoderMoELayer(nn.Module):
 
         hidden_states = self.layer_norm2(hidden_states)
         hidden_states, router_Logits = self.CLIPMoE(hidden_states)
-        hidden_states = self.projection(hidden_states)
-        
-        hidden_states = residual + hidden_states
+
+        hidden_states =  hidden_states + self.projection(residual)
         
         outputs = (hidden_states, router_Logits)
         return outputs
