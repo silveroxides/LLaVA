@@ -36,6 +36,7 @@ from llava.train.llava_trainer import LLaVATrainer
 
 from llava import conversation as conversation_lib
 from llava.model import *
+from llava.model.multimodal_projector.builder import build_vision_projector
 from llava.mm_utils import tokenizer_image_token
 
 from PIL import Image
@@ -952,10 +953,18 @@ def train(attn_implementation=None):
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
+    def initialize_moe(model_args):
+        sparseMoE = build_vision_projector(model_args)
+        return sparseMoE
+
     if model_args.vision_tower is not None:
         
         print('*'*100)
         print('Inside model.vision_tower')
+        sparseMoE = initialize_moe(model_args)
+        print('*'*100)
+        print('Initializing initialize_moe')
+        print(sparseMoE)
         
         model.get_model().initialize_vision_modules(
             model_args=model_args,

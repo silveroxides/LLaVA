@@ -9,10 +9,8 @@ class CLIPVisionTower(nn.Module):
         super().__init__()
 
         self.is_loaded = False
-
         self.vision_tower_name = vision_tower
         self.select_layer = args.mm_vision_select_layer
-        print(self.select_layer)
         self.select_feature = getattr(args, 'mm_vision_select_feature', 'patch')
 
         if not delay_load:
@@ -22,8 +20,7 @@ class CLIPVisionTower(nn.Module):
             self.load_model()
         else:
             self.cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
-            print('*'*40+'vision config'+'*'*40)
-            print(self.cfg_only)
+
 
     def load_model(self, device_map=None):
         if self.is_loaded:

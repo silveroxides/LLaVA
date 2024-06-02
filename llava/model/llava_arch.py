@@ -113,7 +113,7 @@ class LlavaMetaModel:
             for encoder_layer in vision_tower.vision_tower.vision_model.encoder.layers:
                 encoder_layer.mlp = self.mm_projector
                 # encoder_layer.layer_norm2 = nn.LayerNorm(self.hidden_size)
-                encoder_layer.linear = nn.Linear(self.hidden_size, self.config.mm_hidden_size)
+                # encoder_layer.linear = nn.Linear(self.hidden_size, self.config.mm_hidden_size)
                 # encoder_layer.layer_norm2 = nn.LayerNorm(self.config.mm_hidden_size)
 
             if 'unpad' in mm_patch_merge_type:
@@ -182,11 +182,12 @@ class LlavaMetaForCausalLM(ABC):
 
     def encode_images(self, images):
         
+        # from clip
         image_features = self.get_model().get_vision_tower()(images)
         
-
-        
+        # from the projector
         image_features = self.get_model().mm_projector(image_features)
+        
         try:
             image_features, gate_logits = image_features
             return image_features, gate_logits
