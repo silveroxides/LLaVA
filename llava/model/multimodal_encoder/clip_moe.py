@@ -119,7 +119,7 @@ class CLIPEncoderMoELayer(nn.Module):
         # self.experts = nn.ModuleList([CLIPMLP(config) for _ in range(self.num_of_experts)])
         self.CLIPMoE = sparseMoE
         self.experts_out_dim = sparseMoE.experts[0].fc2.out_features
-        self.projection = nn.Linear(self.self.embed_dim , self.experts_out_dim)
+        self.projection = nn.Linear(self.embed_dim , self.experts_out_dim)
         # self.projection2 = nn.Linear(self.self.embed_dim , self.experts_out_dim)
         self.layer_norm2 = nn.LayerNorm(self.embed_dim, eps=config.layer_norm_eps)
     
