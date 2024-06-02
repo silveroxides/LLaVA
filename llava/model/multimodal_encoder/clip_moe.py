@@ -132,35 +132,48 @@ class CLIPEncoderMoELayer(nn.Module):
 
         residual = hidden_states
         hidden_states = self.layer_norm2(hidden_states)
-
-        gate_logits = self.gate(hidden_states)
-
-        router_z_loss = torch.logsumexp(gate_logits, dim = -1)
-        router_z_loss = torch.square(router_z_loss)            
-        router_z_loss = router_z_loss.mean()
-        
-        gate_softmax = nn.functional.softmax(gate_logits, dim=-1, dtype=torch.float).to(hidden_states.dtype)
-
-        density_1_proxy = reduce(gate_softmax, '... n e -> ... e', 'mean')
-
-        weights, selected_experts = torch.topk(gate_softmax, self.num_selected)
-
-        one_hot_gate_indices = nn.functional.one_hot(rearrange(selected_experts, '... k -> k ...'), self.num_of_experts).float()[0]
-        density_1 = reduce(one_hot_gate_indices, '... n e -> ... e', 'mean')
-        balance_loss = (density_1_proxy * density_1).mean() * float(self.num_of_experts ** 2)
-
-        weights = weights / torch.sum(weights, dim=-1, keepdim=True).to(hidden_states.dtype)
-        
-        results = torch.zeros_like(hidden_states).to(hidden_states.device, hidden_states.dtype)
-        for b in range(hidden_states.shape[0]):
-            for i, expert in enumerate(self.experts):
-                token_idx, nth_expert = torch.where(selected_experts[b] == i)
-                results[b][token_idx] += weights[b][token_idx, nth_expert, None] * expert(hidden_states[b][token_idx])
-        #hidden_states = self.mlp(hidden_states)
-        hidden_states = residual + results
-
-        outputs = (hidden_states, balance_loss, router_z_loss)
+        hidden_states, router_Logits = self.CLIPMoE(hidden_states)
+        hidden_states = residual + hidden_states
+        outputs = (hidden_states, router_Logits)
         return outputs
+
+
+        # ##################################################################################################################
+        # ################## end of cuMoE code
+        # ##################################################################################################################
+        # gate_logits = self.gate(hidden_states)
+
+        # router_z_loss = torch.logsumexp(gate_logits, dim = -1)
+        # router_z_loss = torch.square(router_z_loss)            
+        # router_z_loss = router_z_loss.mean()
+        
+        # gate_softmax = nn.functional.softmax(gate_logits, dim=-1, dtype=torch.float).to(hidden_states.dtype)
+
+        # density_1_proxy = reduce(gate_softmax, '... n e -> ... e', 'mean')
+
+        # weights, selected_experts = torch.topk(gate_softmax, self.num_selected)
+
+        # one_hot_gate_indices = nn.functional.one_hot(rearrange(selected_experts, '... k -> k ...'), self.num_of_experts).float()[0]
+        # density_1 = reduce(one_hot_gate_indices, '... n e -> ... e', 'mean')
+        # balance_loss = (density_1_proxy * density_1).mean() * float(self.num_of_experts ** 2)
+
+        # weights = weights / torch.sum(weights, dim=-1, keepdim=True).to(hidden_states.dtype)
+        
+        # results = torch.zeros_like(hidden_states).to(hidden_states.device, hidden_states.dtype)
+        # for b in range(hidden_states.shape[0]):
+        #     for i, expert in enumerate(self.experts):
+        #         token_idx, nth_expert = torch.where(selected_experts[b] == i)
+        #         results[b][token_idx] += weights[b][token_idx, nth_expert, None] * expert(hidden_states[b][token_idx])
+        #hidden_states = self.mlp(hidden_states)
+        # hidden_states = residual + results
+        # outputs = (hidden_states, balance_loss, router_z_loss)
+        # return outputs
+        
+        # ##################################################################################################################
+        # ################## end of cuMoE code
+        # ##################################################################################################################
+
+
 
 class CLIPEncoder(nn.Module):
     def __init__(self, config, sparseMoE):
@@ -174,17 +187,30 @@ class CLIPEncoder(nn.Module):
     ):
         encoder_states = ()
         hidden_states = inputs_embeds
-        balance_losses = []
-        router_z_losses = []
+        router_Logits = []
+
         for idx, encoder_layer in enumerate(self.layers):
             encoder_states = encoder_states + (hidden_states,)
             layer_outputs = encoder_layer(hidden_states)
+            
             hidden_states = layer_outputs[0]
-            balance_loss = layer_outputs[1]
-            balance_losses.append(balance_loss)
-            router_z_loss = layer_outputs[2]
-            router_z_losses.append(router_z_loss)
-        return encoder_states, balance_losses, router_z_losses
+            router_Logit = layer_outputs[1]
+
+            router_Logits.append(router_Logit)
+
+        return encoder_states, router_Logits
+    
+        # for idx, encoder_layer in enumerate(self.layers):
+        #     encoder_states = encoder_states + (hidden_states,)
+        #     layer_outputs = encoder_layer(hidden_states)
+        #     hidden_states = layer_outputs[0]
+        #     balance_loss = layer_outputs[1]
+        #     balance_losses.append(balance_loss)
+        #     router_z_loss = layer_outputs[2]
+        #     router_z_losses.append(router_z_loss)
+        # return encoder_states, balance_losses, router_z_losses
+    
+    
 
 class CLIPVisionEmbeddings(nn.Module):
     def __init__(self, config):
@@ -235,5 +261,21 @@ class CLIPSMoEVisionTransformer(nn.Module):
         hidden_states = self.embeddings(pixel_values)
         hidden_states = self.pre_layrnorm(hidden_states)
 
-        encoder_outputs, balance_losses, router_z_losses = self.encoder(hidden_states)
-        return encoder_outputs[-1], torch.stack(balance_losses).mean(), torch.stack(router_z_losses).mean()
+        encoder_outputs, router_logits = self.encoder(hidden_states)
+
+        print('-'*100)
+        print(f'Clip Encoder Shape: {encoder_outputs.shape}')
+        print(f'Router Logits Shape: {router_logits.shape}')
+        print('-'*100)
+
+        print('-'*100)
+        print(f'Clip Encoder Last layer Shape: {encoder_outputs[-1].shape}')
+        print(f'Router Logits Mean Shape: {torch.stack(router_logits).mean().shape}')
+        print('-'*100)
+
+        return encoder_outputs[-1], torch.stack(router_logits).mean()
+    
+        # encoder_outputs, balance_losses, router_z_losses = self.encoder(hidden_states)
+        # return encoder_outputs[-1], torch.stack(balance_losses).mean(), torch.stack(router_z_losses).mean()
+    
+
