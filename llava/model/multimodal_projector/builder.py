@@ -21,8 +21,8 @@ class Experts(nn.Module):
         super().__init__()
         self.config = config
         self.activation_fn = ACT2FN[config.hidden_act]
-        self.fc1 = nn.Linear(config.hidden_size, config.intermediate_size)
-        self.fc2 = nn.Linear(config.intermediate_size, config.hidden_size)
+        self.fc1 = nn.Linear(config.mm_hidden_size, config.hidden_size)
+        self.fc2 = nn.Linear(config.hidden_size, config.hidden_size)
 
     def forward(self, hidden_states):
         hidden_states = self.fc1(hidden_states)
