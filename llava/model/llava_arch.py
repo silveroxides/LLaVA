@@ -64,10 +64,7 @@ class LlavaMetaModel:
         mm_patch_merge_type = model_args.mm_patch_merge_type
 
         # adding this for sake of clipMOE
-        model_args.mm_hidden_size = getattr(self.config, 'mm_hidden_size', 5120)
-
-        print(self.config)
-        print(model_args)
+        model_args.mm_hidden_size = self.config.hidden_size
 
         self.config.mm_vision_tower = vision_tower
 
