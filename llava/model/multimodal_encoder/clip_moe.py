@@ -272,7 +272,8 @@ class CLIPSMoEVisionTransformer(nn.Module):
 
         print('-'*100)
         # print(f'Clip Encoder Shape: {encoder_outputs.shape}')
-        print(f'Router Logits Shape: {router_logits.shape}')
+        print(f'No. Router Logits : {len(router_logits)}')
+        print(f'Router Logits Shape : {router_logits[0].shape}')
         print('-'*100)
 
         print('-'*100)
