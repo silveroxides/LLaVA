@@ -71,12 +71,14 @@ class CLIPVisionTower(nn.Module):
             print('-'*100)
             print(f'Image shape: {images.shape}')
             print('-'*100)
-            image_features = []
-            router_logits = []
             image_forward_out, router_logits = self.vision_tower(images)
-            image_feature = self.feature_select(image_forward_out).to(images.dtype)
-            image_features.append(image_feature)
-            router_logits.append(router_logits)
+            image_features = self.feature_select(image_forward_out).to(images.dtype)
+            
+            if type(image_features) is torch.tensor:
+                print('-'*100)
+                print(f'SHape of images: {image_features.shape}')
+                print('-'*100)
+            
 
         # return image_features, router_logits
         return image_features

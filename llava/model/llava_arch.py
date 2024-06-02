@@ -182,9 +182,10 @@ class LlavaMetaForCausalLM(ABC):
 
     def encode_images(self, images):
         
-        # from clip
+        # get image features from vision encoder
         image_features = self.get_model().get_vision_tower()(images)
-        
+
+        # passing the image features to the clip
         # from the projector
         image_features = self.get_model().mm_projector(image_features)
 
