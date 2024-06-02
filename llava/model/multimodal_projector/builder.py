@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import re
-
+from transformers.activations import ACT2FN
 
 class IdentityMap(nn.Module):
     def __init__(self):
@@ -15,17 +15,20 @@ class IdentityMap(nn.Module):
     def config(self):
         return {"mm_projector_type": 'identity'}
     
+
 class Experts(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.ffn = nn.Sequential(
-            nn.Linear(config.mm_hidden_size, config.hidden_size),
-            nn.GELU(),
-            nn.Linear(config.hidden_size, config.hidden_size)
-        )
+        self.config = config
+        self.activation_fn = ACT2FN[config.hidden_act]
+        self.fc1 = nn.Linear(config.hidden_size, config.intermediate_size)
+        self.fc2 = nn.Linear(config.intermediate_size, config.hidden_size)
 
-    def forward(self, x):
-        return self.ffn(x)
+    def forward(self, hidden_states):
+        hidden_states = self.fc1(hidden_states)
+        hidden_states = self.activation_fn(hidden_states)
+        hidden_states = self.fc2(hidden_states)
+        return hidden_states
     
 class SparseMoeBlock(nn.Module):
     """
