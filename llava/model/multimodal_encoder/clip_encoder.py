@@ -40,7 +40,14 @@ class CLIPVisionTower(nn.Module):
             self.vision_tower = CLIPSMoEVisionTransformer(cfg_only, sparseMoE, self.num_experts, self.num_selected)
         else:
             self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name, device_map=device_map)
-        self.vision_tower.requires_grad_(False)
+        
+        # ##############################################################################################
+        # encoder is frizzed
+        
+        # self.vision_tower.requires_grad_(False)
+        
+        # ##############################################################################################
+
 
         self.is_loaded = True
 
@@ -55,8 +62,9 @@ class CLIPVisionTower(nn.Module):
             raise ValueError(f'Unexpected select feature: {self.select_feature}')
         return image_features
 
-    @torch.no_grad()
+    # @torch.no_grad()
     def forward(self, images):
+        # image is a list
         if type(images) is list:
             image_features = []
             router_logits = []
@@ -68,18 +76,9 @@ class CLIPVisionTower(nn.Module):
         
         # image is not a list but tensor
         else:
-            print('-'*100)
-            print(f'Image shape: {images.shape}')
-            print('-'*100)
             image_forward_out, router_logits = self.vision_tower(images)
             image_features = self.feature_select(image_forward_out).to(images.dtype)
             
-            if type(image_features) is torch.tensor:
-                print('-'*100)
-                print(f'SHape of images: {image_features.shape}')
-                print('-'*100)
-            
-
         # return image_features, router_logits
         return image_features
 

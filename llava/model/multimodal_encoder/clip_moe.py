@@ -269,17 +269,6 @@ class CLIPSMoEVisionTransformer(nn.Module):
         hidden_states = self.pre_layrnorm(hidden_states)
 
         encoder_outputs, router_logits = self.encoder(hidden_states)
-
-        print('-'*100)
-        # print(f'Clip Encoder Shape: {encoder_outputs.shape}')
-        print(f'No. Router Logits : {len(router_logits)}')
-        print(f'Router Logits Shape : {router_logits[0].shape}')
-        print('-'*100)
-
-        print('-'*100)
-        print(f'Clip Encoder Last layer Shape: {encoder_outputs[-1].shape}')
-        print('-'*100)
-
         return encoder_outputs[-1], router_logits
     
         # encoder_outputs, balance_losses, router_z_losses = self.encoder(hidden_states)

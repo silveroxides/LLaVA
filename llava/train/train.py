@@ -975,14 +975,15 @@ def train(attn_implementation=None):
 
     if model_args.vision_tower is not None:
 
-        print('-'*100)
-        print('Inside initialize_vision_modules')       
+        # print('-'*100)
+        # print('Inside initialize_vision_modules')       
 
         sparseMoE = initialize_moe(model.config, model_args)
-        print('-'*100)
-        print('Initializing initialize_moe')
-        print(sparseMoE)
-        print('-'*100)
+        
+        # print('-'*100)
+        # print('Initializing initialize_moe')
+        # print(sparseMoE)
+        # print('-'*100)
         
         model.get_model().initialize_vision_modules(
             model_args=model_args,
@@ -1008,12 +1009,16 @@ def train(attn_implementation=None):
         model.config.tokenizer_model_max_length = tokenizer.model_max_length
 
         model.config.tune_mm_mlp_adapter = training_args.tune_mm_mlp_adapter = model_args.tune_mm_mlp_adapter
+
+        # mlp_adapter is mumtimodal projector
+        # making it freez/tune based on the model 
         if model_args.tune_mm_mlp_adapter:
             model.requires_grad_(False)
             for p in model.get_model().mm_projector.parameters():
                 p.requires_grad = True
 
         model.config.freeze_mm_mlp_adapter = training_args.freeze_mm_mlp_adapter
+
         if training_args.freeze_mm_mlp_adapter:
             for p in model.get_model().mm_projector.parameters():
                 p.requires_grad = False
