@@ -30,6 +30,9 @@ import torch
 import transformers
 import tokenizers
 
+from transformers import CLIPConfig, CLIPVisionModel
+
+
 from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
 from torch.utils.data import Dataset
 from llava.train.llava_trainer import LLaVATrainer
@@ -953,18 +956,32 @@ def train(attn_implementation=None):
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
-    def initialize_moe():
-        sparseMoE = build_vision_projector(model_args)
+    def initialize_moe(config, model_args):
+        
+        config.mm_projector_type = getattr(model_args, 'mm_projector_type', 'linear')
+        config.num_experts = getattr(model_args, 'num_experts', 1)
+        config.num_experts_per_tok = getattr(model_args, 'num_experts_per_tok', 1)
+        config.aux_loss_coef = getattr(model_args, 'aux_loss_coef', 0.01)
+        
+        # gettting the config for the vision tower
+        vision_tower = getattr(model_args, 'vision_tower', 'openai/clip-vit-large-patch14')
+        vision_tower_config = CLIPConfig.from_pretrained(vision_tower)
+        config.mm_hidden_size = vision_tower_config.vison_config.hidden_size
+
+        print('*'*100)
+        print('modfied model config')
+        print(model.config)
+
+        sparseMoE = build_vision_projector(config)
+
         return sparseMoE
 
     if model_args.vision_tower is not None:
-        
+
         print('*'*100)
-        print('Inside model.vision_tower')
-        print(model.config)
-        print('-'*100)
-        print(model_args)
-        sparseMoE = initialize_moe(model_args)
+        print('Inside initialize_vision_modules')       
+
+        sparseMoE = initialize_moe(model.config, model_args)
         print('*'*100)
         print('Initializing initialize_moe')
         print(sparseMoE)
