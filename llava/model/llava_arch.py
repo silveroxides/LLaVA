@@ -284,12 +284,25 @@ class LlavaMetaForCausalLM(ABC):
         _position_ids = position_ids
         _attention_mask = attention_mask
         if attention_mask is None:
+            print('-'*100)
+            print('Attendion mask is None')
+            print('-'*100)
             attention_mask = torch.ones_like(input_ids, dtype=torch.bool)
         else:
+            print('-'*100)
+            print('Attendion mask is Not None')
+            print('-'*100)
             attention_mask = attention_mask.bool()
+
         if position_ids is None:
+            print('-'*100)
+            print('posiiton ids is None')
+            print('-'*100)
             position_ids = torch.arange(0, input_ids.shape[1], dtype=torch.long, device=input_ids.device)
         if labels is None:
+            print('-'*100)
+            print('labels is None')
+            print('-'*100)
             labels = torch.full_like(input_ids, IGNORE_INDEX)
 
         # remove the padding using attention_mask -- FIXME
