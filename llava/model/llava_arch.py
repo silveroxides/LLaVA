@@ -269,7 +269,7 @@ class LlavaMetaForCausalLM(ABC):
             print(f'Image Shape: {images.shape}')
             
             image_features, gate_logits = self.encode_images(images)
-            print(f'Encoded image features: {image_features}')
+            print(f'Encoded image features: {image_features.shape}')
             print('-'*100)
 
         # TODO: image start / end is not implemented here to support pretraining.
@@ -306,6 +306,7 @@ class LlavaMetaForCausalLM(ABC):
             labels = torch.full_like(input_ids, IGNORE_INDEX)
 
         # remove the padding using attention_mask -- FIXME
+        # filtering the input_ids based on the input ids
         _input_ids = input_ids
         input_ids = [cur_input_ids[cur_attention_mask] for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)]
         labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
