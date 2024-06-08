@@ -309,6 +309,9 @@ class LlavaMetaForCausalLM(ABC):
         # filtering the input_ids based on the input ids
         _input_ids = input_ids
         input_ids = [cur_input_ids[cur_attention_mask] for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)]
+        print('-'*100)
+        print(f'Len input_is: {len(input_ids)}, Shape nput ids: {input_ids[0].shape}')
+        print('-'*100)
         labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
 
         new_input_embeds = []
