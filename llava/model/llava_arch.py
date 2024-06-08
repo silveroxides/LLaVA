@@ -203,8 +203,8 @@ class LlavaMetaForCausalLM(ABC):
 
     def prepare_inputs_labels_for_multimodal(
         self, input_ids, position_ids, attention_mask, past_key_values, labels,
-        images, image_sizes=None
-    ):
+        images, image_sizes=None):
+        
         vision_tower = self.get_vision_tower()
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
             return input_ids, position_ids, attention_mask, past_key_values, None, labels
@@ -310,6 +310,7 @@ class LlavaMetaForCausalLM(ABC):
             cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
             cur_input_embeds_no_im = torch.split(cur_input_embeds, split_sizes, dim=0)
             cur_new_input_embeds = []
+            
             cur_new_labels = []
 
             for i in range(num_images + 1):
@@ -367,6 +368,7 @@ class LlavaMetaForCausalLM(ABC):
 
         new_input_embeds = torch.stack(new_input_embeds_padded, dim=0)
 
+
         if _labels is None:
             new_labels = None
         else:
@@ -382,6 +384,8 @@ class LlavaMetaForCausalLM(ABC):
 
         return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits
 
+    
+    # invoked from train.py: line 1030
     def initialize_vision_tokenizer(self, model_args, tokenizer):
         if model_args.mm_use_im_patch_token:
             tokenizer.add_tokens([DEFAULT_IMAGE_PATCH_TOKEN], special_tokens=True)
@@ -419,6 +423,7 @@ class LlavaMetaForCausalLM(ABC):
                     input_embeddings[-num_new_tokens:] = embed_tokens_weight
                 else:
                     raise ValueError(f"Unexpected embed_tokens_weight shape. Pretrained: {embed_tokens_weight.shape}. Current: {input_embeddings.shape}. Numer of new tokens: {num_new_tokens}.")
+        
         elif model_args.mm_use_im_patch_token:
             if model_args.tune_mm_mlp_adapter:
                 for p in self.get_input_embeddings().parameters():

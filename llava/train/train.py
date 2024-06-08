@@ -682,6 +682,7 @@ class LazySupervisedDataset(Dataset):
         list_data_dict = json.load(open(data_path, "r"))
 
         rank0_print("Formatting inputs...Skip in lazy mode")
+
         self.tokenizer = tokenizer
         self.list_data_dict = list_data_dict
         self.data_args = data_args
@@ -802,6 +803,7 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
     #                         data_args=data_args)
      
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer)
+    
     return dict(train_dataset=train_dataset,
                 eval_dataset=None,
                 data_collator=data_collator)
@@ -947,8 +949,10 @@ def train(attn_implementation=None):
                 tokenizer=tokenizer,
                 model=model,
             )
+    
     elif model_args.version == "v0.5":
         tokenizer.pad_token = tokenizer.unk_token
+    
     else:
         tokenizer.pad_token = tokenizer.unk_token
         if model_args.version in conversation_lib.conv_templates:
@@ -975,15 +979,7 @@ def train(attn_implementation=None):
 
     if model_args.vision_tower is not None:
 
-        # print('-'*100)
-        # print('Inside initialize_vision_modules')       
-
         sparseMoE = initialize_moe(model.config, model_args)
-        
-        # print('-'*100)
-        # print('Initializing initialize_moe')
-        # print(sparseMoE)
-        # print('-'*100)
         
         model.get_model().initialize_vision_modules(
             model_args=model_args,
@@ -1030,6 +1026,7 @@ def train(attn_implementation=None):
         model.config.mm_projector_lr = training_args.mm_projector_lr
         training_args.use_im_start_end = model_args.mm_use_im_start_end
         model.config.mm_use_im_patch_token = model_args.mm_use_im_patch_token
+        
         model.initialize_vision_tokenizer(model_args, tokenizer=tokenizer)
     
 
@@ -1046,6 +1043,7 @@ def train(attn_implementation=None):
                     if training_args.bf16 and module.weight.dtype == torch.float32:
                         module = module.to(torch.bfloat16)
 
+    # data module contain train_datset and data_collector instances
     data_module = make_supervised_data_module(tokenizer=tokenizer,
                                               data_args=data_args)
 
