@@ -265,11 +265,11 @@ class LlavaMetaForCausalLM(ABC):
                 raise ValueError(f"Unexpected mm_patch_merge_type: {self.config.mm_patch_merge_type}")
         else:
             print('-'*100)
-            print('Images dimension is 4')
-            print(images.shape)
+            print(f'Images dimension is: {images.ndim}')
+            print(f'Image Shape: {images.shape}')
             
             image_features, gate_logits = self.encode_images(images)
-            print(f'encoded image features: {image_features}')
+            print(f'Encoded image features: {image_features}')
             print('-'*100)
 
         # TODO: image start / end is not implemented here to support pretraining.
