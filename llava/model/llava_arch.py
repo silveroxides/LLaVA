@@ -17,6 +17,7 @@ from abc import ABC, abstractmethod
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import copy
 
 from .multimodal_encoder.builder import build_vision_tower
@@ -198,8 +199,35 @@ class LlavaMetaForCausalLM(ABC):
             return image_features
         
 
+    def clip_contrastive_loss(input_text_embeds, input_vision_embeds):
+        # Normalize the embeddings
+        input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
+        input_vision_embeds = F.normalize(input_vision_embeds, dim=-1)  # Normalize across the embed_dim
 
-        
+        # Compute the average embeddings for text and vision
+        text_embeds = input_text_embeds.mean(dim=1)  # [batch_size, embed_dim]
+        vision_embeds = input_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
+
+        # Compute the cosine similarity between all pairs
+        logits_per_image = torch.matmul(vision_embeds, text_embeds.T)  # [batch_size, batch_size]
+        logits_per_text = logits_per_image.T  # [batch_size, batch_size]
+
+        # Temperature parameter
+        temperature = 0.07
+        logits_per_image = logits_per_image / temperature
+        logits_per_text = logits_per_text / temperature
+
+        # Ground truth labels
+        batch_size = input_text_embeds.shape[0]
+        labels = torch.arange(batch_size, dtype=torch.long, device=logits_per_image.device)
+
+        # Compute the cross-entropy loss
+        loss_image = F.cross_entropy(logits_per_image, labels)
+        loss_text = F.cross_entropy(logits_per_text, labels)
+
+        # Total loss
+        total_loss = (loss_image + loss_text) / 2
+        return total_loss        
 
     def prepare_inputs_labels_for_multimodal(
         self, input_ids, position_ids, attention_mask, past_key_values, labels,
@@ -267,6 +295,7 @@ class LlavaMetaForCausalLM(ABC):
             print('-'*100)
             print(f'Images dimension is: {images.ndim}')
             print(f'Image Shape: {images.shape}')
+            print(labels)
             
             image_features, gate_logits = self.encode_images(images)
             print(f'Encoded image features: {image_features.shape}')
