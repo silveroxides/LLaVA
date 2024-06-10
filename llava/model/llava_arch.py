@@ -54,6 +54,9 @@ class LlavaMetaModel:
         if type(vision_tower) is list:
             vision_tower = vision_tower[0]
         return vision_tower
+    
+    def get_co_attention(self):
+        return CrossAttentionEncoder(self.config.hidden_size, self.config.hidden_size*2, 2, 2)
 
     def initialize_vision_modules(self, model_args, sparseMoE, fsdp=None):
         print('Inside initialize_vision_modules')
@@ -98,7 +101,7 @@ class LlavaMetaModel:
         self.config.mm_patch_merge_type = mm_patch_merge_type
 
         # initializing the co_attention
-        self.co_attention = CrossAttentionEncoder(self.hidden_size, self.hidden_size*2, 2, 2)
+        self.co_attention = self.get_co_attention()
 
         if getattr(self, 'mm_projector', None) is None:
             print('-' * 100)
