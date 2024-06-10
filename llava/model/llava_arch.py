@@ -339,6 +339,7 @@ class LlavaMetaForCausalLM(ABC):
 
         new_input_embeds = []
         new_labels = []
+        all_input_embeds = []
         cur_image_idx = 0
 
         for batch_idx, cur_input_ids in enumerate(input_ids):
