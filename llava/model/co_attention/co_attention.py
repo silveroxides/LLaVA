@@ -82,6 +82,9 @@ class CrossAttentionLayer(nn.Module):
 
 class CrossAttentionEncoder(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, num_heads, dropout = 0.05):
+        print('-'*100)
+        print('cross attenstion build')
+        print('-'*100)
         super(CrossAttentionEncoder, self).__init__()
         self.layers = nn.ModuleList([CrossAttentionLayer(input_dim, hidden_dim, num_heads, dropout) 
                                      for _ in range(num_layers)])
@@ -90,15 +93,16 @@ class CrossAttentionEncoder(nn.Module):
         for layer in self.layers:
             x = layer(x, memory)
         return x
-    
-    
-    
-hudai = CrossAttentionEncoder(768, 768, 2, 2)
-x = torch.rand(32, 10, 768)
-memory = torch.rand(32, 20, 768)
 
-output = hudai(x, memory)
-output.shape
+ 
+    
+    
+# hudai = CrossAttentionEncoder(768, 768, 2, 2)
+# x = torch.rand(32, 10, 768)
+# memory = torch.rand(32, 20, 768)
+
+# output = hudai(x, memory)
+# output.shape
 
 # multihead_attn = nn.MultiheadAttention(768, 2)
 # cross = MultiHeadCrossAttention(768, 2)
