@@ -175,7 +175,7 @@ class LlavaMetaForCausalLM(ABC):
     def get_vision_tower(self):
         return self.get_model().get_vision_tower()
     
-    def get_co_attension(self, x, y ):
+    def get_co_attention(self, x, y ):
         return self.get_model().co_attention(x, y)
 
     def encode_images(self, images):
@@ -196,7 +196,7 @@ class LlavaMetaForCausalLM(ABC):
             return image_features
         
 
-    def clip_contrastive_loss(input_text_embeds, input_vision_embeds):
+    def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds):
         # Normalize the embeddings
         input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
         input_vision_embeds = F.normalize(input_vision_embeds, dim=-1)  # Normalize across the embed_dim
@@ -309,25 +309,25 @@ class LlavaMetaForCausalLM(ABC):
         _position_ids = position_ids
         _attention_mask = attention_mask
         if attention_mask is None:
-            print('-'*100)
-            print('Attendion mask is None')
-            print('-'*100)
+            # print('-'*100)
+            # print('Attendion mask is None')
+            # print('-'*100)
             attention_mask = torch.ones_like(input_ids, dtype=torch.bool)
         else:
-            print('-'*100)
-            print('Attendion mask is Not None')
-            print('-'*100)
+            # print('-'*100)
+            # print('Attendion mask is Not None')
+            # print('-'*100)
             attention_mask = attention_mask.bool()
 
         if position_ids is None:
-            print('-'*100)
-            print('posiiton ids is None')
-            print('-'*100)
+            # print('-'*100)
+            # print('posiiton ids is None')
+            # print('-'*100)
             position_ids = torch.arange(0, input_ids.shape[1], dtype=torch.long, device=input_ids.device)
         if labels is None:
-            print('-'*100)
-            print('labels is None')
-            print('-'*100)
+            # print('-'*100)
+            # print('labels is None')
+            # print('-'*100)
             labels = torch.full_like(input_ids, IGNORE_INDEX)
 
         # remove the padding using attention_mask -- FIXME
@@ -393,10 +393,10 @@ class LlavaMetaForCausalLM(ABC):
         # ######################################################### ######################################################### ########################################################
 
         
-        text_co_attention = self.get_co_attension(all_input_embeds, image_features)
+        text_co_attention = self.get_co_attention(all_input_embeds, image_features)
         print('-'*100)
         print(f'Co attension result text: {text_co_attention.shape}')
-        vision_co_attention = self.get_co_attension(image_features, all_input_embeds)
+        vision_co_attention = self.get_co_attention(image_features, all_input_embeds)
         print(f'Co attension result vision: {vision_co_attention.shape}')
         print('-'*100)
 
