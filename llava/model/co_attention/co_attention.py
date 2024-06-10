@@ -95,7 +95,8 @@ class CrossAttentionEncoder(nn.Module):
         return x
 
  
-    
+def get_co_attention(input_dim, hidden_dim, num_layers, num_heads):
+    return CrossAttentionEncoder(input_dim, hidden_dim, num_layers, num_heads)
     
 # hudai = CrossAttentionEncoder(768, 768, 2, 2)
 # x = torch.rand(32, 10, 768)

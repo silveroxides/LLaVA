@@ -21,6 +21,7 @@ import torch.nn.functional as F
 import copy
 
 from .multimodal_encoder.builder import build_vision_tower
+from .co_attention.co_attention import get_co_attention
 from .multimodal_projector.builder import build_vision_projector
 
 from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
@@ -96,6 +97,9 @@ class LlavaMetaModel:
         self.config.mm_vision_select_feature = mm_vision_select_feature
         self.config.mm_patch_merge_type = mm_patch_merge_type
 
+        # initializing the co_attention
+        self.co_attention = get_co_attention(self.hidden_size, self.hidden_size*2, 2, 2)
+
         if getattr(self, 'mm_projector', None) is None:
             print('-' * 100)
             print('*'*40+'build viison projector'+'*'*40)
@@ -104,16 +108,6 @@ class LlavaMetaModel:
             self.mm_projector = sparseMoE
             print(self.mm_projector)
             print('-'*120)
-
-            #############################################################################################
-            # # Replace the (mlp): CLIPMLP with the sparse_moe
-            #############################################################################################
-
-            # for encoder_layer in vision_tower.vision_tower.vision_model.encoder.layers:
-            #     encoder_layer.mlp = self.mm_projector
-            #     # encoder_layer.layer_norm2 = nn.LayerNorm(self.hidden_size)
-            #     # encoder_layer.linear = nn.Linear(self.hidden_size, self.config.mm_hidden_size)
-            #     # encoder_layer.layer_norm2 = nn.LayerNorm(self.config.mm_hidden_size)
 
             if 'unpad' in mm_patch_merge_type:
                 embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
@@ -347,13 +341,64 @@ class LlavaMetaForCausalLM(ABC):
         new_labels = []
         cur_image_idx = 0
 
+        for batch_idx, cur_input_ids in enumerate(input_ids):
+            # no. of images we are processing in this batch: finding this from input seqeunce
+            num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum().item()
+            print(f"Batch {batch_idx}: num_images = {num_images}")
+
+            if num_images == 0:
+                cur_image_features = image_features[cur_image_idx] if cur_image_idx < len(image_features) else torch.zeros((0, 768))
+                cur_input_embeds_1 = self.get_model().embed_tokens(cur_input_ids)
+                cur_input_embeds = torch.cat([cur_input_embeds_1, cur_image_features[0:0]], dim=0)
+                new_input_embeds.append(cur_input_embeds)
+                new_labels.append(labels[batch_idx])
+                cur_image_idx += 1
+                continue
+
+            # find the image_tokens indices in the cur_input_ids and then adding -1 at the start and the the shape of the current input ids shape at the end
+            image_token_indices = [-1] + torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0].tolist() + [cur_input_ids.shape[0]]
+
+            cur_input_ids_noim = []
+            cur_labels = labels[batch_idx]
+            cur_labels_noim = []
+
+            for i in range(len(image_token_indices) - 1):
+                cur_input_ids_noim.append(cur_input_ids[image_token_indices[i]+1:image_token_indices[i+1]])
+                cur_labels_noim.append(cur_labels[image_token_indices[i]+1:image_token_indices[i+1]])
+
+
+            split_sizes = [x.shape[0] for x in cur_labels_noim]
+            # concat the segment of input_ids and get the embedds
+            cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
+
+            all_input_embeds.append(cur_input_embeds)
+
+        all_input_embeds = torch.stack(all_input_embeds, dim=0)
+        # image_features = image_features.to(self.device)
+        print('-'*100)
+        print(f'self.device: {self.device}')
+        print(f'Input Text Embeds: {all_input_embeds.shape}')
+        print(f'Input Vision Embeds: {image_features.shape}')
+        print(f"all_input_embeds is on device: {all_input_embeds.device}")
+        print(f"image_features is on device: {image_features.device}")
+        print('-'*100)
+
+        # ######################################################### ######################################################### ########################################################
 
         
+        text_co_attention = self.co_attention(all_input_embeds, image_features)
+        print('-'*100)
+        print(f'Co attension result text: {text_co_attention.shape}')
+        vision_co_attention = self.co_attention(image_features, all_input_embeds)
+        print(f'Co attension result vision: {vision_co_attention.shape}')
+        print('-'*100)
+
+        contrastive_loss = self.clip_contrastive_loss(text_co_attention, vision_co_attention)
+        print(contrastive_loss)
+
+        ######################################################### ######################################################### ########################################################        
         for batch_idx, cur_input_ids in enumerate(input_ids):
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
-            print('-'*100)
-            print(f"Batch {batch_idx}: num_images = {num_images}")
-            print('-'*100)
             if num_images == 0:
                 cur_image_features = image_features[cur_image_idx]
                 cur_input_embeds_1 = self.get_model().embed_tokens(cur_input_ids)
@@ -364,20 +409,23 @@ class LlavaMetaForCausalLM(ABC):
                 continue
 
             image_token_indices = [-1] + torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0].tolist() + [cur_input_ids.shape[0]]
-            cur_input_ids_noim = []
+
+            # cur_input_ids_noim = []
             cur_labels = labels[batch_idx]
             cur_labels_noim = []
             for i in range(len(image_token_indices) - 1):
-                cur_input_ids_noim.append(cur_input_ids[image_token_indices[i]+1:image_token_indices[i+1]])
+                # cur_input_ids_noim.append(cur_input_ids[image_token_indices[i]+1:image_token_indices[i+1]])
                 cur_labels_noim.append(cur_labels[image_token_indices[i]+1:image_token_indices[i+1]])
             
             split_sizes = [x.shape[0] for x in cur_labels_noim]
             
             # current concatanated input embeds
-            cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
+            # cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
+            cur_input_embeds = text_co_attention[batch_idx]
             print('-'*100)
             print(f'Current Input Embeds: {cur_input_embeds.shape}')
             print('-'*100)
+
             cur_input_embeds_no_im = torch.split(cur_input_embeds, split_sizes, dim=0)
             
             cur_new_input_embeds = []
@@ -387,7 +435,8 @@ class LlavaMetaForCausalLM(ABC):
                 cur_new_input_embeds.append(cur_input_embeds_no_im[i])
                 cur_new_labels.append(cur_labels_noim[i])
                 if i < num_images:
-                    cur_image_features = image_features[cur_image_idx]
+                    # cur_image_features = image_features[cur_image_idx]
+                    cur_image_features = vision_co_attention[cur_image_idx]
                     cur_image_idx += 1
                     cur_new_input_embeds.append(cur_image_features)
                     cur_new_labels.append(torch.full((cur_image_features.shape[0],), IGNORE_INDEX, device=cur_labels.device, dtype=cur_labels.dtype))
