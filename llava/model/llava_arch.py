@@ -174,6 +174,9 @@ class LlavaMetaForCausalLM(ABC):
 
     def get_vision_tower(self):
         return self.get_model().get_vision_tower()
+    
+    def get_co_attension(self, x, y ):
+        return self.get_model().co_attention(x, y)
 
     def encode_images(self, images):
         
@@ -386,22 +389,14 @@ class LlavaMetaForCausalLM(ABC):
 
         all_input_embeds = torch.stack(padded_input_embeds, dim=0)
 
-        # image_features = image_features.to(self.device)
-        print('-'*100)
-        print(f'self.device: {self.device}')
-        print(f'Input Text Embeds: {all_input_embeds.shape}')
-        print(f'Input Vision Embeds: {image_features.shape}')
-        print(f"all_input_embeds is on device: {all_input_embeds.device}")
-        print(f"image_features is on device: {image_features.device}")
-        print('-'*100)
 
         # ######################################################### ######################################################### ########################################################
 
         
-        text_co_attention = self.co_attention(all_input_embeds, image_features)
+        text_co_attention = self.get_co_attension(all_input_embeds, image_features)
         print('-'*100)
         print(f'Co attension result text: {text_co_attention.shape}')
-        vision_co_attention = self.co_attention(image_features, all_input_embeds)
+        vision_co_attention = self.get_co_attension(image_features, all_input_embeds)
         print(f'Co attension result vision: {vision_co_attention.shape}')
         print('-'*100)
 
