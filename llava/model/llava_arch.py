@@ -289,7 +289,6 @@ class LlavaMetaForCausalLM(ABC):
             print('-'*100)
             print(f'Images dimension is: {images.ndim}')
             print(f'Image Shape: {images.shape}')
-            print(labels)
             
             image_features, gate_logits = self.encode_images(images)
             print(f'Encoded image features: {image_features.shape}')
@@ -371,6 +370,8 @@ class LlavaMetaForCausalLM(ABC):
             split_sizes = [x.shape[0] for x in cur_labels_noim]
             # concat the segment of input_ids and get the embedds
             cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
+            cur_input_embeds = cur_input_embeds.to(self.device)
+
 
             all_input_embeds.append(cur_input_embeds)
 
