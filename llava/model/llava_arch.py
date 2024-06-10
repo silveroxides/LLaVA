@@ -370,7 +370,6 @@ class LlavaMetaForCausalLM(ABC):
             split_sizes = [x.shape[0] for x in cur_labels_noim]
             # concat the segment of input_ids and get the embedds
             cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
-            cur_input_embeds = cur_input_embeds.to(self.device)
 
 
             all_input_embeds.append(cur_input_embeds)
@@ -382,7 +381,7 @@ class LlavaMetaForCausalLM(ABC):
 
         for x in all_input_embeds:
             padding = torch.zeros(max_len - x.shape[0], x.shape[1])
-            padded_x = torch.cat([x, padding], dim=0)
+            padded_x = torch.cat([x, padding], dim=0, dtype=all_input_embeds.dtype, device=all_input_embeds.device)
             padded_input_embeds.append(padded_x)
 
         all_input_embeds = torch.stack(padded_input_embeds, dim=0)
