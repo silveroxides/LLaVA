@@ -381,7 +381,7 @@ class LlavaMetaForCausalLM(ABC):
 
         for x in all_input_embeds:
             padding = torch.zeros(max_len - x.shape[0], x.shape[1])
-            padded_x = torch.cat([x, padding], dim=0, dtype=all_input_embeds.dtype, device=all_input_embeds.device)
+            padded_x = torch.cat([x, padding], dim=0, device=all_input_embeds.device)
             padded_input_embeds.append(padded_x)
 
         all_input_embeds = torch.stack(padded_input_embeds, dim=0)
