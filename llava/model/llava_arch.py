@@ -329,7 +329,7 @@ class LlavaMetaForCausalLM(ABC):
         # will pick one sequence from batch at a time
         for batch_idx, cur_input_ids in enumerate(input_ids):
 
-            print(f'current_input_ids size: {len(cur_input_ids)}')
+            print(f'[BEFORE] current_input_ids size: {len(cur_input_ids)}')
             # getting number of images present in given images
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
             print(f'num_image: {num_images}')
@@ -354,7 +354,7 @@ class LlavaMetaForCausalLM(ABC):
                 cur_input_ids_noim.append(cur_input_ids[image_token_indices[i]+1:image_token_indices[i+1]])
                 cur_labels_noim.append(cur_labels[image_token_indices[i]+1:image_token_indices[i+1]])
 
-            print(f'length of cur_input_ids_noim: {len(cur_input_ids_noim)}')
+            print(f'[AFTER] cur_input_ids_noim: {len(torch.cat(cur_input_ids_noim))}')
             
             split_sizes = [x.shape[0] for x in cur_labels_noim]
             cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
