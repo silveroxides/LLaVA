@@ -303,13 +303,14 @@ class LlavaMetaForCausalLM(ABC):
             labels = torch.full_like(input_ids, IGNORE_INDEX)
 
         print('*'*100)
-        print(f'Type of Inputs ids: {type(input_ids)}')
-        print(f'Type of attension mask: {type(attention_mask)}')
-        print(f'Type of position ids: {type(position_ids)}')
-        print(f'Type of labels: {type(labels)}')
+        print(f'Shape of Inputs ids: {input_ids.shape}')
+        print(f'Shape of attension mask: {attention_mask.shpe}')
+        print(f'Shape of position ids: {position_ids.shape}')
+        print(f'Shape of labels: {labels.shape}')
         print('*'*100)   
         # remove the padding using attention_mask -- FIXME
         _input_ids = input_ids
+        # inputs_ids =   [101, 2001, 2002, 2003, 0, 0, 0] -->   [101, 2001, 2002, 2003, 0, 0]
         input_ids = [cur_input_ids[cur_attention_mask] for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)]
         labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
         new_input_embeds = []
