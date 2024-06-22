@@ -11,7 +11,7 @@ deepspeed llava/train/train_mem.py \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end False \
     --mm_use_im_patch_token False \
-    --bf16 True \
+    --fp16 True \
     --output_dir ./checkpoints/llava-vicuna-v5-3-7b \
     --max_steps 50 \
     --num_experts_per_tok 2 \
