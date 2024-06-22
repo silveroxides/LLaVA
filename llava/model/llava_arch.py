@@ -301,6 +301,13 @@ class LlavaMetaForCausalLM(ABC):
             position_ids = torch.arange(0, input_ids.shape[1], dtype=torch.long, device=input_ids.device)
         if labels is None:
             labels = torch.full_like(input_ids, IGNORE_INDEX)
+
+        print('*'*100)
+        print(f'Type of Inputs ids: {input_ids}')
+        print(f'Type of attension mask: {attention_mask}')
+        print(f'Type of position ids: {position_ids}')
+        print(f'Type of labels: {labels}')
+        print('*'*100)   
         # remove the padding using attention_mask -- FIXME
         _input_ids = input_ids
         input_ids = [cur_input_ids[cur_attention_mask] for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)]
