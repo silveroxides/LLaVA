@@ -379,6 +379,10 @@ class LlavaMetaForCausalLM(ABC):
 
             cur_new_input_embeds = [x.to(self.device) for x in cur_new_input_embeds]
             cur_new_input_embeds = torch.cat(cur_new_input_embeds)
+            
+            print('*'*100)
+            print(f'current new input embeds: {cur_new_input_embeds.size}')
+            print('*'*100)
             cur_new_labels = torch.cat(cur_new_labels)
             new_input_embeds.append(cur_new_input_embeds)
             new_labels.append(cur_new_labels)
