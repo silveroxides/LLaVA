@@ -329,10 +329,10 @@ class LlavaMetaForCausalLM(ABC):
         # will pick one sequence from batch at a time
         for batch_idx, cur_input_ids in enumerate(input_ids):
 
-            print(f'current_input_ids: {cur_input_ids.size}')
+            print(f'current_input_ids size: {len(cur_input_ids)}')
             # getting number of images present in given images
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
-            print(f'num_image: {num_image}')
+            print(f'num_image: {num_images}')
 
             if num_images == 0:
                 cur_image_features = image_features[cur_image_idx]
