@@ -281,11 +281,16 @@ class LlavaMetaForCausalLM(ABC):
                 image_features = new_image_features
             else:
                 raise ValueError(f"Unexpected mm_patch_merge_type: {self.config.mm_patch_merge_type}")
+        
         else:
             image_features, gate_logits = self.encode_images(images)
+            print('*'*100)
+            print(f'Image Feature shape: {image_features.shape}')
+        
         # TODO: image start / end is not implemented here to support pretraining.
         if getattr(self.config, 'tune_mm_mlp_adapter', False) and getattr(self.config, 'mm_use_im_start_end', False):
             raise NotImplementedError
+        
         # Let's just add dummy tensors if they do not exist,
         # it is a headache to deal with None all the time.
         # But it is not ideal, and if you have a better idea,
@@ -302,30 +307,30 @@ class LlavaMetaForCausalLM(ABC):
         if labels is None:
             labels = torch.full_like(input_ids, IGNORE_INDEX)
 
-        print('*'*100)
-        print(f'Shape of Inputs ids: {input_ids.shape}')
-        for i in range(input_ids.shape[0]):
-            print(input_ids[i])
-        print(f'Shape of attension mask: {attention_mask.shape}')
-        for i in range(attention_mask.shape[0]):
-            print(attention_mask[i])
-        print(f'Shape of position ids: {position_ids.shape}')
-        for i in range(position_ids.shape[0]):
-            print(position_ids[i])
-        print(f'Shape of labels: {labels.shape}')
-        for i in range(labels.shape[0]):
-            print(labels[i])
-        print('*'*100)   
+        # shape: torch.size[batch_size, sequence]
+        # Shape of Inout_ids: torch.Size([4, 22])
+        # Shape of attension_mask: torch.Size([4, 22])
+        # Shape of position_ids: torch.Size([4, 22])
+        # Shape of labels: torch.Size([4, 22])
+
         # remove the padding using attention_mask -- FIXME
         _input_ids = input_ids
         # inputs_ids =   [101, 2001, 2002, 2003, 0, 0, 0] -->   [101, 2001, 2002, 2003, 0, 0]
         input_ids = [cur_input_ids[cur_attention_mask] for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)]
         labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
+         
+        
+        
         new_input_embeds = []
         new_labels = []
         cur_image_idx = 0
+        # input_ids = [batch_size, sequence]
+        # will pick one sequence from batch at a time
         for batch_idx, cur_input_ids in enumerate(input_ids):
+
+            # getting number of images present in given images
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
+
             if num_images == 0:
                 cur_image_features = image_features[cur_image_idx]
                 cur_input_embeds_1 = self.get_model().embed_tokens(cur_input_ids)
