@@ -304,9 +304,17 @@ class LlavaMetaForCausalLM(ABC):
 
         print('*'*100)
         print(f'Shape of Inputs ids: {input_ids.shape}')
-        print(f'Shape of attension mask: {attention_mask.shpe}')
+        for i in range(input_ids.shape[0]):
+            print(input_ids[i])
+        print(f'Shape of attension mask: {attention_mask.shape}')
+        for i in range(attention_mask.shape[0]):
+            print(attention_mask[i])
         print(f'Shape of position ids: {position_ids.shape}')
+        for i in range(position_ids.shape[0]):
+            print(position_ids[i])
         print(f'Shape of labels: {labels.shape}')
+        for i in range(labels.shape[0]):
+            print(labels[i])
         print('*'*100)   
         # remove the padding using attention_mask -- FIXME
         _input_ids = input_ids
