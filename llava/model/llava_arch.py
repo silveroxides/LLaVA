@@ -197,28 +197,41 @@ class LlavaMetaForCausalLM(ABC):
             gate_logits = None
             return image_features
         
-    def seperate_img_text_embeds(self, embeds, image_tokens_sequence):
-        # Assuming embeds is your list of combined embeddings for each sample in the batch
-        image_embeds = []
-        text_embeds = []
+def separate_img_text_embeds(embeds, image_tokens_sequence):
+    # Assuming embeds is your list of combined embeddings for each sample in the batch
+    image_embeds = []
+    text_embeds = []
+    
+    for embed in embeds:
+        # Split the combined embeddings into image and text embeddings
+        image_embed = embed[:image_tokens_sequence]  # Extract image embeddings
+        text_embed = embed[image_tokens_sequence:]   # Extract text embeddings
+        
+        # Append the split embeddings to the respective lists
+        image_embeds.append(image_embed)
+        text_embeds.append(text_embed)
+    
+    # Pad the text embeddings to the maximum length in the batch
+    max_text_length = max(embed.size(0) for embed in text_embeds)
+    padded_text_embeds = []
+    
+    for text_embed in text_embeds:
+        padding_length = max_text_length - text_embed.size(0)
+        padded_text_embed = torch.nn.functional.pad(text_embed, (0, 0, 0, padding_length))
+        padded_text_embeds.append(padded_text_embed)
+    
+    # Convert the lists to tensors
+    image_embeds = torch.stack(image_embeds)
+    text_embeds = torch.stack(padded_text_embeds)
 
-        for embed in embeds:
-            # Split the combined embeddings into image and text embeddings
-            image_embed = embed[1:(image_tokens_sequence+1)]  # Extract image embeddings (tokens 1 to 256)
-            text_embed = embed[(image_tokens_sequence+1):-1]  # Extract text embeddings (tokens 257 to 266)
-
-            # Append the split embeddings to the respective lists
-            image_embeds.append(image_embed)
-            text_embeds.append(text_embed)
-
-        # Convert the lists to tensors
-        image_embeds = torch.stack(image_embeds)
-        # text_embeds = torch.stack(text_embeds)
-        text_embeds = pad_sequence(text_embeds, batch_first=True)
-
-
-        return image_embeds, text_embeds
-
+    print('*'*120)
+    print(f'Inside the seperate text and image embeds')
+    print(f'shape of img embeds: {image_embeds.shape}')
+    print(f'shape of text embeds: {text_embeds.shape}')
+    print('*'*120)
+    
+    return image_embeds, text_embeds
+    
     def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds):
 
         # text embeds has some padded tokens
@@ -421,11 +434,11 @@ class LlavaMetaForCausalLM(ABC):
             new_input_embeds.append(cur_new_input_embeds)
             new_labels.append(cur_new_labels)
         
-        print('*'*100)
-        for i in range(len(new_input_embeds)):
-            print(f'Shape of index {i} of new embeds is: {new_input_embeds[i].shape}')
-            print(f'Shape of index {i} of new label is: {new_labels[i].shape}')
-        print('*'*100)
+        # print('*'*100)
+        # for i in range(len(new_input_embeds)):
+        #     print(f'Shape of index {i} of new embeds is: {new_input_embeds[i].shape}')
+        #     print(f'Shape of index {i} of new label is: {new_labels[i].shape}')
+        # print('*'*100)
 
         # ##################################################### calculate the contrastive loss
         img_token_sequence = image_features.shape[1]
@@ -437,29 +450,56 @@ class LlavaMetaForCausalLM(ABC):
 
         # #####################################################################################
 
+        # suppose
+        # new_input_embeds: list of 4 tensors, each [seq_len, 5120] where seq_len varies (267, 264, 277, 269)
         # Truncate sequences to max length as image embeddings can make the sequence longer
         tokenizer_model_max_length = getattr(self.config, 'tokenizer_model_max_length', None)
-        print('*'*100)
-        print(f'Tokenizer model max length: {tokenizer_model_max_length}')
-        print('*'*100)
+        # print('*'*100)
+        # print(f'Tokenizer model max length: {tokenizer_model_max_length}')
+        # print('*'*100)
         if tokenizer_model_max_length is not None:
-            new_input_embeds = [x[:tokenizer_model_max_length] for x in new_input_embeds]
+            
+            # Truncate to max length (2048 in this case)
+            # This operation truncates the tensors in new_input_embeds and new_labels to a maximum length of 2048.
+            # it basically lining up the input ids within max length
+            new_input_embeds = [x[:tokenizer_model_max_length] for x in new_input_embeds] 
             new_labels = [x[:tokenizer_model_max_length] for x in new_labels]
         
         # Combine them
+        # find max length after truncating 
+        # (267, 264, 277, 269) -> max_length = 277
         max_len = max(x.shape[0] for x in new_input_embeds)
-        batch_size = len(new_input_embeds)
+        batch_size = len(new_input_embeds) #(267, 264, 277, 269) -> batch size = 4
+
+        # empty new_input_embeds
         new_input_embeds_padded = []
+        
+        # new_labels_padded dimensions: [batch_size, max_length]
+        # filled with ignore index = -100
         new_labels_padded = torch.full((batch_size, max_len), IGNORE_INDEX, dtype=new_labels[0].dtype, device=new_labels[0].device)
+
+        # new attention_mask dimensions: [batch_size, max_length]
+        # filled with zeros        
         attention_mask = torch.zeros((batch_size, max_len), dtype=attention_mask.dtype, device=attention_mask.device)
+
+        # new position_ids dimensions: [batch_size, max_length]
+        # filled with zeros         
         position_ids = torch.zeros((batch_size, max_len), dtype=position_ids.dtype, device=position_ids.device)
+
+        # iterate over the each current embeddings in the batch
         for i, (cur_new_embed, cur_new_labels) in enumerate(zip(new_input_embeds, new_labels)):
+            
+            # current length of the seqeunce -> suppose this one has shape [267, 5120] -> [seq_length, embed]
             cur_len = cur_new_embed.shape[0]
+
+            # Pad the current input embeddings tensor to the maximum length: left or right padding according to the code
             if getattr(self.config, 'tokenizer_padding_side', 'right') == "left":
                 new_input_embeds_padded.append(torch.cat((
                     torch.zeros((max_len - cur_len, cur_new_embed.shape[1]), dtype=cur_new_embed.dtype, device=cur_new_embed.device),
                     cur_new_embed
-                ), dim=0))
+                ), dim=0)) # [cur_len, embed_dim] -> [max_length, embed_dim] -> [267, 5120] ->  [277, 5120]
+
+                # Fill the corresponding slice of new_labels_padded, attention_mask, and position_ids
                 if cur_len > 0:
                     new_labels_padded[i, -cur_len:] = cur_new_labels
                     attention_mask[i, -cur_len:] = True
@@ -475,13 +515,20 @@ class LlavaMetaForCausalLM(ABC):
                     position_ids[i, :cur_len] = torch.arange(0, cur_len, dtype=position_ids.dtype, device=position_ids.device)
 
         new_input_embeds = torch.stack(new_input_embeds_padded, dim=0)
+        # all will be in same sequence length
+        # in the batch the max length was 277 we are getting that
+        #(267, 5120),  # [seq_len=267, 5120] -> [277, 5120] 
+        # (264, 5120),  # [seq_len=264, 5120] -> [277, 5120] 
+        # (277, 5120),  # [seq_len=277, 5120] -> [277, 5120] 
+        # (269, 5120),  # [seq_len=269, 5120] -> [277, 5120] 
         
-        print('*'*100)
-        for i in range(new_input_embeds.shape[0]):
-            print(f'Shape of new trancated input embeds, index {i}: {new_input_embeds[i].shape}')
-        print('*'*100)
+        # print('*'*100)
+        # for i in range(new_input_embeds.shape[0]):
+        #     print(f'Shape of new trancated input embeds, index {i}: {new_input_embeds[i].shape}')
+        # print('*'*100)
 
 
+        # checking with the actual passed parameters
         if _labels is None:
             new_labels = None
         else:
