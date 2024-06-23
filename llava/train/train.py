@@ -868,9 +868,9 @@ def train(attn_implementation=None):
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
                 **bnb_model_from_pretrained_args
             )
-            print('#'*40 + 'LlavaLlamaForCausalLM.from_pretrained' + '#'*40)
-            print(model)
-            print('#'*100)
+            # print('#'*40 + 'LlavaLlamaForCausalLM.from_pretrained' + '#'*40)
+            # print(model)
+            # print('#'*100)
 
     else:
         model = transformers.LlamaForCausalLM.from_pretrained(
@@ -987,10 +987,10 @@ def train(attn_implementation=None):
             fsdp=training_args.fsdp
         )
         
-        print('-'*100)
-        print('-'*40+'Model After Initializing vision Module'+'-'*40)
-        print(model)
-        print('-'*100)
+        # print('-'*100)
+        # print('-'*40+'Model After Initializing vision Module'+'-'*40)
+        # print(model)
+        # print('-'*100)
 
         vision_tower = model.get_vision_tower()
 
