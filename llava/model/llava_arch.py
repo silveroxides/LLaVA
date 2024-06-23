@@ -243,7 +243,7 @@ class LlavaMetaForCausalLM(ABC):
         print(f"Attention mask shape: {text_attention_mask.shape}")
         print(f'input_text_embeds dtype: {input_text_embeds.dtype}')
         print(f'vision embeddings dtype: {input_vision_embeds.dtype}')
-        print(f'text_attention_mask dtype: {text_attention_mask}')
+        print(f'text_attention_mask dtype: {text_attention_mask.dtype}')
 
 
         # Safe normalization function
@@ -254,6 +254,10 @@ class LlavaMetaForCausalLM(ABC):
         input_text_embeds = safe_normalize(input_text_embeds, dim=-1)
         input_vision_embeds = safe_normalize(input_vision_embeds, dim=-1)
 
+        print(f'input_text_embeds normalize dtype: {input_text_embeds.dtype}')
+        print(f'vision embeddings normalize dtype: {input_vision_embeds.dtype}')
+        print(f'text_attention_mask dtype: {text_attention_mask.dtype}')
+
         # Compute the average embeddings for vision
         vision_embeds = input_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
 
@@ -261,9 +265,17 @@ class LlavaMetaForCausalLM(ABC):
         text_embeds = (input_text_embeds * text_attention_mask.unsqueeze(-1)).sum(dim=1)
         text_embeds = text_embeds / text_attention_mask.sum(dim=1, keepdim=True).clamp(min=1e-8)
 
+        print(f'input_text_embeds mean dtype: {text_embeds.dtype}')
+        print(f'vision embeddings mean dtype: {vision_embeds.dtype}')
+        print(f'text_attention_mask mean dtype: {text_attention_mask.dtype}')
+
         # Re-normalize the averaged embeddings
         vision_embeds = safe_normalize(vision_embeds)
         text_embeds = safe_normalize(text_embeds)
+
+        print(f'input_text_embeds re normalize dtype: {text_embeds.dtype}')
+        print(f'vision embeddings re normalize dtype: {vision_embeds.dtype}')
+        print(f'text_attention_mask dtype: {text_attention_mask.dtype}')
 
         # Compute the cosine similarity between all pairs
         logits_per_image = torch.matmul(vision_embeds, text_embeds.T)  # [batch_size, batch_size]
