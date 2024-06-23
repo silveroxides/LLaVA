@@ -394,7 +394,7 @@ class LlavaMetaForCausalLM(ABC):
         
         print('*'*100)
         for i in range(len(new_input_embeds)):
-            print(f'Shape of index {i} of new embeds is: {new_input_embeds[i]}')
+            print(f'Shape of index {i} of new embeds is: {new_input_embeds[i].shape}')
         print('*'*100)
 
         # Truncate sequences to max length as image embeddings can make the sequence longer
