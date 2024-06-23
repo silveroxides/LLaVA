@@ -216,8 +216,9 @@ class LlavaMetaForCausalLM(ABC):
         padded_text_embeds = []
         
         for text_embed in text_embeds:
-            padding_length = max_text_length - text_embed.size(0)
-            padded_text_embed = torch.nn.functional.pad(text_embed, (0, 0, 0, padding_length), dtype=text_embed.dtype, device=text_embed.device)
+            padded_text_embed = torch.zeros(max_text_length, dtype=text_embed.dtype, device=text_embed.device)
+            padded_text_embed[:text_embed.size(0)] = text_embed
+            print(f'text embed: {text_embed}')
             print(f'padded text embed: {padded_text_embed}')
             padded_text_embeds.append(padded_text_embed)
         
