@@ -269,7 +269,12 @@ class LlavaMetaForCausalLM(ABC):
         # Ground truth labels
         batch_size = input_text_embeds.shape[0]
         labels = torch.arange(batch_size, dtype=torch.long, device=logits_per_image.device)
-        print(labels)
+
+        if torch.isnan(logits_per_image).any() or torch.isinf(logits_per_image).any():
+            print("NaN or Inf found in logits_per_image")
+        if torch.isnan(logits_per_text).any() or torch.isinf(logits_per_text).any():
+            print("NaN or Inf found in logits_per_text")
+
 
 
         # Compute the cross-entropy loss
