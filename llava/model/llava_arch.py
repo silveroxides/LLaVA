@@ -225,7 +225,8 @@ class LlavaMetaForCausalLM(ABC):
 
         # Total loss
         total_loss = (loss_image + loss_text) / 2
-        return total_loss        
+        return total_loss, loss_image
+
 
     def prepare_inputs_labels_for_multimodal(
         self, input_ids, position_ids, attention_mask, past_key_values, labels,
@@ -392,7 +393,8 @@ class LlavaMetaForCausalLM(ABC):
             new_labels.append(cur_new_labels)
         
         print('*'*100)
-        print(f'New input embeds: {new_input_embeds.shape}')
+        for i in range(len(new_input_embeds)):
+            print(f'Shape of index {i} of new embeds is: {new_input_embeds[i]}')
         print('*'*100)
 
         # Truncate sequences to max length as image embeddings can make the sequence longer
