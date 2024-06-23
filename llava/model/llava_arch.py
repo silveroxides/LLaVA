@@ -234,67 +234,58 @@ class LlavaMetaForCausalLM(ABC):
         
         return image_embeds, text_embeds
     
-    def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds, text_attention_mask):
 
 
+    def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds, text_attention_mask, temperature=0.07):
         print('Inside contrastive loss')
-        print(input_text_embeds.shape)
-        print(input_vision_embeds.shape)
-        print(f"Text embeds range: [{input_text_embeds.min().item():.4f}, {input_text_embeds.max().item():.4f}]")
-        print(f"Vision embeds range: [{input_vision_embeds.min().item():.4f}, {input_vision_embeds.max().item():.4f}]")
+        print(f"Text embeds shape: {input_text_embeds.shape}")
+        print(f"Vision embeds shape: {input_vision_embeds.shape}")
+        print(f"Attention mask shape: {text_attention_mask.shape}")
 
+        # Safe normalization function
+        def safe_normalize(tensor, dim=-1, eps=1e-8):
+            return F.normalize(tensor + eps, dim=dim)
 
         # Normalize the embeddings
-        input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
-        input_vision_embeds = F.normalize(input_vision_embeds, dim=-1)  # Normalize across the embed_dim
-        print(f"Text embeds normalize range: [{input_text_embeds.min().item():.4f}, {input_text_embeds.max().item():.4f}]")
-        print(f"Vision embeds normalize range: [{input_vision_embeds.min().item():.4f}, {input_vision_embeds.max().item():.4f}]")
+        input_text_embeds = safe_normalize(input_text_embeds, dim=-1)
+        input_vision_embeds = safe_normalize(input_vision_embeds, dim=-1)
 
-
-        # Compute the average embeddings for text and vision
+        # Compute the average embeddings for vision
         vision_embeds = input_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
+
         # Compute the average embeddings for text, accounting for padding
-        if text_attention_mask is not None:
-            # Use the attention mask to compute the mean only over non-padded tokens
-            text_embeds = (input_text_embeds * text_attention_mask.unsqueeze(-1)).sum(dim=1) / text_attention_mask.sum(dim=1, keepdim=True)
-        else:
-            # If no mask is provided, assume all tokens are valid (no padding)
-            text_embeds = input_text_embeds.mean(dim=1)  # [batch_size, embed_dim]
+        text_embeds = (input_text_embeds * text_attention_mask.unsqueeze(-1)).sum(dim=1)
+        text_embeds = text_embeds / text_attention_mask.sum(dim=1, keepdim=True).clamp(min=1e-8)
 
-        print(f"Text embeds mean range: [{text_embeds.min().item():.4f}, {text_embeds.max().item():.4f}]")
-        print(f"Vision embeds mean range: [{vision_embeds.min().item():.4f}, {vision_embeds.max().item():.4f}]")
-
+        # Re-normalize the averaged embeddings
+        vision_embeds = safe_normalize(vision_embeds)
+        text_embeds = safe_normalize(text_embeds)
 
         # Compute the cosine similarity between all pairs
         logits_per_image = torch.matmul(vision_embeds, text_embeds.T)  # [batch_size, batch_size]
         logits_per_text = logits_per_image.T  # [batch_size, batch_size]
-        
 
-        # Temperature parameter
-        temperature = 0.07
-        logits_per_image = logits_per_image / temperature
-        logits_per_text = logits_per_text / temperature
+        # Apply temperature scaling
+        logits_per_image /= temperature
+        logits_per_text /= temperature
 
         # Ground truth labels
         batch_size = input_text_embeds.shape[0]
         labels = torch.arange(batch_size, dtype=torch.long, device=logits_per_image.device)
 
-        if torch.isnan(logits_per_image).any() or torch.isinf(logits_per_image).any():
-            print("NaN or Inf found in logits_per_image")
-        if torch.isnan(logits_per_text).any() or torch.isinf(logits_per_text).any():
-            print("NaN or Inf found in logits_per_text")
-
-
-
         # Compute the cross-entropy loss
         loss_image = F.cross_entropy(logits_per_image, labels)
-        print(loss_image)
         loss_text = F.cross_entropy(logits_per_text, labels)
-        print(loss_text)
+
+        print(f"Image loss: {loss_image.item():.4f}")
+        print(f"Text loss: {loss_text.item():.4f}")
 
         # Total loss
         total_loss = (loss_image + loss_text) / 2
         return total_loss, loss_image
+
+# Usage:
+# total_loss, image_loss = clip_contrastive_loss(input_text_embeds, input_vision_embeds, text_attention_mask)
 
 
     def prepare_inputs_labels_for_multimodal(
