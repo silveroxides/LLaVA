@@ -362,8 +362,8 @@ class LlavaMetaForCausalLM(ABC):
         for batch_idx, cur_input_ids in enumerate(input_ids):
 
             # print(f'[BEFORE] current_input_ids size: {len(cur_input_ids)}')
-            pprint.pprint(cur_input_ids)
-            pprint.pprint(labels[batch_idx])
+            # pprint.pprint(cur_input_ids)
+            # pprint.pprint(labels[batch_idx])
             # getting number of images present in given images
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
             # print(f'num_image: {num_images}')
@@ -421,10 +421,11 @@ class LlavaMetaForCausalLM(ABC):
             new_input_embeds.append(cur_new_input_embeds)
             new_labels.append(cur_new_labels)
         
-        # print('*'*100)
-        # for i in range(len(new_input_embeds)):
-        #     print(f'Shape of index {i} of new embeds is: {new_input_embeds[i].shape}')
-        # print('*'*100)
+        print('*'*100)
+        for i in range(len(new_input_embeds)):
+            print(f'Shape of index {i} of new embeds is: {new_input_embeds[i].shape}')
+            print(f'Shape of index {i} of new label is: {new_labels[i].shape}')
+        print('*'*100)
 
         # ##################################################### calculate the contrastive loss
         img_token_sequence = image_features.shape[1]
@@ -438,9 +439,13 @@ class LlavaMetaForCausalLM(ABC):
 
         # Truncate sequences to max length as image embeddings can make the sequence longer
         tokenizer_model_max_length = getattr(self.config, 'tokenizer_model_max_length', None)
+        print('*'*100)
+        print(f'Tokenizer model max length: {tokenizer_model_max_length}')
+        print('*'*100)
         if tokenizer_model_max_length is not None:
             new_input_embeds = [x[:tokenizer_model_max_length] for x in new_input_embeds]
             new_labels = [x[:tokenizer_model_max_length] for x in new_labels]
+        
         # Combine them
         max_len = max(x.shape[0] for x in new_input_embeds)
         batch_size = len(new_input_embeds)
