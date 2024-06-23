@@ -237,6 +237,10 @@ class LlavaMetaForCausalLM(ABC):
     def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds, text_attention_mask):
 
 
+        print('Inside contrastive loss')
+        print(input_text_embeds.shape)
+        print(input_vision_embeds.shape)
+
         # Normalize the embeddings
         input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
         input_vision_embeds = F.normalize(input_vision_embeds, dim=-1)  # Normalize across the embed_dim
@@ -264,11 +268,14 @@ class LlavaMetaForCausalLM(ABC):
 
         # Ground truth labels
         batch_size = input_text_embeds.shape[0]
-        labels = torch.arange(batch_size, dtype=torch.long, device=logits_per_image.device)
+        labels = torch.arange(batch_size, dtype=logits_per_image.long, device=logits_per_image.device)
+
 
         # Compute the cross-entropy loss
         loss_image = F.cross_entropy(logits_per_image, labels)
+        print(loss_image)
         loss_text = F.cross_entropy(logits_per_text, labels)
+        print(loss_text)
 
         # Total loss
         total_loss = (loss_image + loss_text) / 2
