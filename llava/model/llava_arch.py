@@ -196,6 +196,25 @@ class LlavaMetaForCausalLM(ABC):
             gate_logits = None
             return image_features
         
+    def seperate_img_text_embeds(self, embeds, image_tokens_sequence):
+        # Assuming embeds is your list of combined embeddings for each sample in the batch
+        image_embeds = []
+        text_embeds = []
+
+        for embed in embeds:
+            # Split the combined embeddings into image and text embeddings
+            image_embed = embed[1:(image_tokens_sequence+1)]  # Extract image embeddings (tokens 1 to 256)
+            text_embed = embed[(image_tokens_sequence+1):-1]  # Extract text embeddings (tokens 257 to 266)
+
+            # Append the split embeddings to the respective lists
+            image_embeds.append(image_embed)
+            text_embeds.append(text_embed)
+
+        # Convert the lists to tensors
+        image_embeds = torch.stack(image_embeds)
+        text_embeds = torch.stack(text_embeds)
+
+        return image_embeds, text_embeds
 
     def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds):
         # Normalize the embeddings
@@ -396,6 +415,16 @@ class LlavaMetaForCausalLM(ABC):
         for i in range(len(new_input_embeds)):
             print(f'Shape of index {i} of new embeds is: {new_input_embeds[i].shape}')
         print('*'*100)
+
+        # ##################################################### calculate the contrastive loss
+        img_token_sequence = image_features.shape[1]
+        img_embeds, text_embeds = self.seperate_img_text_embeds(new_input_embeds, img_token_sequence)
+        total_loss, img_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
+        print('*'*100)
+        print(f'Contrastive Total loss: {total_loss}, Image loss: {img_loss}')
+        print('*'*100)
+
+        # #####################################################################################
 
         # Truncate sequences to max length as image embeddings can make the sequence longer
         tokenizer_model_max_length = getattr(self.config, 'tokenizer_model_max_length', None)
