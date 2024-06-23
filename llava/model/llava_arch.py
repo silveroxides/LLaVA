@@ -21,6 +21,7 @@ import torch.nn.functional as F
 import copy
 import pprint
 
+from torch.nn.utils.rnn import pad_sequence
 from .multimodal_encoder.builder import build_vision_tower
 from .co_attention.co_attention import get_co_attention
 from .multimodal_projector.builder import build_vision_projector
@@ -212,22 +213,31 @@ class LlavaMetaForCausalLM(ABC):
 
         # Convert the lists to tensors
         image_embeds = torch.stack(image_embeds)
-        text_embeds = torch.stack(text_embeds)
+        # text_embeds = torch.stack(text_embeds)
+        text_embeds = pad_sequence(text_embeds, batch_first=True)
+
 
         return image_embeds, text_embeds
 
     def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds):
+
+        # text embeds has some padded tokens
+        text_mask = (input_text_embeds != 0).float()
+
         # Normalize the embeddings
         input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
         input_vision_embeds = F.normalize(input_vision_embeds, dim=-1)  # Normalize across the embed_dim
 
         # Compute the average embeddings for text and vision
-        text_embeds = input_text_embeds.mean(dim=1)  # [batch_size, embed_dim]
+        # text_embeds = input_text_embeds.mean(dim=1)  # [batch_size, embed_dim]
+        text_embeds = (input_text_embeds * text_mask).sum(dim=1) / text_mask.sum(dim=1) # ignoring the padded tokens
         vision_embeds = input_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
+
 
         # Compute the cosine similarity between all pairs
         logits_per_image = torch.matmul(vision_embeds, text_embeds.T)  # [batch_size, batch_size]
         logits_per_text = logits_per_image.T  # [batch_size, batch_size]
+        
 
         # Temperature parameter
         temperature = 0.07
@@ -306,9 +316,9 @@ class LlavaMetaForCausalLM(ABC):
         else:
             # Image Feature shape: torch.Size([4, 256, 5120]) -> [batch_size, sequence_length, embed_dim]
             image_features, gate_logits = self.encode_images(images)
-            print('*'*100)
-            print(f'Image Feature shape: {image_features.shape}')
-            print(f'Input Ids Shape: {input_ids.shape}')
+            # print('*'*100)
+            # print(f'Image Feature shape: {image_features.shape}')
+            # print(f'Input Ids Shape: {input_ids.shape}')
         
         # TODO: image start / end is not implemented here to support pretraining.
         if getattr(self.config, 'tune_mm_mlp_adapter', False) and getattr(self.config, 'mm_use_im_start_end', False):
@@ -343,7 +353,6 @@ class LlavaMetaForCausalLM(ABC):
         labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
          
         
-        print('*'*100)
         new_input_embeds = []
         new_labels = []
         cur_image_idx = 0
@@ -351,12 +360,12 @@ class LlavaMetaForCausalLM(ABC):
         # will pick one sequence from batch at a time
         for batch_idx, cur_input_ids in enumerate(input_ids):
 
-            print(f'[BEFORE] current_input_ids size: {len(cur_input_ids)}')
+            # print(f'[BEFORE] current_input_ids size: {len(cur_input_ids)}')
             pprint.pprint(cur_input_ids)
             pprint.pprint(labels[batch_idx])
             # getting number of images present in given images
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
-            print(f'num_image: {num_images}')
+            # print(f'num_image: {num_images}')
 
             if num_images == 0:
                 cur_image_features = image_features[cur_image_idx]
@@ -369,7 +378,7 @@ class LlavaMetaForCausalLM(ABC):
 
             # Output: [-1, 3, 7, 22] (start, image positions, sequence_size) -> in this sequence 3rd and 7th token has the image token
             image_token_indices = [-1] + torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0].tolist() + [cur_input_ids.shape[0]]
-            print(f'image_token_indices: {image_token_indices}')
+            # print(f'image_token_indices: {image_token_indices}')
             cur_input_ids_noim = []
             cur_labels = labels[batch_idx]
             cur_labels_noim = []
@@ -378,7 +387,7 @@ class LlavaMetaForCausalLM(ABC):
                 cur_input_ids_noim.append(cur_input_ids[image_token_indices[i]+1:image_token_indices[i+1]])
                 cur_labels_noim.append(cur_labels[image_token_indices[i]+1:image_token_indices[i+1]])
 
-            print(f'[AFTER] cur_input_ids_noim: {len(torch.cat(cur_input_ids_noim))}')
+            # print(f'[AFTER] cur_input_ids_noim: {len(torch.cat(cur_input_ids_noim))}')
             
             split_sizes = [x.shape[0] for x in cur_labels_noim]
             cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
@@ -396,25 +405,25 @@ class LlavaMetaForCausalLM(ABC):
                     cur_new_input_embeds.append(cur_image_features)
                     cur_new_labels.append(torch.full((cur_image_features.shape[0],), IGNORE_INDEX, device=cur_labels.device, dtype=cur_labels.dtype))
             
-            print('*'*100)
-            for i in range(len(cur_new_input_embeds)):
-                print(f'shape of index: {i} is {cur_new_input_embeds[i].shape}')
-            print('*'*100)
+            # print('*'*100)
+            # for i in range(len(cur_new_input_embeds)):
+            #     print(f'shape of index: {i} is {cur_new_input_embeds[i].shape}')
+            # print('*'*100)
 
             cur_new_input_embeds = [x.to(self.device) for x in cur_new_input_embeds]
             cur_new_input_embeds = torch.cat(cur_new_input_embeds)
 
-            print('*'*100)
-            print(f'current new input embeds: {cur_new_input_embeds.shape}')
-            print('*'*100)
+            # print('*'*100)
+            # print(f'current new input embeds: {cur_new_input_embeds.shape}')
+            # print('*'*100)
             cur_new_labels = torch.cat(cur_new_labels)
             new_input_embeds.append(cur_new_input_embeds)
             new_labels.append(cur_new_labels)
         
-        print('*'*100)
-        for i in range(len(new_input_embeds)):
-            print(f'Shape of index {i} of new embeds is: {new_input_embeds[i].shape}')
-        print('*'*100)
+        # print('*'*100)
+        # for i in range(len(new_input_embeds)):
+        #     print(f'Shape of index {i} of new embeds is: {new_input_embeds[i].shape}')
+        # print('*'*100)
 
         # ##################################################### calculate the contrastive loss
         img_token_sequence = image_features.shape[1]
