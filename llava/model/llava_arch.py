@@ -245,10 +245,10 @@ class LlavaMetaForCausalLM(ABC):
         # print(f'vision embeddings dtype: {input_vision_embeds.dtype}')
         # print(f'text_attention_mask dtype: {text_attention_mask.dtype}')
 
-        if torch.isnan(input_text_embeds).any() or torch.isinf(input_text_embeds):
+        if torch.isnan(input_text_embeds).any() or torch.isinf(input_text_embeds).any():
             print("NaNs/inf detected in input_text_embeds")
 
-        if torch.isnan(input_vision_embeds).any() or torch.isinf(input_vision_embeds):
+        if torch.isnan(input_vision_embeds).any() or torch.isinf(input_vision_embeds).any():
             print("NaNs/infs detected in input vision embeds")
 
         
@@ -316,9 +316,6 @@ class LlavaMetaForCausalLM(ABC):
         # Total loss
         total_loss = (loss_image + loss_text) / 2
         return total_loss, loss_image
-
-# Usage:
-# total_loss, image_loss = clip_contrastive_loss(input_text_embeds, input_vision_embeds, text_attention_mask)
 
 
     def prepare_inputs_labels_for_multimodal(
