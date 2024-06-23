@@ -268,7 +268,8 @@ class LlavaMetaForCausalLM(ABC):
 
         # Ground truth labels
         batch_size = input_text_embeds.shape[0]
-        labels = torch.arange(batch_size, dtype=logits_per_image.long, device=logits_per_image.device)
+        labels = torch.arange(batch_size, dtype=torch.long, device=logits_per_image.device)
+        print(labels)
 
 
         # Compute the cross-entropy loss
