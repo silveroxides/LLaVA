@@ -329,11 +329,11 @@ class LlavaMetaForCausalLM(ABC):
         cur_image_idx = 0
         # input_ids = [batch_size, sequence]
         # will pick one sequence from batch at a time
-        for batch_idx, cur_input_ids, cur_labels in enumerate(input_ids):
+        for batch_idx, cur_input_ids in enumerate(input_ids):
 
             print(f'[BEFORE] current_input_ids size: {len(cur_input_ids)}')
             pprint.pprint(cur_input_ids)
-            pprint.pprint(cur_labels)
+            pprint.pprint(labels[batch_idx])
             # getting number of images present in given images
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
             print(f'num_image: {num_images}')
