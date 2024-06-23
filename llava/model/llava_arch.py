@@ -250,6 +250,8 @@ class LlavaMetaForCausalLM(ABC):
         def safe_normalize(tensor, dim=-1, eps=1e-8):
             return F.normalize(tensor + eps, dim=dim)
 
+        target_dtype = input_vision_embeds.dtype
+        
         # Normalize the embeddings
         input_text_embeds = safe_normalize(input_text_embeds, dim=-1)
         input_vision_embeds = safe_normalize(input_vision_embeds, dim=-1)
@@ -264,6 +266,9 @@ class LlavaMetaForCausalLM(ABC):
         # Compute the average embeddings for text, accounting for padding
         text_embeds = (input_text_embeds * text_attention_mask.unsqueeze(-1)).sum(dim=1)
         text_embeds = text_embeds / text_attention_mask.sum(dim=1, keepdim=True).clamp(min=1e-8)
+
+        # Ensure text_embeds are in the target dtype
+        text_embeds = text_embeds.to(target_dtype)
 
         print(f'input_text_embeds mean dtype: {text_embeds.dtype}')
         print(f'vision embeddings mean dtype: {vision_embeds.dtype}')
