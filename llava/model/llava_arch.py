@@ -19,6 +19,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import copy
+import pprint
 
 from .multimodal_encoder.builder import build_vision_tower
 from .co_attention.co_attention import get_co_attention
@@ -287,6 +288,7 @@ class LlavaMetaForCausalLM(ABC):
             image_features, gate_logits = self.encode_images(images)
             print('*'*100)
             print(f'Image Feature shape: {image_features.shape}')
+            print(f'Input Ids Shape: {input_ids.shape}')
         
         # TODO: image start / end is not implemented here to support pretraining.
         if getattr(self.config, 'tune_mm_mlp_adapter', False) and getattr(self.config, 'mm_use_im_start_end', False):
@@ -327,9 +329,11 @@ class LlavaMetaForCausalLM(ABC):
         cur_image_idx = 0
         # input_ids = [batch_size, sequence]
         # will pick one sequence from batch at a time
-        for batch_idx, cur_input_ids in enumerate(input_ids):
+        for batch_idx, cur_input_ids, cur_labels in enumerate(input_ids):
 
             print(f'[BEFORE] current_input_ids size: {len(cur_input_ids)}')
+            pprint.pprint(cur_input_ids)
+            pprint.pprint(cur_labels)
             # getting number of images present in given images
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
             print(f'num_image: {num_images}')
