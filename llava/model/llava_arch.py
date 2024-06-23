@@ -218,8 +218,8 @@ class LlavaMetaForCausalLM(ABC):
         for text_embed in text_embeds:
             padded_text_embed = torch.zeros((max_text_length, text_embed.size(1)), dtype=text_embed.dtype, device=text_embed.device)
             padded_text_embed[:text_embed.size(0)] = text_embed
-            print(f'text embed: {text_embed}')
-            print(f'padded text embed: {padded_text_embed}')
+            print(f'text embed: {text_embed.shape}')
+            print(f'padded text embed: {padded_text_embed.shape}')
             padded_text_embeds.append(padded_text_embed)
         
         # Convert the lists to tensors
@@ -449,7 +449,7 @@ class LlavaMetaForCausalLM(ABC):
         img_embeds, text_embeds = self.seperate_img_text_embeds(new_input_embeds, img_token_sequence)
         attention_mask_sep_text_embeds = text_embeds.sum(dim=-1) != 0
         # Create the mask with the same dtype and device as the input
-        attention_mask_sep_text_embeds =  attention_mask_sep_text_embeds.to(dtype=padded_embeds.dtype, device=padded_embeds.device)
+        attention_mask_sep_text_embeds =  attention_mask_sep_text_embeds.to(dtype=attention_mask.dtype, device=attention_mask.device)
 
         total_loss, img_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
         print('*'*100)
