@@ -241,6 +241,10 @@ class LlavaMetaForCausalLM(ABC):
         print(f"Text embeds shape: {input_text_embeds.shape}")
         print(f"Vision embeds shape: {input_vision_embeds.shape}")
         print(f"Attention mask shape: {text_attention_mask.shape}")
+        print(f'input_text_embeds dtype: {input_text_embeds.dtype}')
+        print(f'vision embeddings dtype: {input_vision_embeds.dtype}')
+        print(f'text_attention_mask dtype: {text_attention_mask}')
+
 
         # Safe normalization function
         def safe_normalize(tensor, dim=-1, eps=1e-8):
