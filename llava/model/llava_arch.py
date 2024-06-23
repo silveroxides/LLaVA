@@ -222,7 +222,7 @@ class LlavaMetaForCausalLM(ABC):
     def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds):
 
         # text embeds has some padded tokens
-        text_mask = (text_embeds != 0).to(dtype=input_text_embeds.dtype)
+        text_mask = (input_text_embeds != 0).to(dtype=input_text_embeds.dtype)
 
 
         # Normalize the embeddings
