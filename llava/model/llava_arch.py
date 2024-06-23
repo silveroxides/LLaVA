@@ -222,7 +222,8 @@ class LlavaMetaForCausalLM(ABC):
     def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds):
 
         # text embeds has some padded tokens
-        text_mask = (input_text_embeds != 0).float()
+        text_mask = (text_embeds != 0).to(dtype=input_text_embeds.dtype)
+
 
         # Normalize the embeddings
         input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
@@ -469,6 +470,11 @@ class LlavaMetaForCausalLM(ABC):
                     position_ids[i, :cur_len] = torch.arange(0, cur_len, dtype=position_ids.dtype, device=position_ids.device)
 
         new_input_embeds = torch.stack(new_input_embeds_padded, dim=0)
+        
+        print('*'*100)
+        for i in range(new_input_embeds.shape[0]):
+            print(f'Shape of new trancated input embeds, index {i}: {new_input_embeds[i].shape}')
+        print('*'*100)
 
 
         if _labels is None:
