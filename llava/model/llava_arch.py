@@ -245,6 +245,14 @@ class LlavaMetaForCausalLM(ABC):
         # print(f'vision embeddings dtype: {input_vision_embeds.dtype}')
         # print(f'text_attention_mask dtype: {text_attention_mask.dtype}')
 
+        if torch.isnan(input_text_embeds).any() or torch.isinf(input_text_embeds):
+            print("NaNs/inf detected in input_text_embeds")
+
+        if torch.isnan(input_vision_embeds).any() or torch.isinf(input_vision_embeds):
+            print("NaNs/infs detected in input vision embeds")
+
+        
+
 
         # Safe normalization function
         def safe_normalize(tensor, dim=-1, eps=1e-8):
@@ -256,11 +264,11 @@ class LlavaMetaForCausalLM(ABC):
         input_text_embeds = safe_normalize(input_text_embeds, dim=-1)
         input_vision_embeds = safe_normalize(input_vision_embeds, dim=-1)
 
-        if torch.isnan(input_text_embeds).any():
+        if torch.isnan(input_vision_embeds).any():
             print("NaNs detected in normalized vision embeddings")
 
-        if torch.isnan(input_vision_embeds).any():
-            print("NaNs detected in normalized test embeddings")
+        if torch.isnan(input_text_embeds).any():
+            print("NaNs detected in normalized text embeddings")
             
 
 
@@ -275,15 +283,15 @@ class LlavaMetaForCausalLM(ABC):
         # Ensure text_embeds are in the target dtype
         text_embeds = text_embeds.to(target_dtype)
 
-        # Re-normalize the averaged embeddings
-        vision_embeds = safe_normalize(vision_embeds)
-        text_embeds = safe_normalize(text_embeds)
+        # # Re-normalize the averaged embeddings
+        # vision_embeds = safe_normalize(vision_embeds)
+        # text_embeds = safe_normalize(text_embeds)
 
         if torch.isnan(vision_embeds).any():
-            print("NaNs detected in re-normalized vision embeddings")
+            print("NaNs detected in mean vision embeddings")
 
         if torch.isnan(text_embeds).any():
-            print("NaNs detected in re-normalized test embeddings")
+            print("NaNs detected in mean text embeddings")
 
 
         # Compute the cosine similarity between all pairs
