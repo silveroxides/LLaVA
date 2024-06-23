@@ -197,7 +197,7 @@ class LlavaMetaForCausalLM(ABC):
             gate_logits = None
             return image_features
         
-    def separate_img_text_embeds(embeds, image_tokens_sequence):
+    def seperate_img_text_embeds(self, embeds, image_tokens_sequence):
         # Assuming embeds is your list of combined embeddings for each sample in the batch
         image_embeds = []
         text_embeds = []
