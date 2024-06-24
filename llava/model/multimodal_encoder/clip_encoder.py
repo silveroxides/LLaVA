@@ -57,7 +57,7 @@ class CLIPVisionTower(nn.Module):
 
         self.is_loaded = True
 
-    def feature_select(self, image_features):
+    def feature_select(self, image_forward_outs):
         image_features = image_forward_outs.hidden_states[self.select_layer]
 
         if self.select_feature == 'patch':
