@@ -342,9 +342,21 @@ class LlavaMetaForCausalLM(ABC):
 
         target_dtype = input_vision_embeds.dtype
 
+            # Convert embeddings to float32 before normalization to prevent NaNs
+        input_text_embeds = input_text_embeds.float()
+        input_vision_embeds = input_vision_embeds.float()
+
+        # # Zero out the padded tokens in the embeddings using the attention mask
+        # expanded_mask = float_mask.unsqueeze(-1).expand_as(input_text_embeds)
+        # input_text_embeds = input_text_embeds * expanded_mask
+
         # Normalize the embeddings
         input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
         input_vision_embeds = F.normalize(input_vision_embeds, dim=-1)  # Normalize across the embed_dim
+
+        # Convert back to float16 if necessary
+        input_text_embeds = input_text_embeds.half()
+        input_vision_embeds = input_vision_embeds.half()
 
         debug_tensor(input_text_embeds, 'input_text_embeds normalized')
         debug_tensor(input_vision_embeds, 'input_text_embeds normalized')
