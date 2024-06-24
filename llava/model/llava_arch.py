@@ -265,7 +265,7 @@ class LlavaMetaForCausalLM(ABC):
 
         debug_tensor(input_text_embeds, "input_text_embeds")
         debug_tensor(input_vision_embeds, "input_vision_embeds")
-        debug_tensor(text_attention_mask, "text_attention_mask")
+        # debug_tensor(text_attention_mask, "text_attention_mask")
         
         # Normalize the embeddings
         input_text_embeds = safe_normalize(input_text_embeds, dim=-1)
