@@ -326,6 +326,7 @@ class LlavaMetaForCausalLM(ABC):
     def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds, attention_mask):
     
         attention_mask = attention_mask.float()
+        print(attention_mask)
         # Zero out the padded tokens in the embeddings using the attention mask
         expanded_mask = attention_mask.unsqueeze(-1).expand_as(input_text_embeds)
         # input_text_embeds = input_text_embeds * expanded_mask
