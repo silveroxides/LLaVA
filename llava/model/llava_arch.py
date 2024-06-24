@@ -325,8 +325,17 @@ class LlavaMetaForCausalLM(ABC):
 
     def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds, attention_mask):
     
+        def debug_tensor(tensor, name):
+            print(f"\nDebugging {name}:")
+            print(f"Shape: {tensor.shape}")
+            print(f"Type: {tensor.dtype}")
+            print(f"Device: {tensor.device}")
+            print(f"Min: {tensor.min().item():.6f}, Max: {tensor.max().item():.6f}")
+            print(f"Mean: {tensor.mean().item():.6f}, Std: {tensor.std().item():.6f}")
+            print(f"NaNs: {torch.isnan(tensor).sum().item()}, Infs: {torch.isinf(tensor).sum().item()}")
+
+        
         attention_mask = attention_mask.float()
-        print(attention_mask)
         # Zero out the padded tokens in the embeddings using the attention mask
         expanded_mask = attention_mask.unsqueeze(-1).expand_as(input_text_embeds)
         # input_text_embeds = input_text_embeds * expanded_mask
@@ -336,6 +345,9 @@ class LlavaMetaForCausalLM(ABC):
         # Normalize the embeddings
         input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
         input_vision_embeds = F.normalize(input_vision_embeds, dim=-1)  # Normalize across the embed_dim
+
+        debug_tensor(input_text_embeds)
+        debug_tensor(input_vision_embeds)
 
         # Calculate the sum and count of valid (non-padded) tokens for text embeddings
         text_embeds_sum = (input_text_embeds * expanded_mask).sum(dim=1)
@@ -555,8 +567,6 @@ class LlavaMetaForCausalLM(ABC):
 
         total_loss, img_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
         print('*'*100)
-        print(f'attention_mask_sep_text_embeds shape: {attention_mask_sep_text_embeds.shape}')
-        print(attention_mask_sep_text_embeds)
         print(f'Contrastive Total loss: {total_loss}, Image loss: {img_loss}')
         print('*'*100)
 
