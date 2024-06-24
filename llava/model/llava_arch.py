@@ -543,8 +543,12 @@ class LlavaMetaForCausalLM(ABC):
         # Create the mask with the same dtype and device as the input
         attention_mask_sep_text_embeds =  attention_mask_sep_text_embeds.to(dtype=attention_mask.dtype, device=attention_mask.device)
 
+
+
         total_loss, img_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
         print('*'*100)
+        print(f'attention_mask_sep_text_embeds shape: {attention_mask_sep_text_embeds.shape}')
+        print(attention_mask_sep_text_embeds)
         print(f'Contrastive Total loss: {total_loss}, Image loss: {img_loss}')
         print('*'*100)
 
