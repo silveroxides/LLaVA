@@ -43,6 +43,7 @@ class CLIPVisionTower(nn.Module):
         if sparseMoE is not None:
             cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
             self.vision_tower = CLIPSMoEVisionTransformer(cfg_only, sparseMoE, self.num_experts, self.num_selected)
+        
         else:
             self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name, device_map=device_map)
         
@@ -57,7 +58,7 @@ class CLIPVisionTower(nn.Module):
         self.is_loaded = True
 
     def feature_select(self, image_features):
-        # image_features = image_forward_outs.hidden_states[self.select_layer]
+        image_features = image_forward_outs.hidden_states[self.select_layer]
 
         if self.select_feature == 'patch':
             image_features = image_features[:, 1:]
@@ -69,6 +70,7 @@ class CLIPVisionTower(nn.Module):
 
     @torch.no_grad()
     def forward(self, images):
+        
         # image is a list
         # for video
         if type(images) is list:
