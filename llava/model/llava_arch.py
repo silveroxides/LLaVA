@@ -245,30 +245,34 @@ class LlavaMetaForCausalLM(ABC):
         # print(f'vision embeddings dtype: {input_vision_embeds.dtype}')
         # print(f'text_attention_mask dtype: {text_attention_mask.dtype}')
 
-        if torch.isnan(input_text_embeds).any() or torch.isinf(input_text_embeds).any():
-            print("NaNs/inf detected in input_text_embeds")
+        def debug_tensor(tensor, name):
+            print(f"\nDebugging {name}:")
+            print(f"Shape: {tensor.shape}")
+            print(f"Type: {tensor.dtype}")
+            print(f"Device: {tensor.device}")
+            print(f"Min: {tensor.min().item():.6f}, Max: {tensor.max().item():.6f}")
+            print(f"Mean: {tensor.mean().item():.6f}, Std: {tensor.std().item():.6f}")
+            print(f"NaNs: {torch.isnan(tensor).sum().item()}, Infs: {torch.isinf(tensor).sum().item()}")
 
-        if torch.isnan(input_vision_embeds).any() or torch.isinf(input_vision_embeds).any():
-            print("NaNs/infs detected in input vision embeds")
-
-        
 
 
         # Safe normalization function
         def safe_normalize(tensor, dim=-1, eps=1e-8):
-            return F.normalize(tensor + eps, dim=dim)
+            norm = torch.norm(tensor, dim=dim, keepdim=True).clamp(min=eps)
+            return tensor / norm
 
         target_dtype = input_vision_embeds.dtype
+
+        debug_tensor(input_text_embeds, "input_text_embeds")
+        debug_tensor(input_vision_embeds, "input_vision_embeds")
+        debug_tensor(text_attention_mask, "text_attention_mask")
         
         # Normalize the embeddings
         input_text_embeds = safe_normalize(input_text_embeds, dim=-1)
         input_vision_embeds = safe_normalize(input_vision_embeds, dim=-1)
 
-        if torch.isnan(input_vision_embeds).any():
-            print("NaNs detected in normalized vision embeddings")
-
-        if torch.isnan(input_text_embeds).any():
-            print("NaNs detected in normalized text embeddings")
+        debug_tensor(input_text_embeds, "input_text_embeds safe normalized")
+        debug_tensor(input_vision_embeds, "input_vision_embeds safe normalized")
             
 
 
@@ -283,15 +287,16 @@ class LlavaMetaForCausalLM(ABC):
         # Ensure text_embeds are in the target dtype
         text_embeds = text_embeds.to(target_dtype)
 
-        # # Re-normalize the averaged embeddings
-        # vision_embeds = safe_normalize(vision_embeds)
-        # text_embeds = safe_normalize(text_embeds)
+        debug_tensor(input_text_embeds, "input_text_embeds mean")
+        debug_tensor(input_vision_embeds, "input_vision_embeds mean")
 
-        if torch.isnan(vision_embeds).any():
-            print("NaNs detected in mean vision embeddings")
 
-        if torch.isnan(text_embeds).any():
-            print("NaNs detected in mean text embeddings")
+        # Re-normalize the averaged embeddings
+        vision_embeds = safe_normalize(vision_embeds)
+        text_embeds = safe_normalize(text_embeds)
+
+        debug_tensor(input_text_embeds, "input_text_embeds re-norm")
+        debug_tensor(input_vision_embeds, "input_vision_embeds re-norm")
 
 
         # Compute the cosine similarity between all pairs
