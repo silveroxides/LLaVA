@@ -236,76 +236,123 @@ class LlavaMetaForCausalLM(ABC):
     
 
 
-    def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds, text_attention_mask, temperature=0.07):
-        print('Inside contrastive loss')
-        # print(f"Text embeds shape: {input_text_embeds.shape}")
-        # print(f"Vision embeds shape: {input_vision_embeds.shape}")
-        # print(f"Attention mask shape: {text_attention_mask.shape}")
-        # print(f'input_text_embeds dtype: {input_text_embeds.dtype}')
-        # print(f'vision embeddings dtype: {input_vision_embeds.dtype}')
-        # print(f'text_attention_mask dtype: {text_attention_mask.dtype}')
+    # def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds, text_attention_mask, temperature=0.07):
+    #     print('Inside contrastive loss')
+    #     # print(f"Text embeds shape: {input_text_embeds.shape}")
+    #     # print(f"Vision embeds shape: {input_vision_embeds.shape}")
+    #     # print(f"Attention mask shape: {text_attention_mask.shape}")
+    #     # print(f'input_text_embeds dtype: {input_text_embeds.dtype}')
+    #     # print(f'vision embeddings dtype: {input_vision_embeds.dtype}')
+    #     # print(f'text_attention_mask dtype: {text_attention_mask.dtype}')
 
-        def debug_tensor(tensor, name):
-            print(f"\nDebugging {name}:")
-            print(f"Shape: {tensor.shape}")
-            print(f"Type: {tensor.dtype}")
-            print(f"Device: {tensor.device}")
-            print(f"Min: {tensor.min().item():.6f}, Max: {tensor.max().item():.6f}")
-            print(f"Mean: {tensor.mean().item():.6f}, Std: {tensor.std().item():.6f}")
-            print(f"NaNs: {torch.isnan(tensor).sum().item()}, Infs: {torch.isinf(tensor).sum().item()}")
+    #     def debug_tensor(tensor, name):
+    #         print(f"\nDebugging {name}:")
+    #         print(f"Shape: {tensor.shape}")
+    #         print(f"Type: {tensor.dtype}")
+    #         print(f"Device: {tensor.device}")
+    #         print(f"Min: {tensor.min().item():.6f}, Max: {tensor.max().item():.6f}")
+    #         print(f"Mean: {tensor.mean().item():.6f}, Std: {tensor.std().item():.6f}")
+    #         print(f"NaNs: {torch.isnan(tensor).sum().item()}, Infs: {torch.isinf(tensor).sum().item()}")
 
 
 
-        # Safe normalization function
-        def safe_normalize(tensor, dim=-1, eps=1e-8):
-            norm = torch.norm(tensor, dim=dim, keepdim=True).clamp(min=eps)
-            return tensor / norm
+    #     # Safe normalization function
+    #     def safe_normalize(tensor, dim=-1, eps=1e-8):
+    #         norm = torch.norm(tensor, dim=dim, keepdim=True).clamp(min=eps)
+    #         return tensor / norm
 
-        target_dtype = input_vision_embeds.dtype
+    #     target_dtype = input_vision_embeds.dtype
 
-        debug_tensor(input_text_embeds, "input_text_embeds")
-        debug_tensor(input_vision_embeds, "input_vision_embeds")
-        # debug_tensor(text_attention_mask, "text_attention_mask")
+    #     debug_tensor(input_text_embeds, "input_text_embeds")
+    #     debug_tensor(input_vision_embeds, "input_vision_embeds")
+    #     # debug_tensor(text_attention_mask, "text_attention_mask")
         
-        # Normalize the embeddings
-        input_text_embeds = safe_normalize(input_text_embeds, dim=-1)
-        input_vision_embeds = safe_normalize(input_vision_embeds, dim=-1)
+    #     # Normalize the embeddings
+    #     input_text_embeds = safe_normalize(input_text_embeds, dim=-1)
+    #     input_vision_embeds = safe_normalize(input_vision_embeds, dim=-1)
 
-        debug_tensor(input_text_embeds, "input_text_embeds safe normalized")
-        debug_tensor(input_vision_embeds, "input_vision_embeds safe normalized")
+    #     debug_tensor(input_text_embeds, "input_text_embeds safe normalized")
+    #     debug_tensor(input_vision_embeds, "input_vision_embeds safe normalized")
             
 
 
-        # Compute the average embeddings for vision
+    #     # Compute the average embeddings for vision
+    #     vision_embeds = input_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
+
+    #     # Compute the average embeddings for text, accounting for padding
+    #     text_embeds = (input_text_embeds * text_attention_mask.unsqueeze(-1)).sum(dim=1)
+    #     text_embeds = text_embeds / text_attention_mask.sum(dim=1, keepdim=True).clamp(min=1e-8)
+
+    #     # divison sometimes cause a change in precision. Let's modify our function to maintain consistent dtype throughout the computation.
+    #     # Ensure text_embeds are in the target dtype
+    #     text_embeds = text_embeds.to(target_dtype)
+
+    #     debug_tensor(input_text_embeds, "input_text_embeds mean")
+    #     debug_tensor(input_vision_embeds, "input_vision_embeds mean")
+
+
+    #     # Re-normalize the averaged embeddings
+    #     vision_embeds = safe_normalize(vision_embeds)
+    #     text_embeds = safe_normalize(text_embeds)
+
+    #     debug_tensor(input_text_embeds, "input_text_embeds re-norm")
+    #     debug_tensor(input_vision_embeds, "input_vision_embeds re-norm")
+
+
+    #     # Compute the cosine similarity between all pairs
+    #     logits_per_image = torch.matmul(vision_embeds, text_embeds.T)  # [batch_size, batch_size]
+    #     logits_per_text = logits_per_image.T  # [batch_size, batch_size]
+
+    #     # Apply temperature scaling
+    #     logits_per_image /= temperature
+    #     logits_per_text /= temperature
+
+    #     # Ground truth labels
+    #     batch_size = input_text_embeds.shape[0]
+    #     labels = torch.arange(batch_size, dtype=torch.long, device=logits_per_image.device)
+
+    #     # Compute the cross-entropy loss
+    #     loss_image = F.cross_entropy(logits_per_image, labels)
+    #     loss_text = F.cross_entropy(logits_per_text, labels)
+
+    #     print(f"Image loss: {loss_image.item():.4f}")
+    #     print(f"Text loss: {loss_text.item():.4f}")
+
+    #     # Total loss
+    #     total_loss = (loss_image + loss_text) / 2
+    #     return total_loss, loss_image
+
+
+    def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds, attention_mask):
+    # Zero out the padded tokens in the embeddings using the attention mask
+        expanded_mask = attention_mask.unsqueeze(-1).expand_as(input_text_embeds)
+        # input_text_embeds = input_text_embeds * expanded_mask
+
+        # Normalize the embeddings
+        input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
+        input_vision_embeds = F.normalize(input_vision_embeds, dim=-1)  # Normalize across the embed_dim
+
+        # Calculate the sum and count of valid (non-padded) tokens for text embeddings
+        text_embeds_sum = (input_text_embeds * expanded_mask).sum(dim=1)
+        valid_token_counts = expanded_mask.sum(dim=1)
+        
+        # Avoid division by zero by replacing zeros with ones (does not affect the result because sum will be zero)
+        valid_token_counts = torch.where(valid_token_counts == 0, torch.ones_like(valid_token_counts), valid_token_counts)
+        
+        # Compute the average embeddings for text and vision
+        text_embeds = text_embeds_sum / valid_token_counts  # [batch_size, embed_dim]
         vision_embeds = input_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
-
-        # Compute the average embeddings for text, accounting for padding
-        text_embeds = (input_text_embeds * text_attention_mask.unsqueeze(-1)).sum(dim=1)
-        text_embeds = text_embeds / text_attention_mask.sum(dim=1, keepdim=True).clamp(min=1e-8)
-
-        # divison sometimes cause a change in precision. Let's modify our function to maintain consistent dtype throughout the computation.
-        # Ensure text_embeds are in the target dtype
-        text_embeds = text_embeds.to(target_dtype)
-
-        debug_tensor(input_text_embeds, "input_text_embeds mean")
-        debug_tensor(input_vision_embeds, "input_vision_embeds mean")
-
-
-        # Re-normalize the averaged embeddings
-        vision_embeds = safe_normalize(vision_embeds)
-        text_embeds = safe_normalize(text_embeds)
-
-        debug_tensor(input_text_embeds, "input_text_embeds re-norm")
-        debug_tensor(input_vision_embeds, "input_vision_embeds re-norm")
-
 
         # Compute the cosine similarity between all pairs
         logits_per_image = torch.matmul(vision_embeds, text_embeds.T)  # [batch_size, batch_size]
         logits_per_text = logits_per_image.T  # [batch_size, batch_size]
 
-        # Apply temperature scaling
-        logits_per_image /= temperature
-        logits_per_text /= temperature
+        # Temperature parameter
+        temperature = 0.07
+        logits_per_image = logits_per_image / temperature
+        logits_per_text = logits_per_text / temperature
+
+        # print(f"Similarity matrix:\n{F.softmax(logits_per_image, dim=-1)}")
 
         # Ground truth labels
         batch_size = input_text_embeds.shape[0]
@@ -314,9 +361,6 @@ class LlavaMetaForCausalLM(ABC):
         # Compute the cross-entropy loss
         loss_image = F.cross_entropy(logits_per_image, labels)
         loss_text = F.cross_entropy(logits_per_text, labels)
-
-        print(f"Image loss: {loss_image.item():.4f}")
-        print(f"Text loss: {loss_text.item():.4f}")
 
         # Total loss
         total_loss = (loss_image + loss_text) / 2
