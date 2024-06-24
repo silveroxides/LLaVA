@@ -1097,6 +1097,10 @@ def train(attn_implementation=None):
     #                 callbacks=[SaveCallback()],
     #                 **data_module)
 
+    print('*'*100)
+    print(model)
+    print('*'*100)
+
     trainer = LLaVATrainer(model=model,
                     tokenizer=tokenizer,
                     args=training_args,
