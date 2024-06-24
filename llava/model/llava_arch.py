@@ -331,6 +331,8 @@ class LlavaMetaForCausalLM(ABC):
         expanded_mask = attention_mask.unsqueeze(-1).expand_as(input_text_embeds)
         # input_text_embeds = input_text_embeds * expanded_mask
 
+        target_dtype = input_vision_embeds.dtype
+
         # Normalize the embeddings
         input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
         input_vision_embeds = F.normalize(input_vision_embeds, dim=-1)  # Normalize across the embed_dim
@@ -345,6 +347,9 @@ class LlavaMetaForCausalLM(ABC):
         # Compute the average embeddings for text and vision
         text_embeds = text_embeds_sum / valid_token_counts  # [batch_size, embed_dim]
         vision_embeds = input_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
+
+        # convert text embed to target dtype
+        text_embeds = text_embeds.to(target_dtype)
 
         # Compute the cosine similarity between all pairs
         logits_per_image = torch.matmul(vision_embeds, text_embeds.T)  # [batch_size, batch_size]
