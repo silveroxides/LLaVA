@@ -67,6 +67,7 @@ class LlavaMetaModel:
         pretrain_mm_mlp_adapter = model_args.pretrain_mm_mlp_adapter
         mm_patch_merge_type = model_args.mm_patch_merge_type
         share_moe = model_args.share_moe
+        co_attention = model_args.cross_attension
 
         self.config.mm_vision_tower = vision_tower
 
@@ -126,7 +127,8 @@ class LlavaMetaModel:
         self.config.mm_patch_merge_type = mm_patch_merge_type
 
         # initializing the co_attention
-        self.co_attention = get_co_attention(self.hidden_size, self.hidden_size*2, 2, 2)
+        if co_attention:
+            self.co_attention = get_co_attention(self.hidden_size, self.hidden_size*2, 2, 2)
 
 
 
