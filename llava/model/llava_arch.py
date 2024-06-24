@@ -57,7 +57,7 @@ class LlavaMetaModel:
             vision_tower = vision_tower[0]
         return vision_tower
 
-    def initialize_vision_modules(self, model_args, sparseMoE, fsdp=None):
+    def initialize_vision_modules(self, model_args, fsdp=None):
         print('Inside initialize_vision_modules')
         # vision_tower = openai/clip-vit-large-patch14
         vision_tower = model_args.vision_tower
@@ -66,14 +66,39 @@ class LlavaMetaModel:
         mm_vision_select_feature = model_args.mm_vision_select_feature
         pretrain_mm_mlp_adapter = model_args.pretrain_mm_mlp_adapter
         mm_patch_merge_type = model_args.mm_patch_merge_type
+        share_moe = model_args.share_moe
 
         self.config.mm_vision_tower = vision_tower
 
+        if getattr(self, 'mm_projector', None) is None:
+            # print('-' * 100)
+            # print('*'*40+'build viison projector'+'*'*40)
+
+            self.mm_projector = build_vision_projector(self.config)
+            # self.mm_projector = sparseMoE
+            # print(self.mm_projector)
+            # print('-'*120)
+
+            if 'unpad' in mm_patch_merge_type:
+                embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
+                self.image_newline = nn.Parameter(
+                    torch.randn(self.config.hidden_size, dtype=self.dtype) * embed_std
+                )
+
+        else:
+            # In case it is frozen by LoRA
+            for p in self.mm_projector.parameters():
+                p.requires_grad = True
+
         if self.get_vision_tower() is None:
+            
+            if share_moe:
+                vision_tower = build_vision_tower(model_args, self.mm_projector)
+
+            else: vision_tower = build_vision_tower(model_args)
 
             print('-' * 140)
             print('*'*40+'build vision tower'+'*'*40)
-            vision_tower = build_vision_tower(model_args, sparseMoE)
             print(vision_tower)
             print('-' * 140)
 
@@ -81,6 +106,7 @@ class LlavaMetaModel:
                 self.vision_tower = [vision_tower]
             else:
                 self.vision_tower = vision_tower
+
         else:
             if fsdp is not None and len(fsdp) > 0:
                 vision_tower = self.vision_tower[0]
@@ -102,29 +128,6 @@ class LlavaMetaModel:
         # initializing the co_attention
         self.co_attention = get_co_attention(self.hidden_size, self.hidden_size*2, 2, 2)
 
-        if getattr(self, 'mm_projector', None) is None:
-            print('-' * 100)
-            print('*'*40+'build viison projector'+'*'*40)
-
-            # self.mm_projector = build_vision_projector(self.config)
-            self.mm_projector = sparseMoE
-            print(self.mm_projector)
-            print('-'*120)
-
-            if 'unpad' in mm_patch_merge_type:
-                embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
-                self.image_newline = nn.Parameter(
-                    torch.randn(self.config.hidden_size, dtype=self.dtype) * embed_std
-                )
-
-            print('-' * 140)
-            print('*'*40+'Modified vision tower'+'*'*40)
-            print(vision_tower)
-            print('-' * 140)
-        else:
-            # In case it is frozen by LoRA
-            for p in self.mm_projector.parameters():
-                p.requires_grad = True
 
 
         if pretrain_mm_mlp_adapter is not None:

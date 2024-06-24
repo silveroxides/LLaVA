@@ -7,7 +7,7 @@ from .clip_moe import CLIPSMoEVisionTransformer
 
 
 class CLIPVisionTower(nn.Module):
-    def __init__(self, vision_tower, sparseMoE, args, delay_load=False):
+    def __init__(self, vision_tower, args, sparseMoE=None, delay_load=False):
         super().__init__()
 
         self.is_loaded = False
@@ -17,25 +17,30 @@ class CLIPVisionTower(nn.Module):
         self.mlp_type = getattr(args, 'mm_projector_type', 'linear')
         self.num_experts = getattr(args, 'num_experts', 'linear')
         self.num_selected = getattr(args, 'num_experts_per_tok', 'linear')
+
+        # check if sparse_Moe is none
+        self.moe = sparseMoE is not None
         
 
         if not delay_load:
-            self.load_model(sparseMoE)
+            if sparseMoE is not None: self.load_model(sparseMoE)
+            else: self.load_model(sparseMoE)
             
         elif getattr(args, 'unfreeze_mm_vision_tower', False):
-            self.load_model(sparseMoE)
+            if sparseMoE is not None: self.load_model(sparseMoE)
+            else: self.load_model(sparseMoE)
         else:
             self.cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
 
 
-    def load_model(self, sparseMoE, device_map=None):
+    def load_model(self, sparseMoE=None, device_map=None):
         if self.is_loaded:
             print('{} is already loaded, `load_model` called again, skipping.'.format(self.vision_tower_name))
             return
 
         self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
 
-        if self.mlp_type == 'sparse_moe':
+        if sparseMoE is not None:
             cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
             self.vision_tower = CLIPSMoEVisionTransformer(cfg_only, sparseMoE, self.num_experts, self.num_selected)
         else:
@@ -65,6 +70,7 @@ class CLIPVisionTower(nn.Module):
     @torch.no_grad()
     def forward(self, images):
         # image is a list
+        # for video
         if type(images) is list:
             image_features = []
             router_logits = []
@@ -75,12 +81,24 @@ class CLIPVisionTower(nn.Module):
                 router_logits.append(router_logits)
         
         # image is not a list but tensor
+        # for image
         else:
-            image_forward_out, router_logits = self.vision_tower(images)
-            image_features = self.feature_select(image_forward_out).to(images.dtype)
+            
+            if self.moe: 
+                image_forward_out, router_logits = self.vision_tower(images)
+                image_features = self.feature_select(image_forward_out).to(images.dtype)
+                # will return router logits in future
+                return image_features
+            
+            else: 
+                image_forward_out = self.vision_tower(images)
+                image_features = self.feature_select(image_forward_out).to(images.dtype)
+                return image_features
+
+            
             
         # return image_features, router_logits
-        return image_features
+        
 
     @property
     def dummy_feature(self):

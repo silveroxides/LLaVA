@@ -67,6 +67,7 @@ class ModelArguments:
     mm_vision_select_layer: Optional[int] = field(default=-1)
     pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
     mm_projector_type: Optional[str] = field(default='linear')
+    share_moe: bool = field(default=False)
     mm_use_im_start_end: bool = field(default=False)
     mm_use_im_patch_token: bool = field(default=True)
     mm_patch_merge_type: Optional[str] = field(default='flat')
@@ -982,7 +983,6 @@ def train(attn_implementation=None):
         
         model.get_model().initialize_vision_modules(
             model_args=model_args,
-            sparseMoE = sparseMoE,
             fsdp=training_args.fsdp
         )
         
