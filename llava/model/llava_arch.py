@@ -218,19 +218,19 @@ class LlavaMetaForCausalLM(ABC):
         for text_embed in text_embeds:
             padded_text_embed = torch.zeros((max_text_length, text_embed.size(1)), dtype=text_embed.dtype, device=text_embed.device)
             padded_text_embed[:text_embed.size(0)] = text_embed
-            print(f'text embed: {text_embed.shape}')
-            print(f'padded text embed: {padded_text_embed.shape}')
+            # print(f'text embed: {text_embed.shape}')
+            # print(f'padded text embed: {padded_text_embed.shape}')
             padded_text_embeds.append(padded_text_embed)
         
         # Convert the lists to tensors
         image_embeds = torch.stack(image_embeds)
         text_embeds = torch.stack(padded_text_embeds)
 
-        print('*'*120)
-        print(f'Inside the seperate text and image embeds')
-        print(f'shape of img embeds: {image_embeds.shape}')
-        print(f'shape of text embeds: {text_embeds.shape}')
-        print('*'*120)
+        # print('*'*120)
+        # print(f'Inside the seperate text and image embeds')
+        # print(f'shape of img embeds: {image_embeds.shape}')
+        # print(f'shape of text embeds: {text_embeds.shape}')
+        # print('*'*120)
         
         return image_embeds, text_embeds
     
@@ -576,9 +576,9 @@ class LlavaMetaForCausalLM(ABC):
 
 
         total_loss, img_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
-        print('*'*100)
-        print(f'Contrastive Total loss: {total_loss}, Image loss: {img_loss}')
-        print('*'*100)
+        # print('*'*100)
+        # print(f'Contrastive Total loss: {total_loss}, Image loss: {img_loss}')
+        # print('*'*100)
 
         # #####################################################################################
 
