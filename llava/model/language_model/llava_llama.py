@@ -63,6 +63,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         # self.gate_logits = () # tuple of gate logits for each layer
         self.gate_logits = None
         self.all_gate_logits = () # tuple of gate logits for each layer
+        self.constrastive_loss = []
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         # Initialize weights and apply final processing
@@ -95,7 +96,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 past_key_values,
                 inputs_embeds,
                 labels,
-                gate_logits
+                gate_logits,
+                C_loss
             ) = self.prepare_inputs_labels_for_multimodal(
                 input_ids,
                 position_ids,
@@ -110,6 +112,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         # self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
         self.gate_logits = gate_logits # tuple of gate logits for each layer
         self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
+        self.constrastive_loss.append(C_loss)
 
 
         return super().forward(

@@ -358,8 +358,6 @@ class LlavaMetaForCausalLM(ABC):
         input_text_embeds = input_text_embeds.half()
         input_vision_embeds = input_vision_embeds.half()
 
-        debug_tensor(input_text_embeds, 'input_text_embeds normalized')
-        debug_tensor(input_vision_embeds, 'input_text_embeds normalized')
 
         # Calculate the sum and count of valid (non-padded) tokens for text embeddings
         text_embeds_sum = (input_text_embeds * expanded_mask).sum(dim=1)
@@ -371,10 +369,6 @@ class LlavaMetaForCausalLM(ABC):
         # Compute the average embeddings for text and vision
         text_embeds = text_embeds_sum / valid_token_counts  # [batch_size, embed_dim]
         vision_embeds = input_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
-
-        debug_tensor(text_embeds, 'input_text_embeds mean')
-        debug_tensor(vision_embeds, 'input_text_embeds mean')
-
 
         # convert text embed to target dtype
         text_embeds = text_embeds.to(target_dtype)
@@ -678,7 +672,7 @@ class LlavaMetaForCausalLM(ABC):
         if _position_ids is None:
             position_ids = None
 
-        return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits
+        return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits, img_loss
 
     
     # invoked from train.py: line 1030
