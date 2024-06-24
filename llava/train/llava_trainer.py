@@ -151,7 +151,7 @@ class LLaVATrainer(Trainer):
 
         # Access the gate_logits attribute from the underlying model
         gate_logits = model.gate_logits  # Access the gate_logits
-        C_loss = model.C_loss       
+        C_loss = model.constrastive_loss       
         num_experts = model.config.num_experts
         num_experts_per_tok = model.config.num_experts_per_tok
         aux_loss_coef = model.config.aux_loss_coef
@@ -173,16 +173,9 @@ class LLaVATrainer(Trainer):
             num_experts_per_tok,
         )
 
-        # overall_aux_loss = aux_loss_coef * load_balancing_loss.detach()
-
-        print(f'Contrastive Loss len: {len(C_loss)}')
-        # Convert the list of losses to a tensor
-        C_loss = torch.tensor(C_loss)
-        # Calculate the average loss
-        C_average_loss = torch.mean(losses_tensor)
 
         print(f'load_balancing_loss: {aux_loss_coef * load_balancing_loss}')
-        print(f'Avg Contrastive loss: {C_average_loss}')
+        print(f'Contrastive loss: {C_loss}')
         print(f'Main Loss: {loss}')
 
         # Add the aux_loss to the main loss
