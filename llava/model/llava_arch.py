@@ -327,79 +327,92 @@ class LlavaMetaForCausalLM(ABC):
     #     total_loss = (loss_image + loss_text) / 2
     #     return total_loss, loss_image
 
+    def clip_contrastive_loss(self, text_embeddings, image_embeddings, temperature=0.7):
+        # Calculating the Loss
+        logits = (text_embeddings @ image_embeddings.T) / temperature
+        images_similarity = image_embeddings @ image_embeddings.T
+        texts_similarity = text_embeddings @ text_embeddings.T
+        targets = F.softmax(
+            (images_similarity + texts_similarity) / 2 * self.temperature, dim=-1
+        )
+        texts_loss = F.cross_entropy(logits, targets, reduction='none')
+        images_loss = F.cross_entropy(logits.T, targets.T, reduction='none')
+        loss =  (images_loss + texts_loss) / 2.0 # shape: (batch_size)
+        return loss.mean()
 
-    def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds, attention_mask):
+
+    # def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds, attention_mask):
     
-        def debug_tensor(tensor, name):
-            print(f"\nDebugging {name}:")
-            print(f"Shape: {tensor.shape}")
-            print(f"Type: {tensor.dtype}")
-            print(f"Device: {tensor.device}")
-            print(f"Min: {tensor.min().item():.6f}, Max: {tensor.max().item():.6f}")
-            print(f"Mean: {tensor.mean().item():.6f}, Std: {tensor.std().item():.6f}")
-            print(f"NaNs: {torch.isnan(tensor).sum().item()}, Infs: {torch.isinf(tensor).sum().item()}")
+    #     def debug_tensor(tensor, name):
+    #         print(f"\nDebugging {name}:")
+    #         print(f"Shape: {tensor.shape}")
+    #         print(f"Type: {tensor.dtype}")
+    #         print(f"Device: {tensor.device}")
+    #         print(f"Min: {tensor.min().item():.6f}, Max: {tensor.max().item():.6f}")
+    #         print(f"Mean: {tensor.mean().item():.6f}, Std: {tensor.std().item():.6f}")
+    #         print(f"NaNs: {torch.isnan(tensor).sum().item()}, Infs: {torch.isinf(tensor).sum().item()}")
 
         
-        attention_mask = attention_mask.float()
-        # Zero out the padded tokens in the embeddings using the attention mask
-        expanded_mask = attention_mask.unsqueeze(-1).expand_as(input_text_embeds)
-        # input_text_embeds = input_text_embeds * expanded_mask
+    #     attention_mask = attention_mask.float()
+    #     # Zero out the padded tokens in the embeddings using the attention mask
+    #     expanded_mask = attention_mask.unsqueeze(-1).expand_as(input_text_embeds)
+    #     # input_text_embeds = input_text_embeds * expanded_mask
 
-        target_dtype = input_vision_embeds.dtype
+    #     target_dtype = input_vision_embeds.dtype
 
-            # Convert embeddings to float32 before normalization to prevent NaNs
-        input_text_embeds = input_text_embeds.float()
-        input_vision_embeds = input_vision_embeds.float()
+    #         # Convert embeddings to float32 before normalization to prevent NaNs
+    #     input_text_embeds = input_text_embeds.float()
+    #     input_vision_embeds = input_vision_embeds.float()
 
-        # # Zero out the padded tokens in the embeddings using the attention mask
-        # expanded_mask = float_mask.unsqueeze(-1).expand_as(input_text_embeds)
-        # input_text_embeds = input_text_embeds * expanded_mask
+    #     # # Zero out the padded tokens in the embeddings using the attention mask
+    #     # expanded_mask = float_mask.unsqueeze(-1).expand_as(input_text_embeds)
+    #     # input_text_embeds = input_text_embeds * expanded_mask
 
-        # Normalize the embeddings
-        input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
-        input_vision_embeds = F.normalize(input_vision_embeds, dim=-1)  # Normalize across the embed_dim
+    #     # Normalize the embeddings
+    #     input_text_embeds = F.normalize(input_text_embeds, dim=-1)  # Normalize across the embed_dim
+    #     input_vision_embeds = F.normalize(input_vision_embeds, dim=-1)  # Normalize across the embed_dim
 
-        # Convert back to float16 if necessary
-        input_text_embeds = input_text_embeds.half()
-        input_vision_embeds = input_vision_embeds.half()
+    #     # Convert back to float16 if necessary
+    #     input_text_embeds = input_text_embeds.half()
+    #     input_vision_embeds = input_vision_embeds.half()
 
 
-        # Calculate the sum and count of valid (non-padded) tokens for text embeddings
-        text_embeds_sum = (input_text_embeds * expanded_mask).sum(dim=1)
-        valid_token_counts = expanded_mask.sum(dim=1)
+    #     # Calculate the sum and count of valid (non-padded) tokens for text embeddings
+    #     text_embeds_sum = (input_text_embeds * expanded_mask).sum(dim=1)
+    #     valid_token_counts = expanded_mask.sum(dim=1)
         
-        # Avoid division by zero by replacing zeros with ones (does not affect the result because sum will be zero)
-        valid_token_counts = torch.where(valid_token_counts == 0, torch.ones_like(valid_token_counts), valid_token_counts)
+    #     # Avoid division by zero by replacing zeros with ones (does not affect the result because sum will be zero)
+    #     valid_token_counts = torch.where(valid_token_counts == 0, torch.ones_like(valid_token_counts), valid_token_counts)
         
-        # Compute the average embeddings for text and vision
-        text_embeds = text_embeds_sum / valid_token_counts  # [batch_size, embed_dim]
-        vision_embeds = input_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
+    #     # Compute the average embeddings for text and vision
+    #     text_embeds = text_embeds_sum / valid_token_counts  # [batch_size, embed_dim]
+    #     vision_embeds = input_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
 
-        # convert text embed to target dtype
-        text_embeds = text_embeds.to(target_dtype)
+    #     # convert text embed to target dtype
+    #     text_embeds = text_embeds.to(target_dtype)
 
-        # Compute the cosine similarity between all pairs
-        logits_per_image = torch.matmul(vision_embeds, text_embeds.T)  # [batch_size, batch_size]
-        logits_per_text = logits_per_image.T  # [batch_size, batch_size]
+    #     # Compute the cosine similarity between all pairs
+    #     logits_per_image = torch.matmul(vision_embeds, text_embeds.T)  # [batch_size, batch_size]
+    #     logits_per_text = logits_per_image.T  # [batch_size, batch_size]
 
-        # Temperature parameter
-        temperature = 0.07
-        logits_per_image = logits_per_image / temperature
-        logits_per_text = logits_per_text / temperature
+    #     # Temperature parameter
+    #     temperature = 0.07
+    #     logits_per_image = logits_per_image / temperature
+    #     logits_per_text = logits_per_text / temperature
 
-        # print(f"Similarity matrix:\n{F.softmax(logits_per_image, dim=-1)}")
+    #     # print(f"Similarity matrix:\n{F.softmax(logits_per_image, dim=-1)}")
 
-        # Ground truth labels
-        batch_size = input_text_embeds.shape[0]
-        labels = torch.arange(batch_size, dtype=torch.long, device=logits_per_image.device)
+    #     # Ground truth labels
+    #     batch_size = input_text_embeds.shape[0]
+    #     labels = torch.arange(batch_size, dtype=torch.long, device=logits_per_image.device)
 
-        # Compute the cross-entropy loss
-        loss_image = F.cross_entropy(logits_per_image, labels)
-        loss_text = F.cross_entropy(logits_per_text, labels)
+    #     # Compute the cross-entropy loss
+    #     loss_image = F.cross_entropy(logits_per_image, labels)
+    #     loss_text = F.cross_entropy(logits_per_text, labels)
 
-        # Total loss
-        total_loss = (loss_image + loss_text) / 2
-        return total_loss, loss_image
+    #     # Total loss
+    #     total_loss = (loss_image + loss_text) / 2
+    #     return total_loss, loss_image
 
 
     def prepare_inputs_labels_for_multimodal(
@@ -580,7 +593,8 @@ class LlavaMetaForCausalLM(ABC):
 
 
 
-        total_loss, img_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
+        total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
+        # total_loss, img_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
         # print('*'*100)
         # print(f'Contrastive Total loss: {total_loss}, Image loss: {img_loss}')
         # print('*'*100)
