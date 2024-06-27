@@ -230,7 +230,7 @@ class LlavaMetaForCausalLM(ABC):
         # Convert the lists to tensors
         image_embeds = torch.stack(image_embeds)
         text_embeds = torch.stack(padded_text_embeds)
-        attention_mask = text_embeds.sum(dim=-1) != 0
+        # attention_mask = text_embeds.sum(dim=-1) != 0
 
         # print('*'*120)
         # print(f'Inside the seperate text and image embeds')
@@ -238,7 +238,7 @@ class LlavaMetaForCausalLM(ABC):
         # print(f'shape of text embeds: {text_embeds.shape}')
         # print('*'*120)
         
-        return image_embeds, text_embeds, attention_mask
+        return image_embeds, text_embeds
     
 
 
