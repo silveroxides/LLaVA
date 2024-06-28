@@ -58,6 +58,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         print('*'*100)
         print('*'*40+'Model'+'*'*40)
         print(self.model)
+        self.config = config
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         self.num_experts = config.num_experts
