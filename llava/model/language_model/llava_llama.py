@@ -93,7 +93,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 inputs_embeds,
                 labels,
                 gate_logits,
-                load_balancing_loss,
                 alignment_loss
             ) = self.prepare_inputs_labels_for_multimodal(
                 input_ids,

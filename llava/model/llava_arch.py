@@ -604,10 +604,10 @@ class LlavaMetaForCausalLM(ABC):
         # (277, 5120),  # [seq_len=277, 5120] -> [277, 5120] 
         # (269, 5120),  # [seq_len=269, 5120] -> [277, 5120] 
         
-        print('*'*100)
-        print('Padded Attension Mask shape: {attention_mask.shape}')
-        pprint.pprint(attention_mask)
-        print('*'*100)
+        # print('*'*100)
+        # print('Padded Attension Mask shape: {attention_mask.shape}')
+        # pprint.pprint(attention_mask)
+        # print('*'*100)
 
 
         # checking with the actual passed parameters
