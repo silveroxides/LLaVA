@@ -242,18 +242,37 @@ class LlavaMetaForCausalLM(ABC):
     
 
 
-    def clip_contrastive_loss(self, text_embeddings, image_embeddings, temperature=0.7):
+    def clip_contrastive_loss(self, text_embeddings, image_embeddings, attention_mask, temperature=0.07):
+
+        # convert this to fp32 to mitigate `nan` during normalization
+        text_embeds = text_embeddings.float()
+        vision_embeds = image_embeddings.float()
+
+        # Normalize the embeddings
+        normalized_text_embeds = F.normalize(text_embeds, dim=-1)  # Normalize across the embed_dim
+        normalized_vision_embeds = F.normalize(vision_embeds, dim=-1)  # Normalize across the embed_dim
+
+        # Create a mask for non-zero vectors
+        attention_mask = attention_mask.float()
+
+        # mean vision embeddings
+        mean_vision_embeds = normalized_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
+        mean_text_embeddings = normalized_text_embeds.sum(dim=1) / attention_mask.sum(dim=1).unsqueeze(-1)
+
         # Calculating the Loss
-        logits = (text_embeddings @ image_embeddings.T) / temperature
-        images_similarity = image_embeddings @ image_embeddings.T
-        texts_similarity = text_embeddings @ text_embeddings.T
+        logits = (mean_vision_embeds @ mean_text_embeddings.T) / temperature
+        
+        images_similarity = mean_text_embeddings @ mean_text_embeddings.T
+        texts_similarity = mean_vision_embeds @ mean_vision_embeds.T
+
         targets = F.softmax(
             (images_similarity + texts_similarity) / 2 * self.temperature, dim=-1
         )
-        texts_loss = F.cross_entropy(logits, targets, reduction='none')
-        images_loss = F.cross_entropy(logits.T, targets.T, reduction='none')
+        texts_loss = F.cross_entropy(logits, targets)
+        images_loss = F.cross_entropy(logits.T, targets.T)
         loss =  (images_loss + texts_loss) / 2.0 # shape: (batch_size)
-        return loss.mean()
+        
+        return loss.mean().half()
 
 
     # def clip_contrastive_loss(self, input_text_embeds, input_vision_embeds, attention_mask):
@@ -509,11 +528,10 @@ class LlavaMetaForCausalLM(ABC):
 
 
         # total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
-        total_loss = 0.1
-        # total_loss, img_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
-        # print('*'*100)
-        # print(f'Contrastive Total loss: {total_loss}, Image loss: {img_loss}')
-        # print('*'*100)
+        total_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
+        print('*'*100)
+        print(f'Contrastive Total loss: {total_loss} {type(total_loss)}')
+        print('*'*100)
 
         # #####################################################################################
 
