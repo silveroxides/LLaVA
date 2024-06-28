@@ -25,6 +25,8 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.generation.utils import GenerateOutput
 
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
+from llava.model.load_balancing_loss import *
+
 
 # thisis inherating all the attributes of LlamaConfig
 # and adding new attribute called model_type attribute to it
@@ -59,11 +61,10 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         print(self.model)
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
+        self.num_experts = config.num_experts
+        self.num_experts_per_tok = config.num_experts_per_tok
         # self.gate_logits = None
         # self.gate_logits = () # tuple of gate logits for each layer
-        self.gate_logits = None
-        self.all_gate_logits = () # tuple of gate logits for each layer
-        self.constrastive_loss = None
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         # Initialize weights and apply final processing
@@ -97,7 +98,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 inputs_embeds,
                 labels,
                 gate_logits,
-                C_loss
+                alignment_loss
             ) = self.prepare_inputs_labels_for_multimodal(
                 input_ids,
                 position_ids,
@@ -110,12 +111,18 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         
         # self.gate_logits = gate_logits
         # self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
-        self.gate_logits = gate_logits # tuple of gate logits for each layer
-        self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
-        self.constrastive_loss = C_loss
+        # self.gate_logits = gate_logits # tuple of gate logits for each layer
+        # self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
+        # self.constrastive_loss = C_loss
+
+        load_balancing_loss = aux_loss(
+            gate_logits,
+            self.num_experts,
+            self.num_experts_per_tok,
+        )
 
 
-        return super().forward(
+        out =  super().forward(
             input_ids=input_ids,
             attention_mask=attention_mask,
             position_ids=position_ids,
@@ -127,6 +134,18 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict
         )
+        loss = out['loss']
+
+        if self.config.local_rank == 0:
+            print('*'*100)
+            print(f'Main Loss: {loss}; LoadBalancingLoss: {load_balancing_loss}; ALignmentLoss: {alignment_loss}')
+            loss += load_balancing_loss.to(loss.device) + alignment_loss.to(loss.device)
+            out['loss'] = loss
+            print(f'Total Loss: {out['loss']}')
+            print('*'*100)
+
+        return out
+
 
     @torch.no_grad()
     def generate(

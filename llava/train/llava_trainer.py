@@ -133,64 +133,64 @@ class LengthGroupedSampler(Sampler):
 class LLaVATrainer(Trainer):
 
 
-    def compute_loss(self, model, inputs, return_outputs=False):
-        """
-        How the loss is computed by Trainer. By default, all models return the loss in the first element.
+    # def compute_loss(self, model, inputs, return_outputs=False):
+    #     """
+    #     How the loss is computed by Trainer. By default, all models return the loss in the first element.
 
-        Subclass and override for custom behavior.
-        """
-        outputs = model(**inputs)
-        loss = outputs.loss
-        print('-'*100)
+    #     Subclass and override for custom behavior.
+    #     """
+    #     outputs = model(**inputs)
+    #     loss = outputs.loss
+    #     print('-'*100)
 
-        # Get the underlying model from the DeepSpeedEngine object
-        model = model.module if hasattr(model, "module") else model
+    #     # Get the underlying model from the DeepSpeedEngine object
+    #     model = model.module if hasattr(model, "module") else model
 
-        # # Print the attributes and methods of the underlying model
-        # print("Model attributes and methods:", dir(model))
+    #     # # Print the attributes and methods of the underlying model
+    #     # print("Model attributes and methods:", dir(model))
 
-        # Access the gate_logits attribute from the underlying model
-        gate_logits = model.gate_logits  # Access the gate_logits
-        C_loss = model.constrastive_loss       
-        num_experts = model.config.num_experts
-        num_experts_per_tok = model.config.num_experts_per_tok
-        aux_loss_coef = model.config.aux_loss_coef
-        projector = model.config.mm_projector_type
-        attention_mask = inputs.get("attention_mask")
+    #     # Access the gate_logits attribute from the underlying model
+    #     gate_logits = model.gate_logits  # Access the gate_logits
+    #     C_loss = model.constrastive_loss       
+    #     num_experts = model.config.num_experts
+    #     num_experts_per_tok = model.config.num_experts_per_tok
+    #     aux_loss_coef = model.config.aux_loss_coef
+    #     projector = model.config.mm_projector_type
+    #     attention_mask = inputs.get("attention_mask")
 
-        # print('#'*100)
-        # print('ProjectorType')
-        # print(type(projector))
-        # print('#'*100)
-
-
-
-        # if projector ==  'sparse_moe':
-
-        load_balancing_loss = aux_loss(
-            gate_logits,
-            num_experts,
-            num_experts_per_tok,
-        )
+    #     # print('#'*100)
+    #     # print('ProjectorType')
+    #     # print(type(projector))
+    #     # print('#'*100)
 
 
-        print(f'load_balancing_loss: {aux_loss_coef * load_balancing_loss}')
-        print(f'Contrastive loss: {C_loss}')
-        print(f'Main Loss: {loss}')
 
-        # Add the aux_loss to the main loss
-        loss += (aux_loss_coef * load_balancing_loss.to(loss.device)) + C_loss.to(loss.device) # loss += self.router_aux_loss_coef * aux_loss.to(loss.device)
-        # combined_loss.backward(retain_graph=True)
+    #     # if projector ==  'sparse_moe':
+
+    #     load_balancing_loss = aux_loss(
+    #         gate_logits,
+    #         num_experts,
+    #         num_experts_per_tok,
+    #     )
 
 
-        print(f'Total Loss: {loss}')
-        print('-'*100)
+    #     print(f'load_balancing_loss: {aux_loss_coef * load_balancing_loss}')
+    #     print(f'Contrastive loss: {C_loss}')
+    #     print(f'Main Loss: {loss}')
 
-        # return (combined_loss, outputs) if return_outputs else combined_loss
+    #     # Add the aux_loss to the main loss
+    #     loss += (aux_loss_coef * load_balancing_loss.to(loss.device)) + C_loss.to(loss.device) # loss += self.router_aux_loss_coef * aux_loss.to(loss.device)
+    #     # combined_loss.backward(retain_graph=True)
 
-        # else:
+
+    #     print(f'Total Loss: {loss}')
+    #     print('-'*100)
+
+    #     # return (combined_loss, outputs) if return_outputs else combined_loss
+
+    #     # else:
             
-        return (loss, outputs) if return_outputs else loss
+    #     return (loss, outputs) if return_outputs else loss
 
 
     def _get_train_sampler(self) -> Optional[torch.utils.data.Sampler]:

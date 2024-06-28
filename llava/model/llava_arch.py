@@ -528,10 +528,7 @@ class LlavaMetaForCausalLM(ABC):
 
 
         # total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
-        total_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
-        print('*'*100)
-        print(f'Contrastive Total loss: {total_loss} {type(total_loss)}')
-        print('*'*100)
+        align_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
 
         # #####################################################################################
 
@@ -625,7 +622,7 @@ class LlavaMetaForCausalLM(ABC):
         if _position_ids is None:
             position_ids = None
 
-        return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits, total_loss
+        return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits, align_loss
 
     
     # invoked from train.py: line 1030
