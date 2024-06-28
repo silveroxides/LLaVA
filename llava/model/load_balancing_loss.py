@@ -6,7 +6,7 @@ from torch.nn import functional as F
 def aux_loss(router_logits: torch.Tensor, num_experts:torch.Tensor, top_k=2):
 
       # getting the probability distribution over the experts
-      routing_weights = F.softmax(router_logits, dim=1, dtype=torch.float)
+      routing_weights = F.softmax(router_logits, dim=1)
 
       # selecting the top-k experts for each token in the sequence
       _, selected_experts = torch.topk(routing_weights, top_k, dim=-1)

@@ -25,11 +25,12 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.generation.utils import GenerateOutput
 
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
+from ..load_balancing_loss import aux_loss
 
 # thisis inherating all the attributes of LlamaConfig
 # and adding new attribute called model_type attribute to it
 class LlavaConfig(LlamaConfig):
-    print('inside LlavaConfig')
+    # print('inside LlavaConfig')
     model_type = "llava_llama"
 
 
@@ -39,7 +40,7 @@ class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
 
     # config: LlamaConfig -> specifying the type of the config argument
     def __init__(self, config: LlamaConfig):
-        print('inside LlavaLlamaModel __init__')
+        # print('inside LlavaLlamaModel __init__')
         # calling the constructor of the parent class LlavaMetaModel and LlamaModel and passing the config argument to it.
         super(LlavaLlamaModel, self).__init__(config)
 
@@ -47,23 +48,18 @@ class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
 # LlamaForCausalLM is the main class which is inharited by LlavaLlamaForCausalLM
 # now we can access all the functions of the parent class
 class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
-    print('inside LlavaLlamaForCausalLM')
+    # print('inside LlavaLlamaForCausalLM')
     config_class = LlavaConfig
 
     def __init__(self, config):
-        print('inside LlavaLlamaForCausalLM __init__')
+        # print('inside LlavaLlamaForCausalLM __init__')
         super(LlamaForCausalLM, self).__init__(config)
         self.model = LlavaLlamaModel(config)
-        print('*'*100)
-        print('*'*40+'Model'+'*'*40)
-        print(self.model)
+        self.config = config
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         # self.gate_logits = None
         # self.gate_logits = () # tuple of gate logits for each layer
-        self.gate_logits = None
-        self.all_gate_logits = () # tuple of gate logits for each layer
-        self.constrastive_loss = None
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         # Initialize weights and apply final processing
@@ -97,7 +93,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 inputs_embeds,
                 labels,
                 gate_logits,
-                C_loss
+                load_balancing_loss,
+                alignment_loss
             ) = self.prepare_inputs_labels_for_multimodal(
                 input_ids,
                 position_ids,
@@ -110,12 +107,12 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         
         # self.gate_logits = gate_logits
         # self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
-        self.gate_logits = gate_logits # tuple of gate logits for each layer
-        self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
-        self.constrastive_loss = C_loss
+        # self.gate_logits = gate_logits # tuple of gate logits for each layer
+        # self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
+        # self.constrastive_loss = C_loss
 
 
-        return super().forward(
+        out = super().forward(
             input_ids=input_ids,
             attention_mask=attention_mask,
             position_ids=position_ids,
@@ -127,6 +124,25 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict
         )
+
+        load_balancing_loss = aux_loss(
+            gate_logits,
+            self.config.num_experts,
+            self.config.num_experts_per_tok,
+        ) * self.config.aux_loss_coef
+
+        
+        loss = out['loss']
+
+        if self.config.local_rank == 0:
+            print('*'*100)
+            print(f'Main Loss: {loss}; LoadBalancingLoss: {load_balancing_loss}; AlignmentLoss: {alignment_loss}')
+            loss += load_balancing_loss.to(loss.device) + alignment_loss.to(loss.device)
+            out['loss'] = loss
+            print(f'Total Loss: {out["loss"]}')
+            print('*'*100)
+
+        return out
 
     @torch.no_grad()
     def generate(
