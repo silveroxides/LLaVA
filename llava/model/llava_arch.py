@@ -266,7 +266,7 @@ class LlavaMetaForCausalLM(ABC):
         texts_similarity = mean_vision_embeds @ mean_vision_embeds.T
 
         targets = F.softmax(
-            (images_similarity + texts_similarity) / 2 * self.temperature, dim=-1
+            (images_similarity + texts_similarity) / 2 * temperature, dim=-1
         )
         texts_loss = F.cross_entropy(logits, targets)
         images_loss = F.cross_entropy(logits.T, targets.T)
