@@ -25,7 +25,7 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.generation.utils import GenerateOutput
 
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
-from llava.model.load_balancing_loss import *
+from ..load_balancing_loss import *
 
 
 # thisis inherating all the attributes of LlamaConfig
