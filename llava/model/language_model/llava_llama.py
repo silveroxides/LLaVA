@@ -119,7 +119,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
 
 
-        out =  super().forward(
+        return super().forward(
             input_ids=input_ids,
             attention_mask=attention_mask,
             position_ids=position_ids,
@@ -132,17 +132,17 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             return_dict=return_dict
         )
         
-        loss = out['loss']
+        # loss = out['loss']
 
-        if self.config.local_rank == 0:
-            print('*'*100)
-            print(f'Main Loss: {loss}; LoadBalancingLoss: {load_balancing_loss}; ALignmentLoss: {alignment_loss}')
-            loss += load_balancing_loss.to(loss.device) + alignment_loss.to(loss.device)
-            out['loss'] = loss
-            print(f'Total Loss: {out['loss']}')
-            print('*'*100)
+        # if self.config.local_rank == 0:
+        #     print('*'*100)
+        #     print(f'Main Loss: {loss}; LoadBalancingLoss: {load_balancing_loss}; ALignmentLoss: {alignment_loss}')
+        #     loss += load_balancing_loss.to(loss.device) + alignment_loss.to(loss.device)
+        #     out['loss'] = loss
+        #     print(f'Total Loss: {out['loss']}')
+        #     print('*'*100)
 
-        return out
+        # return out
 
 
     @torch.no_grad()
