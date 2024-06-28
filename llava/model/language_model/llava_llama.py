@@ -63,7 +63,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         self.vocab_size = config.vocab_size
         self.num_experts = config.num_experts
         self.num_experts_per_tok = config.num_experts_per_tok
-        # self.gate_logits = None
+        self.gate_logits = None
         # self.gate_logits = () # tuple of gate logits for each layer
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
@@ -110,7 +110,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 image_sizes
             )
         
-        # self.gate_logits = gate_logits
+        self.gate_logits = gate_logits
         # self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
         # self.gate_logits = gate_logits # tuple of gate logits for each layer
         # self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
@@ -119,7 +119,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
 
 
-        return super().forward(
+        out =  super().forward(
             input_ids=input_ids,
             attention_mask=attention_mask,
             position_ids=position_ids,
@@ -132,17 +132,17 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             return_dict=return_dict
         )
         
-        # loss = out['loss']
+        loss = out['loss']
 
-        # if self.config.local_rank == 0:
-        #     print('*'*100)
-        #     print(f'Main Loss: {loss}; LoadBalancingLoss: {load_balancing_loss}; ALignmentLoss: {alignment_loss}')
-        #     loss += load_balancing_loss.to(loss.device) + alignment_loss.to(loss.device)
-        #     out['loss'] = loss
-        #     print(f'Total Loss: {out['loss']}')
-        #     print('*'*100)
+        if self.config.local_rank == 0:
+            print('*'*100)
+            print(f'Main Loss: {loss}; LoadBalancingLoss: {load_balancing_loss}; ALignmentLoss: {alignment_loss}')
+            loss += load_balancing_loss.to(loss.device) + alignment_loss.to(loss.device)
+            out['loss'] = loss
+            print(f'Total Loss: {out['loss']}')
+            print('*'*100)
 
-        # return out
+        return out
 
 
     @torch.no_grad()
