@@ -25,8 +25,6 @@ from torch.nn.utils.rnn import pad_sequence
 from .multimodal_encoder.builder import build_vision_tower
 from .co_attention.co_attention import get_co_attention
 from .multimodal_projector.builder import build_vision_projector
-from load_balancing_loss import aux_loss
-
 
 from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
 
@@ -531,14 +529,6 @@ class LlavaMetaForCausalLM(ABC):
 
         # total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
         align_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
-
-        # #####################################################################################
-        load_balancing_loss = aux_loss(
-            gate_logits,
-            4,
-            2
-        )
-
 
         # #####################################################################################
 
