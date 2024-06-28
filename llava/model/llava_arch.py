@@ -25,6 +25,8 @@ from torch.nn.utils.rnn import pad_sequence
 from .multimodal_encoder.builder import build_vision_tower
 from .co_attention.co_attention import get_co_attention
 from .multimodal_projector.builder import build_vision_projector
+from load_balancing_loss import aux_loss
+
 
 from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
 
@@ -531,6 +533,14 @@ class LlavaMetaForCausalLM(ABC):
         align_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
 
         # #####################################################################################
+        load_balancing_loss = aux_loss(
+            gate_logits,
+            4,
+            2
+        )
+
+
+        # #####################################################################################
 
         # suppose
         # new_input_embeds: list of 4 tensors, each [seq_len, 5120] where seq_len varies (267, 264, 277, 269)
@@ -622,7 +632,7 @@ class LlavaMetaForCausalLM(ABC):
         if _position_ids is None:
             position_ids = None
 
-        return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits, align_loss
+        return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits, load_balancing_loss, align_loss
 
     
     # invoked from train.py: line 1030

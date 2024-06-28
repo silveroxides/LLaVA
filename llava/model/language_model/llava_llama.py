@@ -25,7 +25,6 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.generation.utils import GenerateOutput
 
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
-from ..load_balancing_loss import *
 
 
 # thisis inherating all the attributes of LlamaConfig
@@ -98,6 +97,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 inputs_embeds,
                 labels,
                 gate_logits,
+                load_balancing_loss,
                 alignment_loss
             ) = self.prepare_inputs_labels_for_multimodal(
                 input_ids,
@@ -115,11 +115,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         # self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
         # self.constrastive_loss = C_loss
 
-        load_balancing_loss = aux_loss(
-            gate_logits,
-            self.num_experts,
-            self.num_experts_per_tok,
-        )
+
 
 
         out =  super().forward(
@@ -134,6 +130,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict
         )
+        
         loss = out['loss']
 
         if self.config.local_rank == 0:
