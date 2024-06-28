@@ -26,7 +26,6 @@ from transformers.generation.utils import GenerateOutput
 
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 
-
 # thisis inherating all the attributes of LlamaConfig
 # and adding new attribute called model_type attribute to it
 class LlavaConfig(LlamaConfig):
@@ -112,8 +111,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         # self.constrastive_loss = C_loss
 
 
-
-
         out =  super().forward(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -138,7 +135,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             print('*'*100)
 
         return out
-
 
     @torch.no_grad()
     def generate(
