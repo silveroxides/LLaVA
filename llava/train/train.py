@@ -882,6 +882,8 @@ def train(attn_implementation=None):
             **bnb_model_from_pretrained_args
         )
     model.config.use_cache = False
+    model.config.local_rank = local_rank
+
 
 
     if model_args.freeze_backbone:
