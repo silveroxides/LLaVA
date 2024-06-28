@@ -55,15 +55,10 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         print('inside LlavaLlamaForCausalLM __init__')
         super(LlamaForCausalLM, self).__init__(config)
         self.model = LlavaLlamaModel(config)
-        print('*'*100)
-        print('*'*40+'Model'+'*'*40)
-        print(self.model)
         self.config = config
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
-        self.num_experts = config.num_experts
-        self.num_experts_per_tok = config.num_experts_per_tok
-        self.gate_logits = None
+        # self.gate_logits = None
         # self.gate_logits = () # tuple of gate logits for each layer
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
@@ -110,7 +105,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 image_sizes
             )
         
-        self.gate_logits = gate_logits
+        # self.gate_logits = gate_logits
         # self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
         # self.gate_logits = gate_logits # tuple of gate logits for each layer
         # self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
