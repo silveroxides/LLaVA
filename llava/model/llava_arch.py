@@ -632,7 +632,7 @@ class LlavaMetaForCausalLM(ABC):
         if _position_ids is None:
             position_ids = None
 
-        return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits, load_balancing_loss, align_loss
+        return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits, align_loss
 
     
     # invoked from train.py: line 1030
