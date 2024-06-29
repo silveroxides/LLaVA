@@ -130,18 +130,21 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             self.config.num_experts_per_tok,
         ) * self.config.aux_loss_coef
 
-        
+
+        print('*'*100)
+
         loss = out['loss']
 
-        # if self.config.local_rank == 0:
-        # print('*'*100)
-        # print(f'Main Loss: {loss}; LoadBalancingLoss: {load_balancing_loss}; AlignmentLoss: {alignment_loss}')
+        if self.config.local_rank == 0:
+            print(f'LLM Loss: {loss}; LoadBalancingLoss: {load_balancing_loss}; AlignmentLoss: {alignment_loss}')
         
         loss += load_balancing_loss.to(loss.device) + alignment_loss.to(loss.device)
         out['loss'] = loss
 
-        # print(f'Total Loss: {out["loss"]}')
-        # print('*'*100)
+        if self.config.local_rank == 0:
+            print(f'Total Loss: {out["loss"]}')
+        
+        print('*'*100)
 
         return out
 
