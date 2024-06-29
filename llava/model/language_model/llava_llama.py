@@ -17,6 +17,7 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
+import wandb
 
 from transformers import AutoConfig, AutoModelForCausalLM, \
                          LlamaConfig, LlamaModel, LlamaForCausalLM
@@ -132,16 +133,20 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
 
 
-        loss = out['loss']
+        llm_loss = out['loss']
+        out['loss'] = llm_loss + load_balancing_loss.to(llm_loss.device) + alignment_loss.to(llm_loss.device)
+
 
         if self.config.local_rank == 0:
-            print(f'LLM Loss: {loss}; LoadBalancingLoss: {load_balancing_loss}; AlignmentLoss: {alignment_loss}')
-        
-        loss += load_balancing_loss.to(loss.device) + alignment_loss.to(loss.device)
-        out['loss'] = loss
-
-        if self.config.local_rank == 0:
+            print(f'LLM Loss: {llm_loss}; LoadBalancingLoss: {load_balancing_loss}; AlignmentLoss: {alignment_loss}')
             print(f'Total Loss: {out["loss"]}')
+
+        wandb.log({
+            "llm_loss": llm_loss,
+            "load_balancing_loss": load_balancing_loss,
+            "alignment_loss": alignment_loss,
+            # ... log any other metrics you want (e.g., accuracy) ... 
+        })
         
 
         return out
