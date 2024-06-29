@@ -131,7 +131,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         ) * self.config.aux_loss_coef
 
 
-        print('*'*100)
 
         loss = out['loss']
 
@@ -144,7 +143,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         if self.config.local_rank == 0:
             print(f'Total Loss: {out["loss"]}')
         
-        print('*'*100)
 
         return out
 
