@@ -259,20 +259,29 @@ class LlavaMetaForCausalLM(ABC):
         mean_vision_embeds = normalized_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
         mean_text_embeddings = normalized_text_embeds.sum(dim=1) / attention_mask.sum(dim=1).unsqueeze(-1)
 
-        # Calculating the Loss
-        logits = (mean_vision_embeds @ mean_text_embeddings.T) / temperature
-        
-        images_similarity = mean_text_embeddings @ mean_text_embeddings.T
-        texts_similarity = mean_vision_embeds @ mean_vision_embeds.T
+        # Compute the cosine similarity between all pairs
+        logits_per_image = torch.matmul(mean_vision_embeds, mean_text_embeddings.T)  # [batch_size, batch_size]
+        logits_per_text = logits_per_image.T  # [batch_size, batch_size]
 
-        targets = F.softmax(
-            (images_similarity + texts_similarity) / 2 * temperature, dim=-1
-        )
-        texts_loss = F.cross_entropy(logits, targets)
-        images_loss = F.cross_entropy(logits.T, targets.T)
-        loss =  (images_loss + texts_loss) / 2.0 # shape: (batch_size)
+        # Temperature parameter
+        logits_per_image = logits_per_image / temperature
+        logits_per_text = logits_per_text / temperature
+
+        # print(f"Similarity matrix:\n{F.softmax(logits_per_image)}")
+
+        # Ground truth labels
+        batch_size = text_embeddings.shape[0]
+        labels = torch.arange(batch_size, dtype=torch.long, device=logits_per_image.device)
+
+        # Compute the cross-entropy loss
+        loss_image = F.cross_entropy(logits_per_image, labels)
+        loss_text = F.cross_entropy(logits_per_text, labels)
+
+        # Total loss
+        total_loss = (loss_image + loss_text) / 2
         
-        return loss.mean().half()
+        return total_loss.half()
+        
 
 
     def prepare_inputs_labels_for_multimodal(
