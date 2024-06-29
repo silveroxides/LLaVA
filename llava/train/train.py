@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 import json
 import logging
 import pathlib
+import wandb
 from typing import Dict, Optional, Sequence, List
 from transformers import BitsAndBytesConfig, AutoConfig
 
@@ -813,6 +814,7 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
 
 def train(attn_implementation=None):
     global local_rank
+    wandb.init(project="FineTuneLLaVa", name="Pretrain_lr_2e-3-gas_2")
     parser = transformers.HfArgumentParser(
         (ModelArguments, DataArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
@@ -883,11 +885,6 @@ def train(attn_implementation=None):
         )
     model.config.use_cache = False
     model.config.local_rank = local_rank
-
-    print('*'*100)
-    print(f'Local Rank: {model.config.local_rank}')
-    print('*'*100)
-
 
 
     if model_args.freeze_backbone:
