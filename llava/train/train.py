@@ -884,6 +884,10 @@ def train(attn_implementation=None):
     model.config.use_cache = False
     model.config.local_rank = local_rank
 
+    print('*'*100)
+    print(f'Local Rank: {model.config.local_rank}')
+    print('*'*100)
+
 
 
     if model_args.freeze_backbone:
