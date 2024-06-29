@@ -822,7 +822,7 @@ def train(attn_implementation=None):
     local_rank = training_args.local_rank
     compute_dtype = (torch.float16 if training_args.fp16 else (torch.bfloat16 if training_args.bf16 else torch.float32))
     if local_rank == 0:
-        wandb.init(project="FineTuneLLaVa", name=model_args.run_name)
+        wandb.init(project="FineTuneLLaVa", name=training_args.run_name)
 
 
     
