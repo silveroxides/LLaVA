@@ -814,7 +814,10 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
 
 def train(attn_implementation=None):
     global local_rank
-    wandb.init(project="FineTuneLLaVa", name="Pretrain_lr_2e-3-gas_2")
+
+    if local_rank == 0:
+        wandb.init(project="FineTuneLLaVa", name="Pretrain_lr_2e-3-gas_2")
+        
     parser = transformers.HfArgumentParser(
         (ModelArguments, DataArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()

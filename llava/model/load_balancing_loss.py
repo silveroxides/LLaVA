@@ -3,29 +3,27 @@ from typing import Optional
 from torch import nn
 from torch.nn import functional as F
 
-def aux_loss(router_logits: torch.Tensor, num_experts:torch.Tensor, top_k=2):
-
-      # getting the probability distribution over the experts
-      routing_weights = F.softmax(router_logits, dim=1)
-
-      # selecting the top-k experts for each token in the sequence
-      _, selected_experts = torch.topk(routing_weights, top_k, dim=-1)
-
-
-      expert_mask = torch.nn.functional.one_hot(selected_experts, num_classes=num_experts).permute(2, 1, 0)
-
-      # Sum over the topK and sequence_length dimensions
-      tokens_per_expert = expert_mask.sum(dim=(1, 2))
-      
-      num_tokens = expert_mask.shape[-1]  # (batch_size * sequence_length)
-      
-      # Divide by the total number of tokens to get the fraction
-      fraction_of_tokens = tokens_per_expert / num_tokens
-
-      router_prob_per_expert = torch.mean(routing_weights, dim=0)
-
-      overall_loss = torch.sum(fraction_of_tokens * router_prob_per_expert)
-      return overall_loss*num_experts
+def improved_load_balancing_loss(router_logits: torch.Tensor, num_experts: int, top_k: int):
+    # Get the probability distribution over the experts
+    routing_weights = F.softmax(router_logits, dim=1)
+    
+    # Select the top-k experts for each token in the sequence
+    _, selected_experts = torch.topk(routing_weights, top_k, dim=-1)
+    
+    # Create a one-hot tensor for selected experts
+    expert_mask = F.one_hot(selected_experts, num_classes=num_experts).sum(dim=1)
+    
+    # Calculate the fraction of tokens per expert
+    num_tokens = expert_mask.sum()
+    fraction_of_tokens = expert_mask.float() / num_tokens
+    
+    # Calculate the mean routing probability per expert
+    router_prob_per_expert = routing_weights.mean(dim=0)
+    
+    # Compute the overall loss
+    overall_loss = torch.sum(fraction_of_tokens * router_prob_per_expert) * num_experts
+    
+    return overall_loss
 
 def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tensor = None, top_k=2, attention_mask: Optional[torch.Tensor] = None
                             ) -> float:
