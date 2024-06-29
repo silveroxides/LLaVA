@@ -3,7 +3,7 @@ from typing import Optional
 from torch import nn
 from torch.nn import functional as F
 
-def improved_load_balancing_loss(router_logits: torch.Tensor, num_experts: int, top_k: int):
+def aux_loss(router_logits: torch.Tensor, num_experts: int, top_k: int):
     # Get the probability distribution over the experts
     routing_weights = F.softmax(router_logits, dim=1)
     

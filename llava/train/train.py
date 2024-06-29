@@ -815,14 +815,15 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
 def train(attn_implementation=None):
     global local_rank
 
-    if local_rank == 0:
-        wandb.init(project="FineTuneLLaVa", name="Pretrain_lr_2e-3-gas_2")
         
     parser = transformers.HfArgumentParser(
         (ModelArguments, DataArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
     local_rank = training_args.local_rank
     compute_dtype = (torch.float16 if training_args.fp16 else (torch.bfloat16 if training_args.bf16 else torch.float32))
+    if local_rank == 0:
+        wandb.init(project="FineTuneLLaVa", name=model_args.run_name)
+
 
     
 
