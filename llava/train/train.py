@@ -819,7 +819,7 @@ def train(attn_implementation=None):
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
     local_rank = training_args.local_rank
     compute_dtype = (torch.float16 if training_args.fp16 else (torch.bfloat16 if training_args.bf16 else torch.float32))
-    wandb.init(project="FineTuneLLaVa", name=training_args.run_name)
+    # wandb.init(project="FineTuneLLaVa", name=training_args.run_name)
     
 
     bnb_model_from_pretrained_args = {}

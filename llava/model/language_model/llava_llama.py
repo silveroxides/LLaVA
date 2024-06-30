@@ -141,12 +141,12 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             print(f'LLM Loss: {llm_loss}; LoadBalancingLoss: {load_balancing_loss}; AlignmentLoss: {alignment_loss}')
             print(f'Total Loss: {out["loss"]}')
 
-        wandb.log({
-            "llm_loss": llm_loss,
-            "load_balancing_loss": load_balancing_loss,
-            "alignment_loss": alignment_loss,
-            # ... log any other metrics you want (e.g., accuracy) ... 
-        })
+        # wandb.log({
+        #     "llm_loss": llm_loss,
+        #     "load_balancing_loss": load_balancing_loss,
+        #     "alignment_loss": alignment_loss,
+        #     # ... log any other metrics you want (e.g., accuracy) ... 
+        # })
         
 
         return out
