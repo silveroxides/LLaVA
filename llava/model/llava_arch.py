@@ -373,15 +373,16 @@ class LlavaMetaForCausalLM(ABC):
         # Shape of position_ids: torch.Size([4, 22])
         # Shape of labels: torch.Size([4, 22])
 
-        # remove the padding using attention_mask -- FIXME
+        # remove the padding using attention_mask
         _input_ids = input_ids
-        # inputs_ids =   [101, 2001, 2002, 2003, 0, 0, 0] -->   [101, 2001, 2002, 2003, 0, 0]
+        # inputs_ids =   [101, 2001, 2002, 2003, 0, 0, 0] -->   [101, 2001, 2002, 2003]
         input_ids = [cur_input_ids[cur_attention_mask] for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)]
         labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
          
         
         new_input_embeds = []
         new_labels = []
+        text_features = []
         cur_image_idx = 0
         # input_ids = [batch_size, sequence]
         # will pick one sequence from batch at a time
@@ -390,9 +391,10 @@ class LlavaMetaForCausalLM(ABC):
             # print(f'[BEFORE] current_input_ids size: {len(cur_input_ids)}')
             # pprint.pprint(cur_input_ids)
             # pprint.pprint(labels[batch_idx])
-            # getting number of images present in given images
+
+            # getting sum of number of images present in given input_ids
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
-            # print(f'num_image: {num_images}')
+            print(f'num_image: {num_images}')
 
             if num_images == 0:
                 cur_image_features = image_features[cur_image_idx]
@@ -419,6 +421,8 @@ class LlavaMetaForCausalLM(ABC):
             split_sizes = [x.shape[0] for x in cur_labels_noim]
             cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
             cur_input_embeds_no_im = torch.split(cur_input_embeds, split_sizes, dim=0)
+
+            text_features.append(cur_input_embeds)
 
             cur_new_input_embeds = []
             cur_new_labels = []
@@ -447,11 +451,10 @@ class LlavaMetaForCausalLM(ABC):
             new_input_embeds.append(cur_new_input_embeds)
             new_labels.append(cur_new_labels)
         
-        # print('*'*100)
-        # for i in range(len(new_input_embeds)):
-        #     print(f'Shape of index {i} of new embeds is: {new_input_embeds[i].shape}')
-        #     print(f'Shape of index {i} of new label is: {new_labels[i].shape}')
-        # print('*'*100)
+        print('*'*100)
+        for i in range(len(text_features)):
+            print(f'Shape of index {i} of text_features is: {text_features[i].shape}')
+        print('*'*100)
 
         # ##################################################### calculate the contrastive loss
         img_token_sequence = image_features.shape[1]
