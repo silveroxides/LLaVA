@@ -375,7 +375,7 @@ class LlavaMetaForCausalLM(ABC):
 
             # getting sum of number of images present in given input_ids
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
-            print(f'num_image: {num_images}')
+            # print(f'num_image: {num_images}')
 
             if num_images == 0:
                 cur_image_features = image_features[cur_image_idx]
@@ -432,10 +432,10 @@ class LlavaMetaForCausalLM(ABC):
             new_input_embeds.append(cur_new_input_embeds)
             new_labels.append(cur_new_labels)
         
-        print('*'*100)
-        for i in range(len(text_features)):
-            print(f'Shape of index {i} of text_features is: {text_features[i].shape}')
-        print('*'*100)
+        # print('*'*100)
+        # for i in range(len(text_features)):
+        #     print(f'Shape of index {i} of text_features is: {text_features[i].shape}')
+        # print('*'*100)
 
         # ##################################################### calculate the contrastive loss
         text_features = [x.to(self.device) for x in text_features]
@@ -444,10 +444,10 @@ class LlavaMetaForCausalLM(ABC):
         # Create the mask with the same dtype and device as the input
         padded_text_features_attention_mask =  padded_text_features_attention_mask.to(dtype=attention_mask.dtype, device=attention_mask.device)
 
-        print('*'*120)
-        print(f'shape of Padded text features: {padded_text_features.shape}')
-        print(f'shape of images features: {image_features.shape}')
-        print('*'*120)
+        # print('*'*120)
+        # print(f'shape of Padded text features: {padded_text_features.shape}')
+        # print(f'shape of images features: {image_features.shape}')
+        # print('*'*120)
 
         # total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
         align_loss = self.clip_contrastive_loss(padded_text_features, image_features, padded_text_features_attention_mask)
