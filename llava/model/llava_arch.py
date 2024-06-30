@@ -202,19 +202,7 @@ class LlavaMetaForCausalLM(ABC):
             gate_logits = None
             return image_features
         
-    def seperate_img_text_embeds(self, embeds, image_tokens_sequence):
-        # Assuming embeds is your list of combined embeddings for each sample in the batch
-        image_embeds = []
-        text_embeds = []
-        
-        for embed in embeds:
-            # Split the combined embeddings into image and text embeddings
-            image_embed = embed[:image_tokens_sequence]  # Extract image embeddings
-            text_embed = embed[image_tokens_sequence:]   # Extract text embeddings
-            
-            # Append the split embeddings to the respective lists
-            image_embeds.append(image_embed)
-            text_embeds.append(text_embed)
+    def pad_text_features(self, text_embeds):
         
         # Pad the text embeddings to the maximum length in the batch
         max_text_length = max(embed.size(0) for embed in text_embeds)
@@ -227,18 +215,11 @@ class LlavaMetaForCausalLM(ABC):
             # print(f'padded text embed: {padded_text_embed.shape}')
             padded_text_embeds.append(padded_text_embed)
         
-        # Convert the lists to tensors
-        image_embeds = torch.stack(image_embeds)
-        text_embeds = torch.stack(padded_text_embeds)
+        padded_text_features = torch.stack(padded_text_embeds)
         # attention_mask = text_embeds.sum(dim=-1) != 0
 
-        # print('*'*120)
-        # print(f'Inside the seperate text and image embeds')
-        # print(f'shape of img embeds: {image_embeds.shape}')
-        # print(f'shape of text embeds: {text_embeds.shape}')
-        # print('*'*120)
         
-        return image_embeds, text_embeds
+        return padded_text_features
     
 
 
@@ -457,16 +438,19 @@ class LlavaMetaForCausalLM(ABC):
         print('*'*100)
 
         # ##################################################### calculate the contrastive loss
-        img_token_sequence = image_features.shape[1]
-        img_embeds, text_embeds = self.seperate_img_text_embeds(new_input_embeds, img_token_sequence)
-        attention_mask_sep_text_embeds = text_embeds.sum(dim=-1) != 0
+        text_features = [x.to(self.device) for x in text_features]
+        padded_text_features = self.pad_text_features(text_features)
+        padded_text_features_attention_mask = padded_text_features.sum(dim=-1) != 0
         # Create the mask with the same dtype and device as the input
-        attention_mask_sep_text_embeds =  attention_mask_sep_text_embeds.to(dtype=attention_mask.dtype, device=attention_mask.device)
+        padded_text_features_attention_mask =  padded_text_features_attention_mask.to(dtype=attention_mask.dtype, device=attention_mask.device)
 
-
+        print('*'*120)
+        print(f'shape of Padded text features: {padded_text_features.shape}')
+        print(f'shape of images features: {image_features.shape}')
+        print('*'*120)
 
         # total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
-        align_loss = self.clip_contrastive_loss(text_embeds, img_embeds, attention_mask_sep_text_embeds)
+        align_loss = self.clip_contrastive_loss(padded_text_features, image_features, padded_text_features_attention_mask)
 
         # ##########################################################################################################################################################################
 
