@@ -89,6 +89,9 @@ class DualStreamCrossAttentionModel(nn.Module):
         self.dropout = nn.Dropout(dropout)
         
     def forward(self, visual_feature, text_feature, text_mask=None, visual_mask=None):
+        
+        text_mask = text_mask.float()
+
         for layer in self.layers:
             visual_feature, text_feature = layer(visual_feature, text_feature, visual_mask, text_mask)
         return visual_feature, text_feature

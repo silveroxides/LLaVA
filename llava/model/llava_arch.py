@@ -183,8 +183,8 @@ class LlavaMetaForCausalLM(ABC):
     def get_vision_tower(self):
         return self.get_model().get_vision_tower()
     
-    def get_co_attention(self, x, y ):
-        return self.get_model().co_attention(x, y)
+    def cross_attention(self, text_features, image_features, text_mask):
+        return self.get_model().co_attention(image_features, text_features, text_mask, visual_mask = None)
 
     def encode_images(self, images):
         
@@ -362,7 +362,7 @@ class LlavaMetaForCausalLM(ABC):
         labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
 
         for ids in input_ids:
-            print(f'Input ids: {ids}; length: {len(ids)}')
+            print(f'Input ids length: {len(ids)}')
          
         
         new_input_embeds = []
@@ -451,13 +451,15 @@ class LlavaMetaForCausalLM(ABC):
         # Create the mask with the same dtype and device as the input
         padded_text_features_attention_mask =  padded_text_features_attention_mask.to(dtype=attention_mask.dtype, device=attention_mask.device)
 
-        # print('*'*120)
-        # print(f'shape of Padded text features: {padded_text_features.shape}')
-        # print(f'shape of images features: {image_features.shape}')
-        # print('*'*120)
+        image_features, text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
+
+        print('*'*120)
+        print(f'shape of cross attension text features: {padded_text_features.shape}')
+        print(f'shape of cross attension images features: {image_features.shape}')
+        print('*'*120)
 
         # total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
-        align_loss = self.clip_contrastive_loss(padded_text_features, image_features, padded_text_features_attention_mask)
+        align_loss = self.clip_contrastive_loss(text_features, image_features, padded_text_features_attention_mask)
 
         # ##########################################################################################################################################################################
 
