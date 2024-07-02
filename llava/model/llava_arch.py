@@ -400,7 +400,9 @@ class LlavaMetaForCausalLM(ABC):
         splits = []
         text_labels = []
         cur_image_idx = 0
-        cross_attension  = self.get_vision_tower()
+        
+        cross_attension  = self.get_cross_attension()
+
         print(f'Cross attension {cross_attension}')
         # input_ids = [batch_size, sequence]
         # will pick one sequence from batch at a time
