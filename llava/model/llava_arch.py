@@ -62,6 +62,7 @@ class LlavaMetaModel:
         if cross_attension:
             print('cross attension enable')
             return True
+        else: return False
 
     def initialize_vision_modules(self, model_args, fsdp=None):
         print('Inside initialize_vision_modules')
@@ -400,6 +401,7 @@ class LlavaMetaForCausalLM(ABC):
         text_labels = []
         cur_image_idx = 0
         cross_attension  = self.get_vision_tower()
+        print(f'Cross attension {cross_attension}')
         # input_ids = [batch_size, sequence]
         # will pick one sequence from batch at a time
         for batch_idx, cur_input_ids in enumerate(input_ids):
@@ -462,6 +464,9 @@ class LlavaMetaForCausalLM(ABC):
 
             
             if cross_attension != True:
+
+                print('inside cross attension not true')
+                
                 cur_new_input_embeds = []
                 cur_new_labels = []
 
