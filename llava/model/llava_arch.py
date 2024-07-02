@@ -128,7 +128,7 @@ class LlavaMetaModel:
 
         # initializing the co_attention
         if co_attention:
-            self.co_attention = get_co_attention(self.hidden_size, self.hidden_size*2, num_layers=2, num_heads=2, dropout_rate=0.1)
+            self.co_attention = get_co_attention(self.hidden_size, self.config.intermediate_size, num_layers=2, num_heads=2, dropout_rate=0.1)
             
 
 
@@ -360,6 +360,9 @@ class LlavaMetaForCausalLM(ABC):
         # inputs_ids =   [101, 2001, 2002, 2003, 0, 0, 0] -->   [101, 2001, 2002, 2003]
         input_ids = [cur_input_ids[cur_attention_mask] for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)]
         labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
+
+        for ids in input_ids:
+            print(f'Input ids: {ids}; length: {len(ids)}')
          
         
         new_input_embeds = []
