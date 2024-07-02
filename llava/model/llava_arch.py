@@ -147,7 +147,6 @@ class LlavaMetaModel:
         cross_attension = getattr(self, 'co_attention', None)
 
         if cross_attension is not None:
-            print('cross attension enable')
             return True
         else: return False
 
@@ -516,10 +515,13 @@ class LlavaMetaForCausalLM(ABC):
         
         if cross_attension:
             image_features, text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
-            # total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
-            align_loss = self.clip_contrastive_loss(text_features, image_features, padded_text_features_attention_mask)
 
             text_features = self.remove_padding(text_features, padded_text_features_attention_mask)
+            padded_text_features = self.pad_text_features(text_features)
+            padded_text_features_attention_mask = padded_text_features.sum(dim=-1) != 0
+            # total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
+            align_loss = self.clip_contrastive_loss(padded_text_features, image_features, padded_text_features_attention_mask)
+
             print('unpad text features')
             for i in text_features:
                 print(i.shape)

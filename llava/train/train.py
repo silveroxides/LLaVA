@@ -880,7 +880,6 @@ def train(attn_implementation=None):
         )
     model.config.use_cache = False
     model.config.local_rank = local_rank
-    print(model.config)
 
 
     if model_args.freeze_backbone:
