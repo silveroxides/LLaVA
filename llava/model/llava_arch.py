@@ -510,6 +510,9 @@ class LlavaMetaForCausalLM(ABC):
             align_loss = self.clip_contrastive_loss(text_features, image_features, padded_text_features_attention_mask)
 
             text_features = self.remove_padding(text_features, padded_text_features_attention_mask)
+            print('unpad text features')
+            for i in text_features:
+                print(i.shape)
 
 
             cur_new_input_embeds = []
@@ -520,6 +523,7 @@ class LlavaMetaForCausalLM(ABC):
                 print(cur_input_embeds_no_im.shape)
                 cur_labels_noim = text_labels[x]
                 split_sizes = splits[x]
+                print(split_sizes)
                 cur_input_embeds_no_im = torch.split(cur_input_embeds_no_im, split_sizes, dim=0)
                 print(cur_input_embeds_no_im.shape)
 
