@@ -56,6 +56,12 @@ class LlavaMetaModel:
         if type(vision_tower) is list:
             vision_tower = vision_tower[0]
         return vision_tower
+    
+    def get_cross_attension(self):
+        cross_attension = getattr(self, 'cross_attension', False)
+        if cross_attension:
+            print('cross attension enable')
+            return True
 
     def initialize_vision_modules(self, model_args, fsdp=None):
         print('Inside initialize_vision_modules')
@@ -183,6 +189,9 @@ class LlavaMetaForCausalLM(ABC):
     def get_vision_tower(self):
         return self.get_model().get_vision_tower()
     
+    def get_cross_attension(self):
+        return self.get_model().get_cross_attension()
+    
     def cross_attention(self, text_features, image_features, text_mask):
         return self.get_model().co_attention(image_features, text_features, text_mask, visual_mask = None)
 
@@ -222,8 +231,26 @@ class LlavaMetaForCausalLM(ABC):
         
         return padded_text_features
     
+    def remove_padding(self, text_features, attention_mask):
+        """Removes padding from a batch of text features based on attention masks.
 
+        Args:
+            text_features (torch.Tensor): Batch of text features 
+                (shape: batch_size x max_sequence_length x feature_dim).
+            attention_mask (torch.Tensor): Batch of attention masks 
+                (shape: batch_size x max_sequence_length), 
+                where True indicates a valid token and False indicates padding.
 
+        Returns:
+            list: A list of tensors, each representing a sequence without padding.
+        """
+
+        unpadded_features = []
+        for seq_features, seq_mask in zip(text_features, attention_mask):
+            valid_indices = seq_mask.nonzero().squeeze()
+            unpadded_features.append(seq_features[valid_indices])
+        return unpadded_features
+    
     def clip_contrastive_loss(self, text_embeddings, image_embeddings, attention_mask, temperature=0.07):
 
         # convert this to fp32 to mitigate `nan` during normalization
@@ -271,6 +298,7 @@ class LlavaMetaForCausalLM(ABC):
         images, image_sizes=None):
         
         vision_tower = self.get_vision_tower()
+        
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
             return input_ids, position_ids, attention_mask, past_key_values, None, labels
         if type(images) is list or images.ndim == 5:
@@ -368,7 +396,10 @@ class LlavaMetaForCausalLM(ABC):
         new_input_embeds = []
         new_labels = []
         text_features = []
+        splits = []
+        text_labels = []
         cur_image_idx = 0
+        cross_attension  = self.get_vision_tower()
         # input_ids = [batch_size, sequence]
         # will pick one sequence from batch at a time
         for batch_idx, cur_input_ids in enumerate(input_ids):
@@ -390,8 +421,15 @@ class LlavaMetaForCausalLM(ABC):
                 cur_image_idx += 1
                 continue
 
+            # cur_input_ids = torch.tensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])  
+            # labels = torch.tensor([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32])  
+
+            # suppose 0, 4, 9 and 12 are the image tokens
+
             # Output: [-1, 3, 7, 22] (start, image positions, sequence_size) -> in this sequence 3rd and 7th token has the image token
             image_token_indices = [-1] + torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0].tolist() + [cur_input_ids.shape[0]]
+            # image_token_indices = torch.tensor([-1, 0, 4, 9, 12])  
+
             # print(f'image_token_indices: {image_token_indices}')
             cur_input_ids_noim = []
             cur_labels = labels[batch_idx]
@@ -401,47 +439,61 @@ class LlavaMetaForCausalLM(ABC):
                 cur_input_ids_noim.append(cur_input_ids[image_token_indices[i]+1:image_token_indices[i+1]])
                 cur_labels_noim.append(cur_labels[image_token_indices[i]+1:image_token_indices[i+1]])
 
-            # print(f'[AFTER] cur_input_ids_noim: {len(torch.cat(cur_input_ids_noim))}')
+            # cur_input_ids_noim: [tensor([1, 2, 3]), tensor([5, 6, 7, 8]), tensor([10, 11])] 
+            # cur_labels_noim:   [tensor([21, 22, 23]), tensor([25, 26, 27, 28]), tensor([30, 31])]
+
+            # Stores the lengths of each text segment in cur_input_ids_noim/cur_labels_noim
+            split_sizes = [x.shape[0] for x in cur_labels_noim] # split_sizes:  ([3, 4, 2] in our example).
             
-            split_sizes = [x.shape[0] for x in cur_labels_noim]
+            # concat the segments in a single tensor [tensor([1, 2, 3]), tensor([5, 6, 7, 8]), tensor([10, 11])] to
+            # torch.cat(cur_input_ids_noim) --> tensor([ 1, 2, 3, 5, 6, 7, 8, 10, 11])
+            # next we get the text feature for this input ids.
+            # the length of input ids is 9 for our example is 9
+            # after self.get_model().embed_tokens(torch.cat(cur_input_ids_noim)) -> it becomes shape of [9, embed_dimension]
             cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
+
+            # Finally, the concatenated embeddings are split back into their original segments
+            # from [9, embed_dimension] -> [3, embed_dimension], [4, embed_dimension], [2, embed_dimension] 
             cur_input_embeds_no_im = torch.split(cur_input_embeds, split_sizes, dim=0)
 
             text_features.append(cur_input_embeds)
+            text_labels.append(cur_labels_noim)
+            splits.append(split_sizes)
 
-            cur_new_input_embeds = []
-            cur_new_labels = []
+            
+            if cross_attension != True:
+                cur_new_input_embeds = []
+                cur_new_labels = []
 
-            for i in range(num_images + 1):
-                cur_new_input_embeds.append(cur_input_embeds_no_im[i])
-                cur_new_labels.append(cur_labels_noim[i])
-                if i < num_images:
-                    cur_image_features = image_features[cur_image_idx]
-                    cur_image_idx += 1
-                    cur_new_input_embeds.append(cur_image_features)
-                    cur_new_labels.append(torch.full((cur_image_features.shape[0],), IGNORE_INDEX, device=cur_labels.device, dtype=cur_labels.dtype))
+                for i in range(num_images + 1):
+                    cur_new_input_embeds.append(cur_input_embeds_no_im[i])
+                    cur_new_labels.append(cur_labels_noim[i])
+                    if i < num_images:
+                        cur_image_features = image_features[cur_image_idx]
+                        cur_image_idx += 1
+                        cur_new_input_embeds.append(cur_image_features)
+                        cur_new_labels.append(torch.full((cur_image_features.shape[0],), IGNORE_INDEX, device=cur_labels.device, dtype=cur_labels.dtype))
+                
+                # print('*'*100)
+                # for i in range(len(cur_new_input_embeds)):
+                #     print(f'shape of index: {i} is {cur_new_input_embeds[i].shape}')
+                # print('*'*100)
+
+                cur_new_input_embeds = [x.to(self.device) for x in cur_new_input_embeds]
+                cur_new_input_embeds = torch.cat(cur_new_input_embeds)
+
+                # print('*'*100)
+                # print(f'current new input embeds: {cur_new_input_embeds.shape}')
+                # print('*'*100)
+                cur_new_labels = torch.cat(cur_new_labels)
+                new_input_embeds.append(cur_new_input_embeds)
+                new_labels.append(cur_new_labels)
             
             # print('*'*100)
-            # for i in range(len(cur_new_input_embeds)):
-            #     print(f'shape of index: {i} is {cur_new_input_embeds[i].shape}')
+            # for i in range(len(text_features)):
+            #     print(f'Shape of index {i} of text_features is: {text_features[i].shape}')
             # print('*'*100)
-
-            cur_new_input_embeds = [x.to(self.device) for x in cur_new_input_embeds]
-            cur_new_input_embeds = torch.cat(cur_new_input_embeds)
-
-            # print('*'*100)
-            # print(f'current new input embeds: {cur_new_input_embeds.shape}')
-            # print('*'*100)
-            cur_new_labels = torch.cat(cur_new_labels)
-            new_input_embeds.append(cur_new_input_embeds)
-            new_labels.append(cur_new_labels)
-        
-        # print('*'*100)
-        # for i in range(len(text_features)):
-        #     print(f'Shape of index {i} of text_features is: {text_features[i].shape}')
-        # print('*'*100)
-
-        # ##################################################### calculate the contrastive loss
+        # ##################################################### calculate the contrastive loss  #####################################################
         for txt_feature in text_features:
             print(f' Shape of text_feature of: {txt_feature.shape}')
             
@@ -450,16 +502,52 @@ class LlavaMetaForCausalLM(ABC):
         padded_text_features_attention_mask = padded_text_features.sum(dim=-1) != 0
         # Create the mask with the same dtype and device as the input
         padded_text_features_attention_mask =  padded_text_features_attention_mask.to(dtype=attention_mask.dtype, device=attention_mask.device)
+        
+        
+        if cross_attension:
+            image_features, text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
+            # total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
+            align_loss = self.clip_contrastive_loss(text_features, image_features, padded_text_features_attention_mask)
 
-        image_features, text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
+            text_features = self.remove_padding(text_features, padded_text_features_attention_mask)
 
-        print('*'*120)
-        print(f'shape of cross attension text features: {padded_text_features.shape}')
-        print(f'shape of cross attension images features: {image_features.shape}')
-        print('*'*120)
 
-        # total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
-        align_loss = self.clip_contrastive_loss(text_features, image_features, padded_text_features_attention_mask)
+            cur_new_input_embeds = []
+            cur_new_labels = []
+
+            for i in range(len(text_features)):
+                cur_input_embeds_no_im = text_features[i]
+                cur_labels_noim = text_labels[i]
+                split_sizes = splits[1]
+                cur_input_embeds_no_im = torch.split(cur_input_embeds, split_sizes, dim=0)
+
+                for i in range(num_images + 1):
+                    cur_new_input_embeds.append(cur_input_embeds_no_im[i])
+                    cur_new_labels.append(cur_labels_noim[i])
+                    if i < num_images:
+                        cur_image_features = image_features[cur_image_idx]
+                        cur_image_idx += 1
+                        cur_new_input_embeds.append(cur_image_features)
+                        cur_new_labels.append(torch.full((cur_image_features.shape[0],), IGNORE_INDEX, device=cur_labels.device, dtype=cur_labels.dtype))
+                
+                # print('*'*100)
+                # for i in range(len(cur_new_input_embeds)):
+                #     print(f'shape of index: {i} is {cur_new_input_embeds[i].shape}')
+                # print('*'*100)
+
+                cur_new_input_embeds = [x.to(self.device) for x in cur_new_input_embeds]
+                cur_new_input_embeds = torch.cat(cur_new_input_embeds)
+
+                # print('*'*100)
+                # print(f'current new input embeds: {cur_new_input_embeds.shape}')
+                # print('*'*100)
+                cur_new_labels = torch.cat(cur_new_labels)
+                new_input_embeds.append(cur_new_input_embeds)
+                new_labels.append(cur_new_labels)
+
+        else:
+            align_loss = self.clip_contrastive_loss(text_features, image_features, padded_text_features_attention_mask)
+
 
         # ##########################################################################################################################################################################
 
