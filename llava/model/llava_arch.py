@@ -442,6 +442,9 @@ class LlavaMetaForCausalLM(ABC):
         # print('*'*100)
 
         # ##################################################### calculate the contrastive loss
+        for txt_feature in text_features:
+            print(f' Shape of text_feature of: {txt_feature.shape}')
+            
         text_features = [x.to(self.device) for x in text_features]
         padded_text_features = self.pad_text_features(text_features)
         padded_text_features_attention_mask = padded_text_features.sum(dim=-1) != 0
