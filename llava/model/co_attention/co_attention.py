@@ -1,102 +1,101 @@
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class CrossAttention(nn.Module):
-    def __init__(self, input_dim):
-        super(CrossAttention, self).__init__()
-        self.query_linear = nn.Linear(input_dim, input_dim)
-        self.key_linear = nn.Linear(input_dim, input_dim)
-        self.value_linear = nn.Linear(input_dim, input_dim)
-
-    def forward(self, query, key, value):
-        query_proj = self.query_linear(query)
-        key_proj = self.key_linear(key)
-        value_proj = self.value_linear(value)
-
-        # Calculate attention scores
-        scores = torch.matmul(query_proj, key_proj.transpose(-2, -1))
-        attention_weights = F.softmax(scores, dim=-1)
-
-        # Apply attention weights to values
-        output = torch.matmul(attention_weights, value_proj)
-        return output
-    
-
-class MultiHeadCrossAttention(nn.Module):
-    def __init__(self, input_dim, num_heads):
-        super(MultiHeadCrossAttention, self).__init__()
-        assert input_dim % num_heads == 0, "input_dim must be divisible by num_heads"
+class MultiHeadAttention(nn.Module):
+    def __init__(self, input_dim, num_heads, dropout=0.1):
+        super(MultiHeadAttention, self).__init__()
         self.num_heads = num_heads
         self.head_dim = input_dim // num_heads
         
-        # Linear transformations for queries, keys, and values for each head
-        self.query_linear = nn.Linear(input_dim, input_dim)
-        self.key_linear = nn.Linear(input_dim, input_dim)
-        self.value_linear = nn.Linear(input_dim, input_dim)
+        self.query = nn.Linear(input_dim, input_dim)
+        self.key = nn.Linear(input_dim, input_dim)
+        self.value = nn.Linear(input_dim, input_dim)
         
-        # Final linear transformation after concatenating heads
-        self.out_linear = nn.Linear(input_dim, input_dim)
+        self.out = nn.Linear(input_dim, input_dim)
+        self.dropout = nn.Dropout(dropout)
 
-    def forward(self, query, key, value):
+    def forward(self, query, key, value, mask=None):
         batch_size = query.size(0)
         
-        # Apply linear transformations for queries, keys, and values for each head
-        query = self.query_linear(query).view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)  # (batch_size, num_heads, seq_len, head_dim)
-        key = self.key_linear(key).view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)  # (batch_size, num_heads, seq_len, head_dim)
-        value = self.value_linear(value).view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)  # (batch_size, num_heads, seq_len, head_dim)
+        Q = self.query(query).view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
+        K = self.key(key).view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
+        V = self.value(value).view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
         
-        # Calculate attention scores
-        scores = torch.matmul(query, key.transpose(-2, -1)) / (self.head_dim ** 0.5)
-        attention_weights = F.softmax(scores, dim=-1)
+        scores = torch.matmul(Q, K.transpose(-2, -1)) / (self.head_dim ** 0.5)
+        
+        if mask is not None:
+            scores = scores.masked_fill(mask.unsqueeze(1).unsqueeze(2) == 0, float('-inf'))
+        
+        attention = self.dropout(F.softmax(scores, dim=-1))
+        
+        output = torch.matmul(attention, V)
+        output = output.transpose(1, 2).contiguous().view(batch_size, -1, self.num_heads * self.head_dim)
+        return self.dropout(self.out(output))
 
-        # Apply attention weights to values
-        output = torch.matmul(attention_weights, value)  # (batch_size, num_heads, seq_len, head_dim)
-        
-        # Concatenate heads and perform final linear transformation
-        output = output.transpose(1, 2).contiguous().view(batch_size, -1, self.num_heads * self.head_dim)  # (batch_size, seq_len, input_dim)
-        output = self.out_linear(output)
-        return output
-    
-    
-class CrossAttentionLayer(nn.Module):
-    def __init__(self, input_dim, hidden_dim, num_heads, dropout):
-        super(CrossAttentionLayer, self).__init__()
-        self.self_attention = nn.MultiheadAttention(input_dim, num_heads)
-        self.cross_attention = MultiHeadCrossAttention(input_dim, num_heads)
+class FeedForward(nn.Module):
+    def __init__(self, input_dim, hidden_dim, dropout=0.1):
+        super(FeedForward, self).__init__()
         self.linear1 = nn.Linear(input_dim, hidden_dim)
         self.linear2 = nn.Linear(hidden_dim, input_dim)
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x, memory):
-        # Self-attention
-        x, _ = self.self_attention(x, x, x)
+    def forward(self, x):
+        return self.linear2(F.relu(self.dropout(self.linear1(x))))
 
+class DualStreamLayer(nn.Module):
+    def __init__(self, input_dim, hidden_dim, num_heads, dropout=0.1):
+        super(DualStreamLayer, self).__init__()
+        self.self_attn_visual = MultiHeadAttention(input_dim, num_heads, dropout)
+        self.self_attn_text = MultiHeadAttention(input_dim, num_heads, dropout)
+        self.cross_attn_visual = MultiHeadAttention(input_dim, num_heads, dropout)
+        self.cross_attn_text = MultiHeadAttention(input_dim, num_heads, dropout)
+        self.ff_visual = FeedForward(input_dim, hidden_dim, dropout)
+        self.ff_text = FeedForward(input_dim, hidden_dim, dropout)
+        self.norm1_visual = nn.LayerNorm(input_dim)
+        self.norm2_visual = nn.LayerNorm(input_dim)
+        self.norm3_visual = nn.LayerNorm(input_dim)
+        self.norm1_text = nn.LayerNorm(input_dim)
+        self.norm2_text = nn.LayerNorm(input_dim)
+        self.norm3_text = nn.LayerNorm(input_dim)
+        # self.dropout = nn.Dropout(dropout)
+
+    def forward(self, visual_input, text_input, visual_mask=None, text_mask=None):
+        # Self-attention for visual stream
+        visual = self.self_attn_visual(visual_input, visual_input, visual_input, visual_mask)
+        visual = self.norm1_visual(visual_input + visual)
+        
+        # Self-attention for text stream
+        text = self.self_attn_text(text_input, text_input, text_input, text_mask)
+        text = self.norm1_text(text_input + text)
+        
         # Cross-attention
-        x = self.cross_attention(x, memory, memory)
+        visual_cross = self.cross_attn_visual(visual, text, text, text_mask)
+        visual = self.norm2_visual(visual + visual_cross)
+        
+        text_cross = self.cross_attn_text(text, visual, visual, visual_mask)
+        text = self.norm2_text(text + text_cross)
+        
+        # Feed-forward
+        visual = self.norm3_visual(visual + self.ff_visual(visual))
+        text = self.norm3_text(text + self.ff_text(text))
+        
+        return visual, text
 
-        x = self.linear2(F.relu(self.linear1(x)))
-        x = self.dropout(x)
-        return x
-
-class CrossAttentionEncoder(nn.Module):
-    def __init__(self, input_dim, hidden_dim, num_layers, num_heads, dropout = 0.05):
-        print('-'*100)
-        print('cross attenstion build')
-        print('-'*100)
-        super(CrossAttentionEncoder, self).__init__()
-        self.layers = nn.ModuleList([CrossAttentionLayer(input_dim, hidden_dim, num_heads, dropout) 
-                                     for _ in range(num_layers)])
-
-    def forward(self, x, memory):
+class DualStreamCrossAttentionModel(nn.Module):
+    def __init__(self, input_dim, hidden_dim, num_layers, num_heads, dropout=0.1):
+        super(DualStreamCrossAttentionModel, self).__init__()
+        self.layers = nn.ModuleList([DualStreamLayer(input_dim, hidden_dim, num_heads, dropout) for _ in range(num_layers)])
+        self.dropout = nn.Dropout(dropout)
+        
+    def forward(self, visual_feature, text_feature, text_mask=None, visual_mask=None):
         for layer in self.layers:
-            x = layer(x, memory)
-        return x
+            visual_feature, text_feature = layer(visual_feature, text_feature, visual_mask, text_mask)
+        return visual_feature, text_feature
 
  
-def get_co_attention(input_dim, hidden_dim, num_layers, num_heads):
-    return CrossAttentionEncoder(input_dim, hidden_dim, num_layers, num_heads)
+def get_co_attention(input_dim, hidden_dim, num_layers, num_heads, dropout_rate):
+    return DualStreamCrossAttentionModel(input_dim, hidden_dim, num_layers, num_heads, dropout_rate)
     
 # hudai = CrossAttentionEncoder(768, 768, 2, 2)
 # x = torch.rand(32, 10, 768)

@@ -128,7 +128,8 @@ class LlavaMetaModel:
 
         # initializing the co_attention
         if co_attention:
-            self.co_attention = get_co_attention(self.hidden_size, self.hidden_size*2, 2, 2)
+            self.co_attention = get_co_attention(self.hidden_size, self.hidden_size*2, num_layers=2, num_heads=2, dropout_rate=0.1)
+            
 
 
 

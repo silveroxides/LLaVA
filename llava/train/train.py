@@ -845,10 +845,6 @@ def train(attn_implementation=None):
     print('bnb_model_from_pretrained_args:')
     print(bnb_model_from_pretrained_args)
 
-    # vision_tower = openai/clip-vit-large-patch14
-    print('*'*100)
-    torch_dtype = (torch.bfloat16 if training_args.bf16 else None)
-    print(f'Torch Type: {torch_dtype}')
 
     if model_args.vision_tower is not None:
         if 'mpt' in model_args.model_name_or_path:
@@ -884,6 +880,7 @@ def train(attn_implementation=None):
         )
     model.config.use_cache = False
     model.config.local_rank = local_rank
+    print(model.config)
 
 
     if model_args.freeze_backbone:
