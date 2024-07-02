@@ -519,7 +519,7 @@ class LlavaMetaForCausalLM(ABC):
                 cur_input_embeds_no_im = text_features[i]
                 cur_labels_noim = text_labels[i]
                 split_sizes = splits[i]
-                cur_input_embeds_no_im = torch.split(cur_input_embeds, split_sizes, dim=0)
+                cur_input_embeds_no_im = torch.split(cur_input_embeds_no_im, split_sizes, dim=0)
 
                 for i in range(num_images + 1):
                     cur_new_input_embeds.append(cur_input_embeds_no_im[i])
