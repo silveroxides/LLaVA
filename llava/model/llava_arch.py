@@ -36,8 +36,6 @@ class LlavaMetaModel:
     def __init__(self, config):
         super(LlavaMetaModel, self).__init__(config)
 
-        self.cross_attension = config.cross_attension
-
         if hasattr(config, "mm_vision_tower"):
             print('*'*50+'Inside LlavaMetaModel'+'*'*50)
             self.vision_tower = build_vision_tower(config, delay_load=True)
@@ -59,13 +57,6 @@ class LlavaMetaModel:
             vision_tower = vision_tower[0]
         return vision_tower
     
-    def get_cross_attension(self):
-        cross_attension = getattr(self, 'cross_attension', False)
-        if cross_attension:
-            print('cross attension enable')
-            return True
-        else: return False
-
     def initialize_vision_modules(self, model_args, fsdp=None):
         print('Inside initialize_vision_modules')
         # vision_tower = openai/clip-vit-large-patch14
@@ -150,6 +141,15 @@ class LlavaMetaModel:
 
             self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'))
             print(self.mm_projector)
+
+    def get_cross_attension(self):
+        
+        cross_attension = getattr(self, 'co_attention', None)
+
+        if cross_attension is not None:
+            print('cross attension enable')
+            return True
+        else: return False
 
 
 def unpad_image(tensor, original_size):
