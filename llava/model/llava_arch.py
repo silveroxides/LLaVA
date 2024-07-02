@@ -36,6 +36,8 @@ class LlavaMetaModel:
     def __init__(self, config):
         super(LlavaMetaModel, self).__init__(config)
 
+        self.cross_attension = config.cross_attension
+
         if hasattr(config, "mm_vision_tower"):
             print('*'*50+'Inside LlavaMetaModel'+'*'*50)
             self.vision_tower = build_vision_tower(config, delay_load=True)
@@ -299,6 +301,10 @@ class LlavaMetaForCausalLM(ABC):
         images, image_sizes=None):
         
         vision_tower = self.get_vision_tower()
+        cross_attension  = self.get_cross_attension()
+
+        print(f'Cross attension {cross_attension}')
+
         
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
             return input_ids, position_ids, attention_mask, past_key_values, None, labels
@@ -400,10 +406,7 @@ class LlavaMetaForCausalLM(ABC):
         splits = []
         text_labels = []
         cur_image_idx = 0
-        
-        cross_attension  = self.get_cross_attension()
 
-        print(f'Cross attension {cross_attension}')
         # input_ids = [batch_size, sequence]
         # will pick one sequence from batch at a time
         for batch_idx, cur_input_ids in enumerate(input_ids):

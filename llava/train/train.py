@@ -880,6 +880,7 @@ def train(attn_implementation=None):
         )
     model.config.use_cache = False
     model.config.local_rank = local_rank
+    model.config.cross_attension = model_args.cross_attension
     print(model.config)
 
 
