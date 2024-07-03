@@ -564,7 +564,7 @@ class LlavaMetaForCausalLM(ABC):
                 new_labels.append(cur_new_labels)
 
         else:
-            align_loss = self.clip_contrastive_loss(text_features, image_features, padded_text_features_attention_mask)
+            align_loss = self.clip_contrastive_loss(padded_text_features, image_features, padded_text_features_attention_mask)
 
 
         # ##########################################################################################################################################################################
