@@ -531,23 +531,32 @@ class LlavaMetaForCausalLM(ABC):
             # padded_text_features_attention_mask = padded_text_features.sum(dim=-1) != 0
 
             # Check for NaN values
-            text_features_has_nan = torch.isnan(text_features).any().item()
+            text_features_has_nan = torch.isnan(co_text_features).any().item()
             image_features_has_nan = torch.isnan(image_features).any().item()
 
             # Check for infinity values
             image_features_has_inf = torch.isinf(image_features).any().item()
-            text_features_has_inf = torch.isinf(text_features).any().item()
+            text_features_has_inf = torch.isinf(co_text_features).any().item()
 
             # Check for zero values
-            text_features_has_zero = (text_features == 0).any().item()
             image_features_has_zero = (image_features == 0).any().item()
 
-            print("text_features_has_nan Contains NaN:", text_features_has_nan)
-            print("image_features_has_nan Contains NaN:", image_features_has_nan)
-            print("image_features_has_inf Contains Inf:", image_features_has_inf)
-            print("text_features_has_inf Contains Inf:", text_features_has_inf)
-            print("text_features_has_zero Contains Zero:", text_features_has_zero)
-            print("image_features_has_zero Contains Zero:", image_features_has_zero)
+            if text_features_has_nan:
+                print("text_features_has_nan Contains NaN")
+            if image_features_has_nan:
+                print("image_features_has_nan Contains NaN")
+            if image_features_has_inf:
+                print("image_features_has_inf Contains Inf:")
+            if text_features_has_inf:
+                print("text_features_has_inf Contains Inf")
+            
+            for x in text_features:
+                text_features_has_zero = (x == 0).any().item()
+                if text_features_has_zero:
+                    print("text_features_has_zero Contains Zero:", text_features_has_zero)
+                    
+            if image_features_has_zero:
+                print("image_features_has_zero Contains Zero:", image_features_has_zero)
             
             align_loss = self.clip_contrastive_loss(text_features, image_features, padded_text_features_attention_mask)
 
