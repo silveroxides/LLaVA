@@ -523,10 +523,10 @@ class LlavaMetaForCausalLM(ABC):
         
         
         if cross_attension:
-            image_features, text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
+            image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
 
 
-            # text_features = self.remove_padding(text_features, padded_text_features_attention_mask)
+            text_features = self.remove_padding(co_text_features, padded_text_features_attention_mask)
             # padded_text_features = self.pad_text_features(text_features)
             # padded_text_features_attention_mask = padded_text_features.sum(dim=-1) != 0
 
@@ -593,7 +593,7 @@ class LlavaMetaForCausalLM(ABC):
                 new_labels.append(cur_new_labels)
 
         else:
-            align_loss = self.clip_contrastive_loss(padded_text_features, image_features, padded_text_features_attention_mask)
+            align_loss = self.clip_contrastive_loss(co_text_features, image_features, padded_text_features_attention_mask)
 
 
         # ##########################################################################################################################################################################
