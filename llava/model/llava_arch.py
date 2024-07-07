@@ -307,6 +307,7 @@ class LlavaMetaForCausalLM(ABC):
         
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
             return input_ids, position_ids, attention_mask, past_key_values, None, labels
+        
         if type(images) is list or images.ndim == 5:
             if type(images) is list:
                 images = [x.unsqueeze(0) if x.ndim == 3 else x for x in images]
@@ -442,8 +443,16 @@ class LlavaMetaForCausalLM(ABC):
             cur_labels_noim = []
             
             for i in range(len(image_token_indices) - 1):
-                cur_input_ids_noim.append(cur_input_ids[image_token_indices[i]+1:image_token_indices[i+1]])
-                cur_labels_noim.append(cur_labels[image_token_indices[i]+1:image_token_indices[i+1]])
+
+                start = image_token_indices[i] + 1 
+                end = image_token_indices[i + 1]
+
+                # Extract the segment (exclusive of the image token):
+                cur_input_ids_noim.append(cur_input_ids[start:end])
+                cur_labels_noim.append(cur_labels[start:end])
+
+                # cur_input_ids_noim.append(cur_input_ids[image_token_indices[i]+1:image_token_indices[i+1]])
+                # cur_labels_noim.append(cur_labels[image_token_indices[i]+1:image_token_indices[i+1]])
 
             # cur_input_ids_noim: [tensor([1, 2, 3]), tensor([5, 6, 7, 8]), tensor([10, 11])] 
             # cur_labels_noim:   [tensor([21, 22, 23]), tensor([25, 26, 27, 28]), tensor([30, 31])]
@@ -516,11 +525,31 @@ class LlavaMetaForCausalLM(ABC):
         if cross_attension:
             image_features, text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
 
-            text_features = self.remove_padding(text_features, padded_text_features_attention_mask)
-            padded_text_features = self.pad_text_features(text_features)
-            padded_text_features_attention_mask = padded_text_features.sum(dim=-1) != 0
-            # total_loss = self.clip_contrastive_loss(text_embeds, img_embeds)
-            align_loss = self.clip_contrastive_loss(padded_text_features, image_features, padded_text_features_attention_mask)
+
+            # text_features = self.remove_padding(text_features, padded_text_features_attention_mask)
+            # padded_text_features = self.pad_text_features(text_features)
+            # padded_text_features_attention_mask = padded_text_features.sum(dim=-1) != 0
+
+            # Check for NaN values
+            text_features_has_nan = torch.isnan(text_features).any().item()
+            image_features_has_nan = torch.isnan(image_features).any().item()
+
+            # Check for infinity values
+            image_features_has_inf = torch.isinf(image_features).any().item()
+            text_features_has_inf = torch.isinf(text_features).any().item()
+
+            # Check for zero values
+            text_features_has_zero = (text_features == 0).any().item()
+            image_features_has_zero = (image_features == 0).any().item()
+
+            print("text_features_has_nan Contains NaN:", text_features_has_nan)
+            print("image_features_has_nan Contains NaN:", image_features_has_nan)
+            print("image_features_has_inf Contains Inf:", image_features_has_inf)
+            print("text_features_has_inf Contains Inf:", text_features_has_inf)
+            print("text_features_has_zero Contains Zero:", text_features_has_zero)
+            print("image_features_has_zero Contains Zero:", image_features_has_zero)
+            
+            align_loss = self.clip_contrastive_loss(text_features, image_features, padded_text_features_attention_mask)
 
             print('unpad text features')
             for i in text_features:

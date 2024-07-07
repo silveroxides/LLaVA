@@ -31,7 +31,8 @@ class MultiHeadAttention(nn.Module):
         
         output = torch.matmul(attention, V)
         output = output.transpose(1, 2).contiguous().view(batch_size, -1, self.num_heads * self.head_dim)
-        return self.dropout(self.out(output))
+        output = self.dropout(output)
+        return self.out(output)
 
 class FeedForward(nn.Module):
     def __init__(self, input_dim, hidden_dim, dropout=0.1):
@@ -90,7 +91,9 @@ class DualStreamCrossAttentionModel(nn.Module):
         
     def forward(self, visual_feature, text_feature, text_mask=None, visual_mask=None):
         
-        text_mask = text_mask.float()
+        visual_feature = self.dropout(visual_feature)
+        text_feature = self.dropout(text_feature)
+        # text_mask = text_mask.float()
 
         for layer in self.layers:
             visual_feature, text_feature = layer(visual_feature, text_feature, visual_mask, text_mask)
