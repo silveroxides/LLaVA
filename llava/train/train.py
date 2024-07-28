@@ -238,7 +238,7 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer,
         }
         del state_dict
         trainer._save(output_dir, state_dict=cpu_state_dict)  # noqa
-        torch.save(trainer.model.all_gate_logits, os.path.join(output_dir, 'gate_Logits.bin'))
+        # torch.save(trainer.model.all_gate_logits, os.path.join(output_dir, 'gate_Logits.bin'))
 
 
 def smart_tokenizer_and_embedding_resize(
@@ -1101,7 +1101,7 @@ def train(attn_implementation=None):
             model.config.save_pretrained(training_args.output_dir)
             model.save_pretrained(training_args.output_dir, state_dict=state_dict)
             torch.save(non_lora_state_dict, os.path.join(training_args.output_dir, 'non_lora_trainables.bin'))
-            torch.save(model.all_gate_logits, os.path.join(training_args.output_dir, 'gate_Logits.bin'))
+            # torch.save(model.all_gate_logits, os.path.join(training_args.output_dir, 'gate_Logits.bin'))
     
     else:
         safe_save_model_for_hf_trainer(trainer=trainer,
