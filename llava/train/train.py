@@ -927,7 +927,7 @@ def train(attn_implementation=None):
             if training_args.bf16:
                 model.to(torch.bfloat16)
             if training_args.fp16:
-                model.to(torch.float32)
+                model.to(torch.float16)
         rank0_print("Adding LoRA adapters...")
 
         model = get_peft_model(model, lora_config)
