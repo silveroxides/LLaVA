@@ -291,7 +291,8 @@ class LlavaMetaForCausalLM(ABC):
         # Total loss
         total_loss = (loss_image + loss_text) / 2
         
-        return total_loss.half()
+        # return total_loss.half()
+        return total_loss
         
 
 
