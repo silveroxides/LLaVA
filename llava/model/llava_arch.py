@@ -302,7 +302,7 @@ class LlavaMetaForCausalLM(ABC):
         vision_tower = self.get_vision_tower()
         cross_attension  = self.get_cross_attension()
 
-        print(f'Cross attension {cross_attension}')
+        # print(f'Cross attension {cross_attension}')
 
         
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
@@ -396,8 +396,8 @@ class LlavaMetaForCausalLM(ABC):
         input_ids = [cur_input_ids[cur_attention_mask] for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)]
         labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
 
-        for ids in input_ids:
-            print(f'Input ids length: {len(ids)}')
+        # for ids in input_ids:
+        #     print(f'Input ids length: {len(ids)}')
          
         
         new_input_embeds = []
@@ -478,7 +478,7 @@ class LlavaMetaForCausalLM(ABC):
             
             if cross_attension != True:
 
-                print('inside cross attension not true')
+                # print('inside cross attension not true')
                 
                 cur_new_input_embeds = []
                 cur_new_labels = []
@@ -512,8 +512,8 @@ class LlavaMetaForCausalLM(ABC):
             #     print(f'Shape of index {i} of text_features is: {text_features[i].shape}')
             # print('*'*100)
         # ##################################################### calculate the contrastive loss  #####################################################
-        for txt_feature in text_features:
-            print(f' Shape of text_feature of: {txt_feature.shape}')
+        # for txt_feature in text_features:
+        #     print(f' Shape of text_feature of: {txt_feature.shape}')
             
         text_features = [x.to(self.device) for x in text_features]
         padded_text_features = self.pad_text_features(text_features)
