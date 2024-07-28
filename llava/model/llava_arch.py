@@ -527,8 +527,6 @@ class LlavaMetaForCausalLM(ABC):
 
 
             text_features = self.remove_padding(co_text_features, padded_text_features_attention_mask)
-            # padded_text_features = self.pad_text_features(text_features)
-            # padded_text_features_attention_mask = padded_text_features.sum(dim=-1) != 0
 
             # Check for NaN values
             text_features_has_nan = torch.isnan(co_text_features).any().item()
@@ -700,7 +698,7 @@ class LlavaMetaForCausalLM(ABC):
         return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits, align_loss
 
     
-    # invoked from train.py: line 1030
+    # invoked from train.py
     def initialize_vision_tokenizer(self, model_args, tokenizer):
         if model_args.mm_use_im_patch_token:
             tokenizer.add_tokens([DEFAULT_IMAGE_PATCH_TOKEN], special_tokens=True)

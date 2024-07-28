@@ -165,7 +165,7 @@ def get_peft_state_maybe_zero_3(named_params, bias):
                 to_return[bias_name] = t
     else:
         raise NotImplementedError
-    to_return = {k: maybe_zero_3(v, ignore_status=True) for k, v in to_return.items()}
+    # to_return = {k: maybe_zero_3(v, ignore_status=True) for k, v in to_return.items()}
     return to_return
 
 
@@ -173,13 +173,13 @@ def get_peft_state_non_lora_maybe_zero_3(named_params, require_grad_only=True):
     to_return = {k: t for k, t in named_params if "lora_" not in k}
     if require_grad_only:
         to_return = {k: t for k, t in to_return.items() if t.requires_grad}
-    to_return = {k: maybe_zero_3(v, ignore_status=True).cpu() for k, v in to_return.items()}
+    # to_return = {k: maybe_zero_3(v, ignore_status=True).cpu() for k, v in to_return.items()}
     return to_return
 
 
 def get_mm_adapter_state_maybe_zero_3(named_params, keys_to_match):
     to_return = {k: t for k, t in named_params if any(key_match in k for key_match in keys_to_match)}
-    to_return = {k: maybe_zero_3(v, ignore_status=True).cpu() for k, v in to_return.items()}
+    # to_return = {k: maybe_zero_3(v, ignore_status=True).cpu() for k, v in to_return.items()}
     return to_return
 
 
@@ -225,10 +225,10 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer,
 
         return
 
-    if trainer.deepspeed:
-        torch.cuda.synchronize()
-        trainer.save_model(output_dir)
-        return
+    # if trainer.deepspeed:
+    #     torch.cuda.synchronize()
+    #     trainer.save_model(output_dir)
+    #     return
 
     state_dict = trainer.model.state_dict()
     if trainer.args.should_save:
@@ -842,9 +842,10 @@ def train(attn_implementation=None):
                 bnb_4bit_quant_type=training_args.quant_type # {'fp4', 'nf4'}
             )
         ))
-    print('bnb_model_from_pretrained_args:')
-    print(bnb_model_from_pretrained_args)
 
+    ######################################################################################################################################################################################## 
+    # ---------------------------------------------------------------END OF BITS AND BIAS CONFIG---------------------------------------------------------------
+    ######################################################################################################################################################################################## 
 
     if model_args.vision_tower is not None:
         if 'mpt' in model_args.model_name_or_path:
@@ -858,7 +859,7 @@ def train(attn_implementation=None):
             )
         
         else:
-            print('Calling the llama model > refered to LlavaLlamaForCausalLM class ')
+            # print('Calling the llama model > refered to LlavaLlamaForCausalLM class ')
             model = LlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
                 cache_dir=training_args.cache_dir,
@@ -866,9 +867,10 @@ def train(attn_implementation=None):
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
                 **bnb_model_from_pretrained_args
             )
-            # print('#'*40 + 'LlavaLlamaForCausalLM.from_pretrained' + '#'*40)
-            # print(model)
-            # print('#'*100)
+
+    ######################################################################################################################################################################################## 
+    # ---------------------------------------------------------------END OF LOADING LLM---------------------------------------------------------------
+    ######################################################################################################################################################################################## 
 
     else:
         model = transformers.LlamaForCausalLM.from_pretrained(
@@ -878,21 +880,27 @@ def train(attn_implementation=None):
             torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
             **bnb_model_from_pretrained_args
         )
+
     model.config.use_cache = False
     model.config.local_rank = local_rank
 
 
+    # freezing the LLM
     if model_args.freeze_backbone:
         model.model.requires_grad_(False)
+
+    ######################################################################################################################################################################################## 
+    # ---------------------------------------------------------------END OF MODEL FREZZING---------------------------------------------------------------
+    ######################################################################################################################################################################################## 
 
     if training_args.bits in [4, 8]:
         from peft import prepare_model_for_kbit_training
         model.config.torch_dtype=(torch.float32 if training_args.fp16 else (torch.bfloat16 if training_args.bf16 else torch.float32))
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=training_args.gradient_checkpointing)
-        # print('training_args.bits in [4, 8]:')
-        # print(model)
-        # print('####################################################################################################')
-        # print('####################################################################################################')
+
+    ######################################################################################################################################################################################## 
+    # ---------------------------------------------------------------END OF QUANTIZATION---------------------------------------------------------------
+    ######################################################################################################################################################################################## 
 
     if training_args.gradient_checkpointing:
         if hasattr(model, "enable_input_require_grads"):
@@ -902,8 +910,10 @@ def train(attn_implementation=None):
                 output.requires_grad_(True)
             model.get_input_embeddings().register_forward_hook(make_inputs_require_grad)
 
+    # apply peft: Add LoRa adapter layers
     if training_args.lora_enable:
         from peft import LoraConfig, get_peft_model
+
         lora_config = LoraConfig(
             r=training_args.lora_r,
             lora_alpha=training_args.lora_alpha,
@@ -912,17 +922,19 @@ def train(attn_implementation=None):
             bias=training_args.lora_bias,
             task_type="CAUSAL_LM",
         )
+
         if training_args.bits == 16:
             if training_args.bf16:
                 model.to(torch.bfloat16)
             if training_args.fp16:
                 model.to(torch.float16)
         rank0_print("Adding LoRA adapters...")
+
         model = get_peft_model(model, lora_config)
-        # print('training_args.lora_enable')
-        # print(model)
-        # print('####################################################################################################')
-        # print('####################################################################################################')
+
+    ######################################################################################################################################################################################## 
+    # ---------------------------------------------------------------END OF APPLYING LORA---------------------------------------------------------------
+    ######################################################################################################################################################################################## 
         
 
     if 'mpt' in model_args.model_name_or_path:
@@ -932,6 +944,8 @@ def train(attn_implementation=None):
             model_max_length=training_args.model_max_length,
             padding_side="right"
         )
+
+    # loading LLM tokenizer
     else:
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             model_args.model_name_or_path,
@@ -940,6 +954,10 @@ def train(attn_implementation=None):
             padding_side="right",
             use_fast=False,
         )
+
+    ######################################################################################################################################################################################## 
+    # ---------------------------------------------------------------END OF LLM TOKENIZER---------------------------------------------------------------
+    ######################################################################################################################################################################################## 
 
     if model_args.version == "v0":
         if tokenizer.pad_token is None:
@@ -959,6 +977,8 @@ def train(attn_implementation=None):
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
+    
+    
     # initializing the MoE. This is going to be shared accross the modality
     def initialize_moe(config, model_args):
         
@@ -1002,10 +1022,11 @@ def train(attn_implementation=None):
         model.config.tokenizer_padding_side = tokenizer.padding_side
         model.config.tokenizer_model_max_length = tokenizer.model_max_length
 
-        model.config.tune_mm_mlp_adapter = training_args.tune_mm_mlp_adapter = model_args.tune_mm_mlp_adapter
-
+        
         # mlp_adapter is mumtimodal projector
         # making it freez/tune based on the model 
+        model.config.tune_mm_mlp_adapter = training_args.tune_mm_mlp_adapter = model_args.tune_mm_mlp_adapter
+
         if model_args.tune_mm_mlp_adapter:
             model.requires_grad_(False)
             for p in model.get_model().mm_projector.parameters():
@@ -1016,6 +1037,11 @@ def train(attn_implementation=None):
         if training_args.freeze_mm_mlp_adapter:
             for p in model.get_model().mm_projector.parameters():
                 p.requires_grad = False
+
+    ######################################################################################################################################################################################## 
+    # ---------------------------------------------------------------END OF FREZZING VISION ENCODER---------------------------------------------------------------
+    ######################################################################################################################################################################################## 
+
 
         if training_args.bits in [4, 8]:
             model.get_model().mm_projector.to(dtype=compute_dtype, device=training_args.device)
@@ -1045,56 +1071,7 @@ def train(attn_implementation=None):
     data_module = make_supervised_data_module(tokenizer=tokenizer,
                                               data_args=data_args)
 
-    # from transformers import TrainerCallback
-    # class SaveCallback(TrainerCallback):
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.best_metric = None
-
-    #     def on_save(self, args, state, control, **kwargs):
-    #         checkpoint_dir = os.path.join(args.output_dir, 'checkpoint-{}'.format(state.global_step))
-    #         if args.lora_enable:
-    #             state_dict = get_peft_state_maybe_zero_3(
-    #                 model.named_parameters(), training_args.lora_bias
-    #             )
-    #             non_lora_state_dict = get_peft_state_non_lora_maybe_zero_3(
-    #                 model.named_parameters()
-    #             )
-    #             if args.local_rank in [-1, 0]:
-    #                 model.config.save_pretrained(checkpoint_dir)
-    #                 model.save_pretrained(checkpoint_dir, state_dict=state_dict)
-    #                 torch.save(non_lora_state_dict, os.path.join(checkpoint_dir, 'non_lora_trainables.bin'))
-
-    #     def on_evaluate(self, args, state, control, metrics, **kwargs):
-    #         metric_for_best_model = 'eval_loss'  
-    #         metric_value = metrics.get(metric_for_best_model)
-
-    #         if self.best_metric is None or metric_value < self.best_metric:
-    #             self.best_metric = metric_value
-    #             best_model_dir = os.path.join(args.output_dir, 'best_llava_eval_model')
-
-    #             if args.lora_enable:
-    #                 state_dict = get_peft_state_maybe_zero_3(
-    #                     model.named_parameters(), args.lora_bias
-    #                 )
-    #                 non_lora_state_dict = get_peft_state_non_lora_maybe_zero_3(
-    #                     model.named_parameters()
-    #                 )
-    #                 if args.local_rank in [-1, 0]:
-    #                     model.config.save_pretrained(best_model_dir)
-    #                     model.save_pretrained(best_model_dir, state_dict=state_dict)
-    #                     torch.save(non_lora_state_dict, os.path.join(best_model_dir, 'non_lora_trainables.bin'))
-
-    # training_args.do_eval = True  
-    # training_args.evaluation_strategy = "epoch"  # Evaluate at the end of each epoch
-    # training_args.per_device_eval_batch_size = training_args.train_batch_size  # Set batch size for evaluation
-    # # training_args.eval_steps = 10  # If using "steps" strategy, evaluate every 500 steps
-
-    # trainer = LLaVATrainer(model=model,
-    #                 tokenizer=tokenizer,
-    #                 args=training_args,
-    #                 callbacks=[SaveCallback()],
-    #                 **data_module)
+    
 
     print('*'*100)
     print(model)
@@ -1125,6 +1102,7 @@ def train(attn_implementation=None):
             model.save_pretrained(training_args.output_dir, state_dict=state_dict)
             torch.save(non_lora_state_dict, os.path.join(training_args.output_dir, 'non_lora_trainables.bin'))
             torch.save(model.all_gate_logits, os.path.join(training_args.output_dir, 'gate_Logits.bin'))
+    
     else:
         safe_save_model_for_hf_trainer(trainer=trainer,
                                        output_dir=training_args.output_dir)

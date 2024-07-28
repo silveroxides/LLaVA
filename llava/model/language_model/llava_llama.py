@@ -28,10 +28,10 @@ from transformers.generation.utils import GenerateOutput
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 from ..load_balancing_loss import aux_loss
 
-# thisis inherating all the attributes of LlamaConfig
+# this is inherating all the attributes of LlamaConfig
 # and adding new attribute called model_type attribute to it
 class LlavaConfig(LlamaConfig):
-    # print('inside LlavaConfig')
+    # add new attributes to the config
     model_type = "llava_llama"
 
 
@@ -41,11 +41,10 @@ class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
 
     # config: LlamaConfig -> specifying the type of the config argument
     def __init__(self, config: LlamaConfig):
-        # print('inside LlavaLlamaModel __init__')
         # calling the constructor of the parent class LlavaMetaModel and LlamaModel and passing the config argument to it.
         super(LlavaLlamaModel, self).__init__(config)
 
-# LlavaLlamaForCausalLM (child class) is a subclass of both LlamaForCausalLM (parent class) and LlavaMetaForCausalLM.
+# we have created this LlavaLlamaForCausalLM (child class) is a subclass of both LlamaForCausalLM (parent class) and LlavaMetaForCausalLM.
 # LlamaForCausalLM is the main class which is inharited by LlavaLlamaForCausalLM
 # now we can access all the functions of the parent class
 class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
@@ -53,7 +52,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
     config_class = LlavaConfig
 
     def __init__(self, config):
-        # print('inside LlavaLlamaForCausalLM __init__')
+
+        # overriding default MRO as LlavaMetaForCausalLM does not have any _init_ function
         super(LlamaForCausalLM, self).__init__(config)
         self.model = LlavaLlamaModel(config)
         self.config = config

@@ -4,6 +4,7 @@ from torch import nn
 from torch.nn import functional as F
 
 def aux_loss(router_logits: torch.Tensor, num_experts: int, top_k: int):
+    
     # Get the probability distribution over the experts
     routing_weights = F.softmax(router_logits, dim=1)
     
@@ -21,9 +22,9 @@ def aux_loss(router_logits: torch.Tensor, num_experts: int, top_k: int):
     router_prob_per_expert = routing_weights.mean(dim=0)
     
     # Compute the overall loss
-    overall_loss = torch.sum(fraction_of_tokens * router_prob_per_expert) * num_experts
+    overall_loss = torch.sum(fraction_of_tokens * router_prob_per_expert)
     
-    return overall_loss
+    return overall_loss * num_experts
 
 def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tensor = None, top_k=2, attention_mask: Optional[torch.Tensor] = None
                             ) -> float:
