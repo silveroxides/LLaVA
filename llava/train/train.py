@@ -931,10 +931,9 @@ def train(attn_implementation=None):
         rank0_print("Adding LoRA adapters...")
 
         model = get_peft_model(model, lora_config)
-        
-        # Cast specific weights to float() AFTER LoRA initialization
-        model.base_model.model.model.embed_tokens.weight.data = model.base_model.model.model.embed_tokens.weight.data.float()
-        model.base_model.model.lm_head.weight.data = model.base_model.model.lm_head.weight.data.float()
+
+        # Cast weights to float() AFTER LoRA initialization
+        model = model.float()
 
     ######################################################################################################################################################################################## 
     # ---------------------------------------------------------------END OF APPLYING LORA---------------------------------------------------------------
