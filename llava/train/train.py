@@ -930,6 +930,7 @@ def train(attn_implementation=None):
                 model.to(torch.bfloat16)
             if training_args.fp16:
                 model.to(torch.float16)
+                
         rank0_print("Adding LoRA adapters...")
 
         model = get_peft_model(model, lora_config)
@@ -1077,9 +1078,9 @@ def train(attn_implementation=None):
                     if training_args.bf16 and module.weight.dtype == torch.float32:
                         module = module.to(torch.bfloat16)
 
-    # *** Place the casting code here ***
-    model.base_model.model.model.embed_tokens.weight.data = model.base_model.model.model.embed_tokens.weight.data.float()
-    model.base_model.model.lm_head.weight.data = model.base_model.model.lm_head.weight.data.float()
+    # # *** Place the casting code here ***
+    # model.base_model.model.model.embed_tokens.weight.data = model.base_model.model.model.embed_tokens.weight.data.float()
+    # model.base_model.model.lm_head.weight.data = model.base_model.model.lm_head.weight.data.float()
 
 
     # data module contain train_datset and data_collector instances
