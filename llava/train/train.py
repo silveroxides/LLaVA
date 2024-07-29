@@ -932,12 +932,12 @@ def train(attn_implementation=None):
 
         model = get_peft_model(model, lora_config)
 
-        # Cast weights to float() AFTER LoRA initialization
-        model = model.float()
+        # # Cast weights to float() AFTER LoRA initialization
+        # model = model.float()
 
-        for name, param in model.named_parameters():
-            if param.dtype != torch.float32:
-                print(f"Parameter {name} is not in float32")
+        # for name, param in model.named_parameters():
+        #     if param.dtype != torch.float32:
+        #         print(f"Parameter {name} is not in float32")
 
     ######################################################################################################################################################################################## 
     # ---------------------------------------------------------------END OF APPLYING LORA---------------------------------------------------------------
@@ -1073,6 +1073,8 @@ def train(attn_implementation=None):
                 if hasattr(module, 'weight'):
                     if training_args.bf16 and module.weight.dtype == torch.float32:
                         module = module.to(torch.bfloat16)
+                    else: module = module.to(torch.float32)
+
 
     # data module contain train_datset and data_collector instances
     data_module = make_supervised_data_module(tokenizer=tokenizer,
