@@ -829,6 +829,8 @@ def train(attn_implementation=None):
 
         bnb_model_from_pretrained_args.update(dict(
             device_map={"": training_args.device},
+            load_in_4bit=training_args.bits == 4,
+            load_in_8bit=training_args.bits == 8,
             quantization_config=BitsAndBytesConfig(
                 load_in_4bit=training_args.bits == 4,
                 load_in_8bit=training_args.bits == 8,
@@ -1073,7 +1075,10 @@ def train(attn_implementation=None):
                 if hasattr(module, 'weight'):
                     if training_args.bf16 and module.weight.dtype == torch.float32:
                         module = module.to(torch.bfloat16)
-                    else: module = module.to(torch.float32)
+
+    # *** Place the casting code here ***
+    model.base_model.model.model.embed_tokens.weight.data = model.base_model.model.model.embed_tokens.weight.data.float()
+    model.base_model.model.lm_head.weight.data = model.base_model.model.lm_head.weight.data.float()                                                                                                                                                                                                                                                     
 
 
     # data module contain train_datset and data_collector instances
