@@ -877,7 +877,7 @@ def train(attn_implementation=None):
             model_args.model_name_or_path,
             cache_dir=training_args.cache_dir,
             attn_implementation=attn_implementation,
-            torch_dtype=(torch.bfloat16 if training_args.bf16 else torch.float32),
+            torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
             **bnb_model_from_pretrained_args
         )
 
@@ -932,8 +932,8 @@ def train(attn_implementation=None):
 
         model = get_peft_model(model, lora_config)
 
-        # # Cast weights to float() AFTER LoRA initialization
-        # model = model.float()
+        # Cast weights to float() AFTER LoRA initialization
+        model = model.float()
 
         for name, param in model.named_parameters():
             if param.dtype != torch.float32:
