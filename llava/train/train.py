@@ -866,7 +866,7 @@ def train(attn_implementation=None):
                 model_args.model_name_or_path,
                 cache_dir=training_args.cache_dir,
                 attn_implementation=attn_implementation,
-                torch_dtype=(torch.bfloat16 if training_args.bf16 else torch.float32),
+                torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
                 **bnb_model_from_pretrained_args
             )
 
@@ -1061,32 +1061,8 @@ def train(attn_implementation=None):
         model.config.mm_use_im_patch_token = model_args.mm_use_im_patch_token
         
         model.initialize_vision_tokenizer(model_args, tokenizer=tokenizer)
-        # It iterates over the named parameters of the model and checks if requires_grad is False.
-        params_no_grad = [n for n, p in model.named_parameters() if not p.requires_grad]
-
-        # do we have params that does not require no grad? Yes. [llm and vision encoder]
-        if len(params_no_grad) > 0:
-
-            if training_args.fsdp is not None and len(training_args.fsdp) > 0:
-                
-                # using FSDP with parameters that do not require gradients
-                # If there are fewer than 10 such parameters, all their names are printed; otherwise, only the first 10 are shown.
-                if len(params_no_grad) < 10:
-                    print('[WARNING] Attempting to use FSDP while {} parameters do not require gradients: {}'. format(len(params_no_grad), params_no_grad))
-                else:
-                    print('[WARNING] Attempting to use FSDP while {} parameters do not require gradients: {}...(omitted)'. format(len(params_no_grad), ', '.join(params_no_grad[:10])))
-                
-                print("[WARNING] Attempting to use FSDP with partially frozen paramters, this is experimental.")
-                print("[WARNING] As of 4/30/23, this feature requires PyTorch-nightly build.  See here for details: https://github.com/haotian-liu/LLaVA#experimental-use-fsdp-to-save-memory-in-pretraining")
-
-                from torch.distributed.fsdp.fully_sharded_data_parallel import FullyShardedDataParallel as FSDP
-                def patch_FSDP_use_orig_params(func):
-                    def wrap_func(*args, **kwargs):
-                        use_orig_params = kwargs.pop('use_orig_params', True)
-                        return func(*args, **kwargs, use_orig_params=use_orig_params)
-                    return wrap_func
-
-                FSDP.__init__ = patch_FSDP_use_orig_params(FSDP.__init__)    
+        
+    
 
     if training_args.bits in [4, 8]:
         from peft.tuners.lora import LoraLayer
@@ -1100,6 +1076,10 @@ def train(attn_implementation=None):
                 if hasattr(module, 'weight'):
                     if training_args.bf16 and module.weight.dtype == torch.float32:
                         module = module.to(torch.bfloat16)
+
+    # *** Place the casting code here ***
+    model.base_model.model.model.embed_tokens.weight.data = model.base_model.model.model.embed_tokens.weight.data.float()
+    model.base_model.model.lm_head.weight.data = model.base_model.model.lm_head.weight.data.float()
 
 
     # data module contain train_datset and data_collector instances
