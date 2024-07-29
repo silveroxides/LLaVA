@@ -932,8 +932,12 @@ def train(attn_implementation=None):
 
         model = get_peft_model(model, lora_config)
 
-        # Cast weights to float() AFTER LoRA initialization
-        model = model.float()
+        # # Cast weights to float() AFTER LoRA initialization
+        # model = model.float()
+
+        for name, param in model.named_parameters():
+            if param.dtype != torch.float32:
+                print(f"Parameter {name} is not in float32")
 
     ######################################################################################################################################################################################## 
     # ---------------------------------------------------------------END OF APPLYING LORA---------------------------------------------------------------
