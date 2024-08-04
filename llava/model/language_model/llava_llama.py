@@ -125,23 +125,33 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             return_dict=return_dict
         )
 
-        print(self.config)
+        projector_type = getattr(self.config, 'mm_projector_type', 'linear')
 
-        load_balancing_loss = aux_loss(
+        if projector_type == 'sparse_moe':
+            load_balancing_loss = aux_loss(
             gate_logits,
             self.config.num_experts,
             self.config.num_experts_per_tok,
-        ) * self.config.aux_loss_coef
+            ) * self.config.aux_loss_coef
+
+    
+            llm_loss = out['loss']
+            out['loss'] = llm_loss + load_balancing_loss.to(llm_loss.device) + alignment_loss.to(llm_loss.device)
 
 
+            if self.config.local_rank == 0:
+                print(f'LLM Loss: {llm_loss}; LoadBalancingLoss: {load_balancing_loss}; AlignmentLoss: {alignment_loss}')
+                print(f'Total Loss: {out["loss"]}')
 
-        llm_loss = out['loss']
-        out['loss'] = llm_loss + load_balancing_loss.to(llm_loss.device) + alignment_loss.to(llm_loss.device)
+        else:
+            llm_loss = out['loss']
+            out['loss'] = llm_loss + alignment_loss.to(llm_loss.device)
 
 
-        if self.config.local_rank == 0:
-            print(f'LLM Loss: {llm_loss}; LoadBalancingLoss: {load_balancing_loss}; AlignmentLoss: {alignment_loss}')
-            print(f'Total Loss: {out["loss"]}')
+            if self.config.local_rank == 0:
+                print(f'LLM Loss: {llm_loss}; AlignmentLoss: {alignment_loss}')
+                print(f'Total Loss: {out["loss"]}')
+
 
         # wandb.log({
         #     "llm_loss": llm_loss,
