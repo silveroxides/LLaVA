@@ -125,6 +125,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             return_dict=return_dict
         )
 
+        print(self.config)
+
         load_balancing_loss = aux_loss(
             gate_logits,
             self.config.num_experts,

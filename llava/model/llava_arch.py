@@ -363,14 +363,12 @@ class LlavaMetaForCausalLM(ABC):
             image_features = self.encode_images(images)
 
             try:
-                print("handled the case where both gate_logits and img feature is recieved")
                 image_features, gate_logits = image_features
             
             except ValueError:
                 # handle the case where only one value is returned
                 gate_logits = None
                 image_features = image_features
-                print("handled the case where only img feature is recieved")
             # print('*'*100)
             # print(f'Image Feature shape: {image_features.shape}')
             # print(f'Input Ids Shape: {input_ids.shape}')
