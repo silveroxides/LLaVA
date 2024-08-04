@@ -40,4 +40,4 @@ torchrun --nnodes=1 --nproc_per_node=2 --master_port=25001 \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
     --report_to wandb \
-    --run_name "DDP-Kaggle"
+    --run_name "LLaVA-DDP"
