@@ -74,7 +74,7 @@ class ModelArguments:
     pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
     mm_projector_type: Optional[str] = field(default='linear')
     share_moe: bool = field(default=False)
-    cross_attension: bool = field(default=False)
+    cross_attention: bool = field(default=False)
     mm_use_im_start_end: bool = field(default=False)
     mm_use_im_patch_token: bool = field(default=True)
     mm_patch_merge_type: Optional[str] = field(default='flat')
