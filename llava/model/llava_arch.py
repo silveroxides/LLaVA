@@ -266,7 +266,7 @@ class LlavaMetaForCausalLM(ABC):
         normalized_vision_embeds = F.normalize(image_embeddings, dim=-1)  # Normalize across the embed_dim
 
         # Create a mask for non-zero vectors
-        attention_mask = attention_mask.float()
+        attention_mask = attention_mask.bfloat16()
 
         # mean vision embeddings
         mean_vision_embeds = normalized_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
