@@ -83,9 +83,9 @@ class DualStreamLayer(nn.Module):
         
         return visual, text
 
-class DualStreamCrossAttentionModel(nn.Module):
+class CrossAttentionModel(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, num_heads, dropout=0.1):
-        super(DualStreamCrossAttentionModel, self).__init__()
+        super(CrossAttentionModel, self).__init__()
         self.layers = nn.ModuleList([DualStreamLayer(input_dim, hidden_dim, num_heads, dropout) for _ in range(num_layers)])
         self.dropout = nn.Dropout(dropout)
         
@@ -101,7 +101,7 @@ class DualStreamCrossAttentionModel(nn.Module):
 
  
 def get_co_attention(input_dim, hidden_dim, num_layers, num_heads, dropout_rate):
-    return DualStreamCrossAttentionModel(input_dim, hidden_dim, num_layers, num_heads, dropout_rate)
+    return CrossAttentionModel(input_dim, hidden_dim, num_layers, num_heads, dropout_rate)
     
 # hudai = CrossAttentionEncoder(768, 768, 2, 2)
 # x = torch.rand(32, 10, 768)

@@ -125,10 +125,12 @@ class LlavaMetaModel:
         self.config.mm_vision_select_layer = mm_vision_select_layer
         self.config.mm_vision_select_feature = mm_vision_select_feature
         self.config.mm_patch_merge_type = mm_patch_merge_type
+        self.num_layers = getattr(model_args, 'num_layers', 2)
+        self.num_heads = getattr(model_args, 'num_heads', 2)
 
         # initializing the co_attention
         if co_attention:
-            self.co_attention = get_co_attention(self.hidden_size, self.config.intermediate_size, num_layers=2, num_heads=2, dropout_rate=0.1)
+            self.co_attention = get_co_attention(self.hidden_size, self.config.intermediate_size, num_layers=self.num_layers, num_heads=self.num_heads, dropout_rate=0.1)
             
 
 
@@ -255,13 +257,13 @@ class LlavaMetaForCausalLM(ABC):
     
     def clip_contrastive_loss(self, text_embeddings, image_embeddings, attention_mask, temperature=0.07):
 
-        # convert this to fp32 to mitigate `nan` during normalization
-        text_embeds = text_embeddings.float()
-        vision_embeds = image_embeddings.float()
+        # # convert this to fp32 to mitigate `nan` during normalization
+        # text_embeds = text_embeddings.float()
+        # vision_embeds = image_embeddings.float()
 
         # Normalize the embeddings
-        normalized_text_embeds = F.normalize(text_embeds, dim=-1)  # Normalize across the embed_dim
-        normalized_vision_embeds = F.normalize(vision_embeds, dim=-1)  # Normalize across the embed_dim
+        normalized_text_embeds = F.normalize(text_embeddings, dim=-1)  # Normalize across the embed_dim
+        normalized_vision_embeds = F.normalize(image_embeddings, dim=-1)  # Normalize across the embed_dim
 
         # Create a mask for non-zero vectors
         attention_mask = attention_mask.float()
@@ -472,7 +474,7 @@ class LlavaMetaForCausalLM(ABC):
             # concat the segments in a single tensor [tensor([1, 2, 3]), tensor([5, 6, 7, 8]), tensor([10, 11])] to
             # torch.cat(cur_input_ids_noim) --> tensor([ 1, 2, 3, 5, 6, 7, 8, 10, 11])
             # next we get the text feature for this input ids.
-            # the length of input ids is 9 for our example is 9
+            # the length of input ids for our example is 9
             # after self.get_model().embed_tokens(torch.cat(cur_input_ids_noim)) -> it becomes shape of [9, embed_dimension]
             cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
 
@@ -567,18 +569,18 @@ class LlavaMetaForCausalLM(ABC):
             
             align_loss = self.clip_contrastive_loss(co_text_features, image_features, padded_text_features_attention_mask)
 
-            print('unpad text features')
-            for i in text_features:
-                print(i.shape)
+            # print('unpad text features')
+            # for i in text_features:
+            #     print(i.shape)
 
 
 
             for x in range(len(text_features)):
                 cur_input_embeds_no_im = text_features[x]
-                print(cur_input_embeds_no_im.shape)
+                # print(cur_input_embeds_no_im.shape)
                 cur_labels_noim = text_labels[x]
                 split_sizes = splits[x]
-                print(split_sizes)
+                # print(split_sizes)
                 cur_input_embeds_no_im = torch.split(cur_input_embeds_no_im, split_sizes, dim=0)
 
                 cur_new_input_embeds = []

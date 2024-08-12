@@ -53,6 +53,11 @@ def rank0_print(*args):
     if local_rank == 0:
         print(*args)
 
+def rank0_condition():
+    if local_rank == 0:
+        return True
+    else: return False
+
 
 from packaging import version
 IS_TOKENIZER_GREATER_THAN_0_14 = version.parse(tokenizers.__version__) >= version.parse('0.14')
@@ -75,6 +80,8 @@ class ModelArguments:
     mm_patch_merge_type: Optional[str] = field(default='flat')
     mm_vision_select_feature: Optional[str] = field(default="patch")
     num_experts: Optional[int] = field(default=1)
+    num_layers: Optional[int] = field(default=2)
+    num_heads: Optional[int] = field(default=2)
     num_experts_per_tok: Optional[int] = field(default=1)
     aux_loss_coef: Optional[float] = field(default=0.01)
 
@@ -1097,6 +1104,13 @@ def train(attn_implementation=None):
                     tokenizer=tokenizer,
                     args=training_args,
                     **data_module)
+    
+    # Initialize a W&B run
+    rank0status = rank0_condition()
+    
+    if rank0status:
+        os.environ["WANDB_PROJECT"] = "FineTuneLLaVa"
+        wandb.init(project=os.environ["WANDB_PROJECT"])
 
     if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
         trainer.train(resume_from_checkpoint=True)
