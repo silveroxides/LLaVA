@@ -67,7 +67,7 @@ class LlavaMetaModel:
         pretrain_mm_mlp_adapter = model_args.pretrain_mm_mlp_adapter
         mm_patch_merge_type = model_args.mm_patch_merge_type
         share_moe = model_args.share_moe
-        co_attention = model_args.cross_attension
+        co_attention = model_args.cross_attention
 
         self.config.mm_vision_tower = vision_tower
 
@@ -144,11 +144,11 @@ class LlavaMetaModel:
             self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'))
             print(self.mm_projector)
 
-    def get_cross_attension(self):
+    def get_cross_attention(self):
         
-        cross_attension = getattr(self, 'co_attention', None)
+        cross_attention = getattr(self, 'co_attention', None)
 
-        if cross_attension is not None:
+        if cross_attention is not None:
             return True
         else: return False
 
@@ -193,8 +193,8 @@ class LlavaMetaForCausalLM(ABC):
     def get_vision_tower(self):
         return self.get_model().get_vision_tower()
     
-    def get_cross_attension(self):
-        return self.get_model().get_cross_attension()
+    def get_cross_attention(self):
+        return self.get_model().get_cross_attention()
     
     def cross_attention(self, text_features, image_features, text_mask):
         return self.get_model().co_attention(image_features, text_features, text_mask, visual_mask = None)
@@ -303,9 +303,9 @@ class LlavaMetaForCausalLM(ABC):
         images, image_sizes=None):
         
         vision_tower = self.get_vision_tower()
-        cross_attension  = self.get_cross_attension()
+        cross_attention  = self.get_cross_attention()
 
-        # print(f'Cross attension {cross_attension}')
+        # print(f'Cross attension {cross_attention}')
 
         
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
@@ -487,7 +487,7 @@ class LlavaMetaForCausalLM(ABC):
             splits.append(split_sizes)
 
             
-            if cross_attension != True:
+            if cross_attention != True:
 
                 # print('inside cross attension not true')
                 
@@ -533,7 +533,7 @@ class LlavaMetaForCausalLM(ABC):
         padded_text_features_attention_mask =  padded_text_features_attention_mask.to(dtype=attention_mask.dtype, device=attention_mask.device)
         
         
-        if cross_attension:
+        if cross_attention:
             image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
 
 
