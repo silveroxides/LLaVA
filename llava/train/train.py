@@ -1109,6 +1109,7 @@ def train(attn_implementation=None):
     rank0status = rank0_condition()
     
     if rank0status:
+        os.environ["WANDB_API_KEY"] = "a9cd634aa6e8ac711e4a18b073f238ff96672289"
         os.environ["WANDB_PROJECT"] = "FineTuneLLaVa"
         wandb.init(project=os.environ["WANDB_PROJECT"])
 
