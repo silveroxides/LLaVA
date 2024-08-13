@@ -537,7 +537,6 @@ class LlavaMetaForCausalLM(ABC):
             image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
 
 
-            co_text_features = self.remove_padding(co_text_features, padded_text_features_attention_mask)
 
             # Check for NaN values
             text_features_has_nan = torch.isnan(co_text_features).any().item()
@@ -558,6 +557,8 @@ class LlavaMetaForCausalLM(ABC):
                 print("image_features_has_inf Contains Inf:")
             if text_features_has_inf:
                 print("text_features_has_inf Contains Inf")
+
+            co_text_features = self.remove_padding(co_text_features, padded_text_features_attention_mask)
             
             for x in co_text_features:
                 text_features_has_zero = (x == 0).any().item()
