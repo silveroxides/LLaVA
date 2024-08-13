@@ -5,12 +5,11 @@
 #SBATCH --ntasks=1 
 #SBATCH -t 01:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:4 
+#SBATCH --gres=gpu:a100:1 
 #SBATCH -N 1 
-#SBATCH --cpus-per-task=64 
+#SBATCH --cpus-per-task=32 
 #SBATCH --output=log/slurm/log_llava/log-%A-%a.log 
 #SBATCH -J log_llava
-#SBATCH --exclude=udc-ba25-[23,27,28],udc-ba26-[23,24,25,26],udc-ba27-[23,24],udc-an28-[1,7]
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -47,7 +46,7 @@ apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed llava/train/t
 --num_heads ${num_heads[${SLURM_ARRAY_TASK_ID}]} \
 --aux_loss_coef 0.01 \
 --share_moe False \
---cross_attension True \
+--cross_attention True \
 --mm_projector_type 'mlp2x_gelu'\
 --per_device_train_batch_size 32 \
 --per_device_eval_batch_size 4 \
