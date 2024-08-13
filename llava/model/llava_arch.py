@@ -568,7 +568,7 @@ class LlavaMetaForCausalLM(ABC):
             if image_features_has_zero:
                 print("image_features_has_zero Contains Zero:", image_features_has_zero)
             
-            align_loss = self.clip_contrastive_loss(text_features, image_features, padded_text_features_attention_mask)
+            align_loss = self.clip_contrastive_loss(padded_text_features, image_features, padded_text_features_attention_mask)
 
             # print('unpad text features')
             # for i in text_features:
