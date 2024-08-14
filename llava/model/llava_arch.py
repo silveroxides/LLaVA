@@ -258,15 +258,15 @@ class LlavaMetaForCausalLM(ABC):
     def clip_contrastive_loss(self, text_embeddings, image_embeddings, attention_mask, temperature=0.07):
 
         # # convert this to fp32 to mitigate `nan` during normalization
-        # text_embeds = text_embeddings.float()
-        # vision_embeds = image_embeddings.float()
+        text_embeds = text_embeddings.float()
+        vision_embeds = image_embeddings.float()
 
         # Normalize the embeddings
-        normalized_text_embeds = F.normalize(text_embeddings, dim=-1)  # Normalize across the embed_dim
-        normalized_vision_embeds = F.normalize(image_embeddings, dim=-1)  # Normalize across the embed_dim
+        normalized_text_embeds = F.normalize(text_embeds, dim=-1)  # Normalize across the embed_dim
+        normalized_vision_embeds = F.normalize(vision_embeds, dim=-1)  # Normalize across the embed_dim
 
         # Create a mask for non-zero vectors
-        attention_mask = attention_mask.bfloat16()
+        attention_mask = attention_mask.float()
 
         # mean vision embeddings
         mean_vision_embeds = normalized_vision_embeds.mean(dim=1)  # [batch_size, embed_dim]
@@ -534,36 +534,38 @@ class LlavaMetaForCausalLM(ABC):
         
         
         if cross_attention:
-            image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
+            # image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
+            image_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
+
 
 
 
             # Check for NaN values
-            text_features_has_nan = torch.isnan(co_text_features).any().item()
+            # text_features_has_nan = torch.isnan(co_text_features).any().item()
             image_features_has_nan = torch.isnan(image_features).any().item()
 
             # Check for infinity values
             image_features_has_inf = torch.isinf(image_features).any().item()
-            text_features_has_inf = torch.isinf(co_text_features).any().item()
+            # text_features_has_inf = torch.isinf(co_text_features).any().item()
 
             # Check for zero values
             image_features_has_zero = (image_features == 0).any().item()
 
-            if text_features_has_nan:
-                print("text_features_has_nan Contains NaN")
+            # if text_features_has_nan:
+            #     print("text_features_has_nan Contains NaN")
+            # if text_features_has_inf:
+            #     print("text_features_has_inf Contains Inf")
             if image_features_has_nan:
                 print("image_features_has_nan Contains NaN")
             if image_features_has_inf:
                 print("image_features_has_inf Contains Inf:")
-            if text_features_has_inf:
-                print("text_features_has_inf Contains Inf")
 
-            co_text_features = self.remove_padding(co_text_features, padded_text_features_attention_mask)
+            # co_text_features = self.remove_padding(co_text_features, padded_text_features_attention_mask)
             
-            for x in co_text_features:
-                text_features_has_zero = (x == 0).any().item()
-                if text_features_has_zero:
-                    print("text_features_has_zero Contains Zero:", text_features_has_zero)
+            # for x in co_text_features:
+            #     text_features_has_zero = (x == 0).any().item()
+            #     if text_features_has_zero:
+            #         print("text_features_has_zero Contains Zero:", text_features_has_zero)
 
             if image_features_has_zero:
                 print("image_features_has_zero Contains Zero:", image_features_has_zero)
