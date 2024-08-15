@@ -1,4 +1,3 @@
-
 import torch.nn.functional as F
 
 class CrossAttention(nn.Module):
@@ -117,6 +116,7 @@ class CrossAttentionEncoder(nn.Module):
 
         for layer in self.layers:
             visual_feature, text_feature = layer(visual_feature, text_feature, text_mask, visual_mask)
+        
         return visual_feature, text_feature
     
 def get_co_attention(input_dim, hidden_dim, num_layers, num_heads, dropout_rate):
