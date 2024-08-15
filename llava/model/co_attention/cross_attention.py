@@ -94,7 +94,7 @@ class CrossAttentionLayer(nn.Module):
         img_cross = self.cross_attention(img, text, text, text_mask)
         img = self.norm2_visual(img_cross + img)
 
-        text_cross = self.cross_attention(text, img, img, text_mask)
+        text_cross = self.cross_attention(text, img, img)
         text = self.norm2_text(text_cross + text)
         
         # Feed-forward networks with dropout after LayerNorm but before the last linear layer

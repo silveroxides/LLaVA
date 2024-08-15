@@ -74,7 +74,7 @@ class DualStreamLayer(nn.Module):
         visual_cross = self.cross_attn_visual(visual, text, text, text_mask)
         visual = self.norm2_visual(visual + visual_cross)
         
-        text_cross = self.cross_attn_text(text, visual, visual, visual_mask)
+        text_cross = self.cross_attn_text(text, visual, visual)
         text = self.norm2_text(text + text_cross)
         
         # Feed-forward
