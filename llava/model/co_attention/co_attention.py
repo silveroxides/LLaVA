@@ -25,7 +25,7 @@ class MultiHeadAttention(nn.Module):
         scores = torch.matmul(Q, K.transpose(-2, -1)) / (self.head_dim ** 0.5)
         
         if mask is not None:
-            scores = scores.masked_fill(mask.unsqueeze(1).unsqueeze(2) == 0, float('-inf'))
+            scores = scores.masked_fill(mask.unsqueeze(1).unsqueeze(2) == 0, float('-inf')).type_as(scores)
         
         attention = self.dropout(F.softmax(scores, dim=-1))
         
@@ -66,23 +66,22 @@ class DualStreamLayer(nn.Module):
         visual = self.self_attn_visual(visual_input, visual_input, visual_input, visual_mask)
         visual = self.norm1_visual(visual_input + visual)
         
-        # # Self-attention for text stream
-        # text = self.self_attn_text(text_input, text_input, text_input, text_mask)
-        # text = self.norm1_text(text_input + text)
+        # Self-attention for text stream
+        text = self.self_attn_text(text_input, text_input, text_input, text_mask)
+        text = self.norm1_text(text_input + text)
         
         # Cross-attention
-        visual_cross = self.cross_attn_visual(visual, text_input, text_input, text_mask)
+        visual_cross = self.cross_attn_visual(visual, text, text, text_mask)
         visual = self.norm2_visual(visual + visual_cross)
         
-        # text_cross = self.cross_attn_text(text, visual, visual, visual_mask)
-        # text = self.norm2_text(text + text_cross)
+        text_cross = self.cross_attn_text(text, visual, visual, visual_mask)
+        text = self.norm2_text(text + text_cross)
         
         # Feed-forward
         visual = self.norm3_visual(visual + self.ff_visual(visual))
-        # text = self.norm3_text(text + self.ff_text(text))
+        text = self.norm3_text(text + self.ff_text(text))
         
-        # return visual, text
-        return visual
+        return visual, text
 
 class CrossAttentionModel(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, num_heads, dropout=0.1):
@@ -97,10 +96,8 @@ class CrossAttentionModel(nn.Module):
         # text_mask = text_mask.float()
 
         for layer in self.layers:
-            visual_feature = layer(visual_feature, text_feature, visual_mask, text_mask)
-            # visual_feature, text_feature = layer(visual_feature, text_feature, visual_mask, text_mask)
-        return visual_feature
-        # return visual_feature, text_feature
+            visual_feature, text_feature = layer(visual_feature, text_feature, visual_mask, text_mask)
+        return visual_feature, text_feature
 
  
 def get_co_attention(input_dim, hidden_dim, num_layers, num_heads, dropout_rate):

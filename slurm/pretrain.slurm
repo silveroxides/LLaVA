@@ -24,9 +24,10 @@ num_experts_per_tok=(2 2 3 2 3)
 num_layers=(2 4 6 8 10)
 num_heads=(2 4 6 8 10)
 output_dir=('./ckpts/llava-v1.5-13b-pretrain-v1' './ckpts/llava-v1.5-13b-pretrain-v2' './ckpts/llava-v1.5-13b-pretrain-v3' './ckpts/llava-v1.5-13b-pretrain-v4' './ckpts/llava-v1.5-13b-pretrain-v5')
+PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
-apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed llava/train/train_mem.py \
+apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed --master_port $PORT llava/train/train_mem.py \
 --deepspeed ./scripts/zero2.json \
 --model_name_or_path lmsys/vicuna-13b-v1.5 \
 --version plain \
@@ -47,7 +48,7 @@ apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed llava/train/t
 --aux_loss_coef 0.01 \
 --share_moe False \
 --cross_attention True \
---mm_projector_type 'mlp2x_gelu'\
+--mm_projector_type 'mlp2x_gelu' \
 --per_device_train_batch_size 32 \
 --per_device_eval_batch_size 4 \
 --gradient_accumulation_steps 1 \
