@@ -97,15 +97,24 @@ class CrossAttentionLayer(nn.Module):
         text_cross = self.cross_attention(text, img, img)
         text = self.norm2_text(text_cross + text)
         
-        # Feed-forward networks with dropout after LayerNorm but before the last linear layer
-        img_ffn = self.linear2(F.relu(self.norm3_visual(self.linear1(img))))
-        img = img_ffn + img  # Adding residual connection
+        # # Feed-forward networks with dropout after LayerNorm but before the last linear layer
+        # img_ffn = self.linear2(F.relu(self.norm3_visual(self.linear1(img))))
+        # img = img_ffn + img  # Adding residual connection
 
-        text_ffn = self.linear4(F.relu(self.norm3_text(self.linear3(text))))
-        text = text_ffn + text  # Adding residual connection
+        # text_ffn = self.linear4(F.relu(self.norm3_text(self.linear3(text))))
+        # text = text_ffn + text  # Adding residual connection
 
-        img = self.dropout(img)  # Dropout after the residual connection
-        text = self.dropout(text)  # Dropout after the residual connection        
+        # img = self.dropout(img)  # Dropout after the residual connection
+        # text = self.dropout(text)  # Dropout after the residual connection   
+
+        # Feed-forward networks with dropout before residual connections
+        img_ffn = self.linear2(F.relu(self.linear1(img)))
+        img_ffn = self.dropout(img_ffn)  # Dropout before residual connection
+        img = self.norm3_visual(img_ffn + img)
+
+        text_ffn = self.linear4(F.relu(self.linear3(text)))
+        text_ffn = self.dropout(text_ffn)  # Dropout before residual connection
+        text = self.norm3_text(text_ffn + text)     
  
         return img, text
 
