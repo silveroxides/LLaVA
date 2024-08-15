@@ -23,7 +23,8 @@ import pprint
 
 from torch.nn.utils.rnn import pad_sequence
 from .multimodal_encoder.builder import build_vision_tower
-from .co_attention.co_attention import get_co_attention
+# from .co_attention.co_attention import get_co_attention
+from .co_attention.cross_attention import get_co_attention
 from .multimodal_projector.builder import build_vision_projector
 
 from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
@@ -535,7 +536,7 @@ class LlavaMetaForCausalLM(ABC):
         
         if cross_attention:
             # image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
-            image_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
+            image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
 
 
 
