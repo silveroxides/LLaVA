@@ -537,40 +537,42 @@ class LlavaMetaForCausalLM(ABC):
             # image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
             image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
 
+            text_features = self.remove_padding(co_text_features, padded_text_features_attention_mask)
 
 
 
             # Check for NaN values
-            # text_features_has_nan = torch.isnan(co_text_features).any().item()
+            text_features_has_nan = torch.isnan(text_features).any().item()
             image_features_has_nan = torch.isnan(image_features).any().item()
 
             # Check for infinity values
             image_features_has_inf = torch.isinf(image_features).any().item()
-            # text_features_has_inf = torch.isinf(co_text_features).any().item()
+            text_features_has_inf = torch.isinf(text_features).any().item()
 
             # Check for zero values
             image_features_has_zero = (image_features == 0).any().item()
 
-            # if text_features_has_nan:
-            #     print("text_features_has_nan Contains NaN")
-            # if text_features_has_inf:
-            #     print("text_features_has_inf Contains Inf")
+            if text_features_has_nan:
+                print("text_features_has_nan Contains NaN")
+            if text_features_has_inf:
+                print("text_features_has_inf Contains Inf")
             if image_features_has_nan:
                 print("image_features_has_nan Contains NaN")
             if image_features_has_inf:
                 print("image_features_has_inf Contains Inf:")
 
-            # co_text_features = self.remove_padding(co_text_features, padded_text_features_attention_mask)
             
-            # for x in co_text_features:
-            #     text_features_has_zero = (x == 0).any().item()
-            #     if text_features_has_zero:
-            #         print("text_features_has_zero Contains Zero:", text_features_has_zero)
+            for x in text_features:
+                text_features_has_zero = (x == 0).any().item()
+                if text_features_has_zero:
+                    print("text_features_has_zero Contains Zero:", text_features_has_zero)
 
             if image_features_has_zero:
                 print("image_features_has_zero Contains Zero:", image_features_has_zero)
             
-            align_loss = self.clip_contrastive_loss(padded_text_features, image_features, padded_text_features_attention_mask)
+            
+            
+            align_loss = self.clip_contrastive_loss(co_text_features, image_features, padded_text_features_attention_mask)
 
             # print('unpad text features')
             # for i in text_features:

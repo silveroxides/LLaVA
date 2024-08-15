@@ -96,16 +96,17 @@ class CrossAttentionLayer(nn.Module):
 
         text_cross = self.cross_attention(text, img, img, text_mask)
         text = self.norm2_text(text_cross + text)
-
-        img_ffn = self.linear2(F.relu(self.linear1(img)))
-        img = self.norm3_visual(img_ffn + img)
-
-        text_ffn = self.linear4(F.relu(self.linear3(text)))
-        text = self.norm3_text(text_ffn + text)
-
-        img = self.dropout(img)
-        text = self.dropout(text)
         
+        # Feed-forward networks with dropout after LayerNorm but before the last linear layer
+        img_ffn = self.linear2(F.relu(self.norm3_visual(self.linear1(img))))
+        img = img_ffn + img  # Adding residual connection
+
+        text_ffn = self.linear4(F.relu(self.norm3_text(self.linear3(text))))
+        text = text_ffn + text  # Adding residual connection
+
+        img = self.dropout(img)  # Dropout after the residual connection
+        text = self.dropout(text)  # Dropout after the residual connection        
+ 
         return img, text
 
 class CrossAttentionEncoder(nn.Module):
