@@ -534,6 +534,11 @@ class LlavaMetaForCausalLM(ABC):
         
         
         if cross_attention:
+
+            image_features_has_zero = (image_features == 0).any().item()
+            if image_features_has_zero:
+                print('img feature got zero before passing to cross attn')
+
             # image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
             image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
 
@@ -542,12 +547,12 @@ class LlavaMetaForCausalLM(ABC):
 
 
             # Check for NaN values
-            text_features_has_nan = torch.isnan(text_features).any().item()
+            text_features_has_nan = torch.isnan(co_text_features).any().item()
             image_features_has_nan = torch.isnan(image_features).any().item()
 
             # Check for infinity values
             image_features_has_inf = torch.isinf(image_features).any().item()
-            text_features_has_inf = torch.isinf(text_features).any().item()
+            text_features_has_inf = torch.isinf(co_text_features).any().item()
 
             # Check for zero values
             image_features_has_zero = (image_features == 0).any().item()
@@ -562,7 +567,7 @@ class LlavaMetaForCausalLM(ABC):
                 print("image_features_has_inf Contains Inf:")
 
             
-            for x in text_features:
+            for x in co_text_features:
                 text_features_has_zero = (x == 0).any().item()
                 if text_features_has_zero:
                     print("text_features_has_zero Contains Zero:", text_features_has_zero)

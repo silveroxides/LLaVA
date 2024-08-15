@@ -8,8 +8,8 @@
 #SBATCH --gres=gpu:a100:1 
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=32 
-#SBATCH --output=log/slurm/log_llava/log-%A-%a.log 
-#SBATCH -J log_llava
+#SBATCH --output=log/slurm/cross_attn/log-%A-%a.log 
+#SBATCH -J cross_attn
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -22,7 +22,7 @@ vision_tower=('openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14
 num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
 num_layers=(2 4 6 8 10)
-num_heads=(2 4 6 8 10)
+num_heads=(2 4 12 8 10)
 output_dir=('./ckpts/llava-v1.5-13b-pretrain-v1' './ckpts/llava-v1.5-13b-pretrain-v2' './ckpts/llava-v1.5-13b-pretrain-v3' './ckpts/llava-v1.5-13b-pretrain-v4' './ckpts/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
