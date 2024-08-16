@@ -3,13 +3,13 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0-4 
 #SBATCH --ntasks=1 
-#SBATCH -t 01:00:00 
+#SBATCH -t 20:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:1 
+#SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
-#SBATCH --cpus-per-task=32 
-#SBATCH --output=log/slurm/cross_attn/log-%A-%a.log 
-#SBATCH -J cross_attn
+#SBATCH --cpus-per-task=64 
+#SBATCH --output=log/slurm/pretrain/log-%A-%a.log 
+#SBATCH -J pretrain
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -40,7 +40,7 @@ apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed --master_port
 --mm_use_im_patch_token False \
 --bf16 True \
 --output_dir ${output_dir[${SLURM_ARRAY_TASK_ID}]} \
---max_steps 50 \
+--num_train_epochs 1 \
 --num_experts_per_tok ${num_experts_per_tok[${SLURM_ARRAY_TASK_ID}]} \
 --num_experts ${num_experts[${SLURM_ARRAY_TASK_ID}]} \
 --num_layers ${num_layers[${SLURM_ARRAY_TASK_ID}]} \
@@ -54,7 +54,7 @@ apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed --master_port
 --gradient_accumulation_steps 1 \
 --evaluation_strategy "no" \
 --save_strategy "steps" \
---save_steps 25 \
+--save_steps 24000 \
 --save_total_limit 1 \
 --learning_rate 1e-3 \
 --weight_decay 0. \
