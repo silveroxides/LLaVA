@@ -227,9 +227,9 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer,
         current_folder = output_dir.split('/')[-1]
         parent_folder = os.path.dirname(output_dir)
         
-        # Save the weights only if this is the correct process in distributed training
         if trainer.args.local_rank == 0 or trainer.args.local_rank == -1:
             if current_folder.startswith('checkpoint-'):
+                print('saving checkpoint')
                 component_folder = os.path.join(parent_folder, "components")
                 os.makedirs(component_folder, exist_ok=True)
                 for key in keys_to_match:

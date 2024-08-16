@@ -23,7 +23,7 @@ num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
 num_layers=(2 4 6 8 10)
 num_heads=(2 4 12 8 10)
-output_dir=('./ckpts/llava-v1.5-13b-pretrain-v1' './ckpts/llava-v1.5-13b-pretrain-v2' './ckpts/llava-v1.5-13b-pretrain-v3' './ckpts/llava-v1.5-13b-pretrain-v4' './ckpts/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts/pretrain/llava-v1.5-13b-pretrain-v1' './ckpts/pretrain/llava-v1.5-13b-pretrain-v2' './ckpts/pretrain/llava-v1.5-13b-pretrain-v3' './ckpts/pretrain/llava-v1.5-13b-pretrain-v4' './ckpts/pretrain/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
@@ -40,7 +40,7 @@ apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed --master_port
 --mm_use_im_patch_token False \
 --bf16 True \
 --output_dir ${output_dir[${SLURM_ARRAY_TASK_ID}]} \
---max_steps 100 \
+--max_steps 50 \
 --num_experts_per_tok ${num_experts_per_tok[${SLURM_ARRAY_TASK_ID}]} \
 --num_experts ${num_experts[${SLURM_ARRAY_TASK_ID}]} \
 --num_layers ${num_layers[${SLURM_ARRAY_TASK_ID}]} \
@@ -54,9 +54,9 @@ apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed --master_port
 --gradient_accumulation_steps 1 \
 --evaluation_strategy "no" \
 --save_strategy "steps" \
---save_steps 24000 \
+--save_steps 25 \
 --save_total_limit 1 \
---learning_rate 2e-3 \
+--learning_rate 1e-3 \
 --weight_decay 0. \
 --warmup_ratio 0.03 \
 --lr_scheduler_type "cosine" \
