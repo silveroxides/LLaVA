@@ -3,13 +3,13 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0-4 
 #SBATCH --ntasks=1 
-#SBATCH -t 5:00:00 
+#SBATCH -t 10:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:1
+#SBATCH --gres=gpu:a100:8
 #SBATCH -N 1 
-#SBATCH --cpus-per-task=64 
-#SBATCH --output=log/slurm/pretrain/log-%A-%a.log 
-#SBATCH -J pretrain
+#SBATCH --cpus-per-task=128 
+#SBATCH --output=log/slurm/pretrain-81A/log-%A-%a.log 
+#SBATCH -J pretrain-81A
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -21,9 +21,9 @@ model_name=('lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1
 vision_tower=('openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336')
 num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
-num_layers=(2 4 6 8 10)
-num_heads=(2 4 12 8 10)
-output_dir=('./ckpts/pretrain_test/llava-v1.5-13b-pretrain-v1' './ckpts/pretrain_test/llava-v1.5-13b-pretrain-v2' './ckpts/pretrain_test/llava-v1.5-13b-pretrain-v3' './ckpts/pretrain_test/llava-v1.5-13b-pretrain-v4' './ckpts/pretrain_test/llava-v1.5-13b-pretrain-v5')
+num_layers=(8 10 12 14 16)
+num_heads=(8 10 12 14 16)
+output_dir=('./ckpts/pretrain-81A/llava-v1.5-13b-pretrain-v1' './ckpts/pretrain-81A/llava-v1.5-13b-pretrain-v2' './ckpts/pretrain-81A/llava-v1.5-13b-pretrain-v3' './ckpts/pretrain-81A/llava-v1.5-13b-pretrain-v4' './ckpts/pretrain-81A/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
@@ -31,8 +31,8 @@ apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed --master_port
 --deepspeed ./scripts/zero2.json \
 --model_name_or_path lmsys/vicuna-13b-v1.5 \
 --version plain \
---data_path ./dataset/chat.json \
---image_folder ./dataset \
+--data_path ./playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json \
+--image_folder ./playground/data/LLaVA-Pretrain/images \
 --vision_tower openai/clip-vit-large-patch14-336 \
 --tune_mm_mlp_adapter True \
 --mm_vision_select_layer -2 \
@@ -40,7 +40,7 @@ apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed --master_port
 --mm_use_im_patch_token False \
 --bf16 True \
 --output_dir ${output_dir[${SLURM_ARRAY_TASK_ID}]} \
---max_steps 1000 \
+--num_train_epochs 1 \
 --num_experts_per_tok ${num_experts_per_tok[${SLURM_ARRAY_TASK_ID}]} \
 --num_experts ${num_experts[${SLURM_ARRAY_TASK_ID}]} \
 --num_layers ${num_layers[${SLURM_ARRAY_TASK_ID}]} \
@@ -54,7 +54,7 @@ apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed --master_port
 --gradient_accumulation_steps 1 \
 --evaluation_strategy "no" \
 --save_strategy "steps" \
---save_steps 500 \
+--save_steps 24000 \
 --save_total_limit 1 \
 --learning_rate 1e-3 \
 --weight_decay 0. \
