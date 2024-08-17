@@ -542,7 +542,7 @@ class LlavaMetaForCausalLM(ABC):
             # image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
             image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
 
-            text_features = self.remove_padding(co_text_features, padded_text_features_attention_mask)
+            # text_features = self.remove_padding(co_text_features, padded_text_features_attention_mask)
 
 
 
@@ -577,7 +577,7 @@ class LlavaMetaForCausalLM(ABC):
             
             
             
-            align_loss = self.clip_contrastive_loss(co_text_features, image_features, padded_text_features_attention_mask)
+            align_loss = self.clip_contrastive_loss(padded_text_features, image_features, padded_text_features_attention_mask)
 
             # print('unpad text features')
             # for i in text_features:
