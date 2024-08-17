@@ -27,7 +27,7 @@ output_dir=('./ckpts/cross_attn_pretrain_test/llava-v1.5-13b-pretrain-v1' './ckp
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
-apptainer exec --nv /scratch/mi8uu/scartch-mrm/llava.sif deepspeed --master_port $PORT llava/train/train_mem.py \
+apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT llava/train/train_mem.py \
 --deepspeed ./scripts/zero2.json \
 --model_name_or_path lmsys/vicuna-13b-v1.5 \
 --version plain \
