@@ -1,8 +1,9 @@
 #!/bin/bash
 
 deepspeed llava/train/train_mem.py \
+    --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./scripts/zero2.json \
-    --model_name_or_path lmsys/vicuna-13b-v1.5 \
+    --model_name_or_path lmsys/vicuna-7b-v1.5 \
     --version plain \
     --data_path ./playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json \
     --image_folder ./playground/data/images \
@@ -12,17 +13,17 @@ deepspeed llava/train/train_mem.py \
     --mm_use_im_start_end False \
     --mm_use_im_patch_token False \
     --bf16 True \
-    --output_dir ./ckpts/llava-vicuna-v2-3-7b \
+    --output_dir ./ckpts/llava-vicuna-v2-3-lora-7b \
     --num_train_epochs 1 \
     --num_experts_per_tok 2 \
     --num_experts 4 \
-    --num_layers 1 \
-    --num_heads 1 \
+    --num_layers 2 \
+    --num_heads 2 \
     --aux_loss_coef 0.01 \
     --share_moe False \
     --cross_attention True \
     --mm_projector_type 'mlp2x_gelu'\
-    --per_device_train_batch_size 32 \
+    --per_device_train_batch_size 16 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 1 \
     --evaluation_strategy "no" \
@@ -40,4 +41,4 @@ deepspeed llava/train/train_mem.py \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
     --report_to wandb \
-    --run_name "UVA-Pretrain-mlp"
+    --run_name "UVA-Pretrain-lora"
