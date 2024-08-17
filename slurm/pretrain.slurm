@@ -3,13 +3,13 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0-4 
 #SBATCH --ntasks=1 
-#SBATCH -t 10:00:00 
+#SBATCH -t 20:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:8
+#SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
-#SBATCH --cpus-per-task=128 
-#SBATCH --output=log/slurm/pretrain-81A/log-%A-%a.log 
-#SBATCH -J pretrain-81A
+#SBATCH --cpus-per-task=64 
+#SBATCH --output=log/slurm/cross_attn_pretrain/log-%A-%a.log 
+#SBATCH -J pretrain_cross_attn
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -21,9 +21,9 @@ model_name=('lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1
 vision_tower=('openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336')
 num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
-num_layers=(8 10 12 14 16)
-num_heads=(8 10 12 14 16)
-output_dir=('./ckpts/pretrain-81A/llava-v1.5-13b-pretrain-v1' './ckpts/pretrain-81A/llava-v1.5-13b-pretrain-v2' './ckpts/pretrain-81A/llava-v1.5-13b-pretrain-v3' './ckpts/pretrain-81A/llava-v1.5-13b-pretrain-v4' './ckpts/pretrain-81A/llava-v1.5-13b-pretrain-v5')
+num_layers=(2 4 6 8 10)
+num_heads=(2 4 8 8 10)
+output_dir=('./ckpts/cross_attn_pretrain/llava-v1.5-13b-pretrain-v1' './cross_attn_pretrain/pretrain-81A/llava-v1.5-13b-pretrain-v2' './ckpts/cross_attn_pretrain/llava-v1.5-13b-pretrain-v3' './ckpts/cross_attn_pretrain/llava-v1.5-13b-pretrain-v4' './ckpts/cross_attn_pretrain/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
