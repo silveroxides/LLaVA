@@ -7,7 +7,7 @@
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a6000:8
 #SBATCH -N 1 
-#SBATCH --cpus-per-task=64 
+#SBATCH --cpus-per-task=32 
 #SBATCH --output=log/slurm/zero2_p/log-%A-%a.log 
 #SBATCH -J zero2_p
 
