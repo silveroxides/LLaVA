@@ -3,13 +3,13 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0-4 
 #SBATCH --ntasks=1 
-#SBATCH -t 05:00:00 
+#SBATCH -t 20:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:1
+#SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64 
-#SBATCH --output=log/slurm/co_attn_test/log-%A-%a.log 
-#SBATCH -J co_attn_test
+#SBATCH --output=log/slurm/full_co_attn/log-%A-%a.log 
+#SBATCH -J full_co_attn
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -23,7 +23,7 @@ num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
 num_layers=(2 4 6 8 10)
 num_heads=(2 4 8 8 10)
-output_dir=('./ckpts/cross_attn_pretrain_test/llava-v1.5-13b-pretrain-v1' './ckpts/cross_attn_pretrain_test/llava-v1.5-13b-pretrain-v2' './ckpts/cross_attn_pretrain_test/llava-v1.5-13b-pretrain-v3' './ckpts/cross_attn_pretrain_test/llava-v1.5-13b-pretrain-v4' './ckpts/cross_attn_pretrain_test/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts/full_co_attn/llava-v1.5-13b-pretrain-v1' './ckpts/full_co_attn/llava-v1.5-13b-pretrain-v2' './ckpts/full_co_attn/llava-v1.5-13b-pretrain-v3' './ckpts/full_co_attn/llava-v1.5-13b-pretrain-v4' './ckpts/full_co_attn/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
@@ -40,7 +40,7 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --mm_use_im_patch_token False \
 --bf16 True \
 --output_dir ${output_dir[${SLURM_ARRAY_TASK_ID}]} \
---max_steps 1000 \
+--num_train_epochs 1 \
 --num_experts_per_tok ${num_experts_per_tok[${SLURM_ARRAY_TASK_ID}]} \
 --num_experts ${num_experts[${SLURM_ARRAY_TASK_ID}]} \
 --num_layers ${num_layers[${SLURM_ARRAY_TASK_ID}]} \
@@ -54,7 +54,7 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --gradient_accumulation_steps 1 \
 --evaluation_strategy "no" \
 --save_strategy "steps" \
---save_steps 24000 \
+--save_steps 2500 \
 --save_total_limit 1 \
 --learning_rate 1e-3 \
 --weight_decay 0. \
