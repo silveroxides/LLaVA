@@ -5,7 +5,7 @@ deepspeed llava/train/train_mem.py \
     --model_name_or_path lmsys/vicuna-13b-v1.5 \
     --version plain \
     --data_path ./playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json \
-    --image_folder ./playground/data/LLaVA-Pretrain/images \
+    --image_folder ./playground/data/images \
     --vision_tower openai/clip-vit-large-patch14-336 \
     --tune_mm_mlp_adapter True \
     --mm_vision_select_layer -2 \
