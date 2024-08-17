@@ -3,7 +3,7 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0-4 
 #SBATCH --ntasks=1 
-#SBATCH -t 01:00:00 
+#SBATCH -t 05:00:00 
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
@@ -49,7 +49,7 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --share_moe False \
 --cross_attention True \
 --mm_projector_type 'mlp2x_gelu' \
---max_steps 100 \
+--max_steps 1000 \
 --per_device_train_batch_size ${batch_size[${SLURM_ARRAY_TASK_ID}]} \
 --per_device_eval_batch_size 4 \
 --gradient_accumulation_steps 1 \
