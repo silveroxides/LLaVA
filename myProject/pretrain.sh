@@ -16,8 +16,8 @@ deepspeed llava/train/train_mem.py \
     --num_train_epochs 1 \
     --num_experts_per_tok 2 \
     --num_experts 4 \
-    --num_layers 2 \
-    --num_heads 2 \
+    --num_layers 1 \
+    --num_heads 1 \
     --aux_loss_coef 0.01 \
     --share_moe False \
     --cross_attention True \
