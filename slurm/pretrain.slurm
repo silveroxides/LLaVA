@@ -8,8 +8,8 @@
 #SBATCH --gres=gpu:a100:1
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64 
-#SBATCH --output=log/slurm/cross_attn_pretrain/log-%A-%a.log 
-#SBATCH -J pretrain_cross_attn
+#SBATCH --output=log/slurm/co_attn_test/log-%A-%a.log 
+#SBATCH -J co_attn_test
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -23,7 +23,7 @@ num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
 num_layers=(2 4 6 8 10)
 num_heads=(2 4 8 8 10)
-output_dir=('./ckpts/cross_attn_pretrain/llava-v1.5-13b-pretrain-v1' './cross_attn_pretrain/pretrain-81A/llava-v1.5-13b-pretrain-v2' './ckpts/cross_attn_pretrain/llava-v1.5-13b-pretrain-v3' './ckpts/cross_attn_pretrain/llava-v1.5-13b-pretrain-v4' './ckpts/cross_attn_pretrain/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts/cross_attn_pretrain_test/llava-v1.5-13b-pretrain-v1' './ckpts/cross_attn_pretrain_test/llava-v1.5-13b-pretrain-v2' './ckpts/cross_attn_pretrain_test/llava-v1.5-13b-pretrain-v3' './ckpts/cross_attn_pretrain_test/llava-v1.5-13b-pretrain-v4' './ckpts/cross_attn_pretrain_test/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
