@@ -3,13 +3,13 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0-4 
 #SBATCH --ntasks=1 
-#SBATCH -t 12:00:00 
+#SBATCH -t 02:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:8
+#SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
-#SBATCH --cpus-per-task=128 
-#SBATCH --output=log/slurm/full_co_attn_zero2/log-%A-%a.log 
-#SBATCH -J full_co_attn_zero2
+#SBATCH --cpus-per-task=64 
+#SBATCH --output=log/slurm/zero3_p/log-%A-%a.log 
+#SBATCH -J zero3_p
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -23,12 +23,12 @@ num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
 num_layers=(2 4 6 8 10)
 num_heads=(2 4 8 8 10)
-output_dir=('./ckpts/full_co_attn_zero2/llava-v1.5-13b-pretrain-v1' './ckpts/full_co_attn_zero2/llava-v1.5-13b-pretrain-v2' './ckpts/full_co_attn_zero2/llava-v1.5-13b-pretrain-v3' './ckpts/full_co_attn_zero2/llava-v1.5-13b-pretrain-v4' './ckpts/full_co_attn_zero2/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts/zero3_p/llava-v1.5-13b-pretrain-v1' './ckpts/zero3_p/llava-v1.5-13b-pretrain-v2' './ckpts/zero3_p/llava-v1.5-13b-pretrain-v3' './ckpts/zero3_p/llava-v1.5-13b-pretrain-v4' './ckpts/zero3_p/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
 apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT llava/train/train_mem.py \
---deepspeed ./scripts/zero2.json \
+--deepspeed ./scripts/zero3.json \
 --model_name_or_path lmsys/vicuna-13b-v1.5 \
 --version plain \
 --data_path ./playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json \
@@ -40,7 +40,6 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --mm_use_im_patch_token False \
 --bf16 True \
 --output_dir ${output_dir[${SLURM_ARRAY_TASK_ID}]} \
---num_train_epochs 1 \
 --num_experts_per_tok ${num_experts_per_tok[${SLURM_ARRAY_TASK_ID}]} \
 --num_experts ${num_experts[${SLURM_ARRAY_TASK_ID}]} \
 --num_layers ${num_layers[${SLURM_ARRAY_TASK_ID}]} \
@@ -49,6 +48,7 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --share_moe False \
 --cross_attention True \
 --mm_projector_type 'mlp2x_gelu' \
+--max_steps 500 \
 --per_device_train_batch_size 32 \
 --per_device_eval_batch_size 4 \
 --gradient_accumulation_steps 1 \
