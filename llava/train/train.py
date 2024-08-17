@@ -1060,7 +1060,7 @@ def train(attn_implementation=None):
             for p in model.get_model().mm_projector.parameters():
                 p.requires_grad = True
 
-            for p in model.get_model().co__attention.parameters():
+            for p in model.get_model().co_attention.parameters():
                 p.requires_grad = True
 
         model.config.freeze_mm_mlp_adapter = training_args.freeze_mm_mlp_adapter
@@ -1069,7 +1069,7 @@ def train(attn_implementation=None):
             for p in model.get_model().mm_projector.parameters():
                 p.requires_grad = False
 
-            for p in model.get_model().co__attention.parameters():
+            for p in model.get_model().co_attention.parameters():
                 p.requires_grad = True
 
     ######################################################################################################################################################################################## 
