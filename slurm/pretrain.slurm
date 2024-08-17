@@ -8,8 +8,8 @@
 #SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64 
-#SBATCH --output=log/slurm/full_co_attn/log-%A-%a.log 
-#SBATCH -J full_co_attn
+#SBATCH --output=log/slurm/full_co_attn_zero3/log-%A-%a.log 
+#SBATCH -J full_co_attn_zero3
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -23,12 +23,12 @@ num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
 num_layers=(2 4 6 8 10)
 num_heads=(2 4 8 8 10)
-output_dir=('./ckpts/full_co_attn/llava-v1.5-13b-pretrain-v1' './ckpts/full_co_attn/llava-v1.5-13b-pretrain-v2' './ckpts/full_co_attn/llava-v1.5-13b-pretrain-v3' './ckpts/full_co_attn/llava-v1.5-13b-pretrain-v4' './ckpts/full_co_attn/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts/full_co_attn_zero3/llava-v1.5-13b-pretrain-v1' './ckpts/full_co_attn_zero3/llava-v1.5-13b-pretrain-v2' './ckpts/full_co_attn_zero3/llava-v1.5-13b-pretrain-v3' './ckpts/full_co_attn_zero3/llava-v1.5-13b-pretrain-v4' './ckpts/full_co_attn_zero3/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
 apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT llava/train/train_mem.py \
---deepspeed ./scripts/zero2.json \
+--deepspeed ./scripts/zero3.json \
 --model_name_or_path lmsys/vicuna-13b-v1.5 \
 --version plain \
 --data_path ./playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json \
