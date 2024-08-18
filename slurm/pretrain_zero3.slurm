@@ -8,8 +8,8 @@
 #SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64
-#SBATCH --output=log/slurm/pretrain_zero3_v7b/log-%A-%a.log 
-#SBATCH -J zero3
+#SBATCH --output=log/slurm/pretrain_wcattn/log-%A-%a.log 
+#SBATCH -J wcattn
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -17,19 +17,19 @@ export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
 module purge
 module load apptainer
 
-model_name=('lmsys/vicuna-7b-v1.5' 'lmsys/vicuna-7b-v1.5' 'lmsys/vicuna-7b-v1.5' 'lmsys/vicuna-7b-v1.5' 'lmsys/vicuna-7b-v1.5')
+model_name=('lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5')
 vision_tower=('openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336')
 num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
 num_layers=(12 14 16 18 24)
 num_heads=(16 16 16 16 16)
-batch_size=(16 16 16 16 16)
-output_dir=('./ckpts/pretrain_zero3_v7b/llava-v1.5-13b-pretrain-v1' './ckpts/pretrain_zero3_v7b/llava-v1.5-13b-pretrain-v2' './ckpts/pretrain_zero3_v7b/llava-v1.5-13b-pretrain-v3' './ckpts/pretrain_zero3_v7b/llava-v1.5-13b-pretrain-v4' './ckpts/pretrain_zero3_v7b/llava-v1.5-13b-pretrain-v5')
+batch_size=(32 32 32 32 32)
+output_dir=('./ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v1' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v2' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v3' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v4' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
 apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT llava/train/train_mem.py \
---deepspeed ./scripts/zero3.json \
+--deepspeed ./scripts/zero2.json \
 --model_name_or_path ${model_name[${SLURM_ARRAY_TASK_ID}]} \
 --version plain \
 --data_path ./playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json \
@@ -47,7 +47,7 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --num_heads ${num_heads[${SLURM_ARRAY_TASK_ID}]} \
 --aux_loss_coef 0.01 \
 --share_moe False \
---cross_attention True \
+--cross_attention False \
 --mm_projector_type 'mlp2x_gelu' \
 --num_train_epochs 1 \
 --per_device_train_batch_size ${batch_size[${SLURM_ARRAY_TASK_ID}]} \

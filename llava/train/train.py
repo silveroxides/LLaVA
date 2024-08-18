@@ -1060,8 +1060,10 @@ def train(attn_implementation=None):
             for p in model.get_model().mm_projector.parameters():
                 p.requires_grad = True
 
-            for p in model.get_model().co_attention.parameters():
-                p.requires_grad = True
+            co_attention = getattr(model_args, 'cross_attention', False)  
+            if co_attention: 
+                for p in model.get_model().co_attention.parameters():
+                    p.requires_grad = True
 
             for param in model.model.embed_tokens.parameters():
                 param.requires_grad = True
@@ -1073,7 +1075,7 @@ def train(attn_implementation=None):
                 p.requires_grad = False
 
             for p in model.get_model().co_attention.parameters():
-                p.requires_grad = True
+                p.requires_grad = False
 
     ######################################################################################################################################################################################## 
     # ---------------------------------------------------------------END OF FREZZING VISION ENCODER---------------------------------------------------------------
