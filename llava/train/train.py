@@ -256,7 +256,7 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer,
             keys_to_match.extend(['embed_tokens', 'embed_in'])
 
         if getattr(trainer.args, "tune_embed_tokens", False):
-            keys_to_match.extend(['embed_tokens'])
+            keys_to_match.extend(['model.embed_tokens'])
 
         # Extract the relevant parameters
         weight_to_save = get_mm_adapter_state_maybe_zero_3(trainer.model.named_parameters(), keys_to_match)
@@ -1175,8 +1175,8 @@ def train(attn_implementation=None):
                     args=training_args,
                     **data_module)
     
-    for name, _ in trainer.model.named_parameters():
-        print(name)
+    # for name, _ in trainer.model.named_parameters():
+    #     print(name)
     # Initialize a W&B run
     rank0status = rank0_condition()
     

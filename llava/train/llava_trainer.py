@@ -241,7 +241,7 @@ class LLaVATrainer(Trainer):
             if getattr(self.args, "use_im_start_end", False):
                 keys_to_match.extend(['embed_tokens', 'embed_in'])
             if getattr(self.args, "tune_embed_tokens", False):
-                keys_to_match.extend(['embed_tokens'])  
+                keys_to_match.extend(['model.embed_tokens'])  
             if getattr(self.args, "cross_attention", False):
                 keys_to_match.extend(['cross_attention'])
             
