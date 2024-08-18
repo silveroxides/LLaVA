@@ -1063,7 +1063,7 @@ def train(attn_implementation=None):
             for p in model.get_model().co_attention.parameters():
                 p.requires_grad = True
 
-            for param in model.get_model().LlavaLlamaForCausalLM.model.embed_tokens.parameters():
+            for param in model.LlavaLlamaForCausalLM.model.embed_tokens.parameters():
                 param.requires_grad = True
 
         model.config.freeze_mm_mlp_adapter = training_args.freeze_mm_mlp_adapter
@@ -1119,8 +1119,6 @@ def train(attn_implementation=None):
     print('*'*100)
     print(model)
     print('*'*100)
-    for param in model.get_model().LlavaLlamaForCausalLM.model.embed_tokens.parameters():
-        param.requires_grad = True
 
     # for name, param in model.named_parameters():
     #     if param.requires_grad:
