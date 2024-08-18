@@ -237,10 +237,14 @@ class LLaVATrainer(Trainer):
             output_dir = os.path.join(run_dir, checkpoint_folder)
 
             # Save Adapter, Vision Resampler, and Cross Attention
-            keys_to_match = ['mm_projector', 'vision_resampler', 'cross_attention']
+            keys_to_match = ['mm_projector', 'vision_resampler']
             if getattr(self.args, "use_im_start_end", False):
                 keys_to_match.extend(['embed_tokens', 'embed_in'])
-
+            if getattr(trainer.args, "tune_embed_tokens", False):
+                keys_to_match.extend(['embed_tokens'])  
+            if getattr(trainer.args, "cross_attention", False):
+                keys_to_match.extend(['cross_attention'])
+            
             # Extract the relevant parameters
             weight_to_save = get_mm_adapter_state_maybe_zero_3(self.model.named_parameters(), keys_to_match)
 

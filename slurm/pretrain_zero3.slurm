@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1 
 #SBATCH -t 01:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:4
+#SBATCH --gres=gpu:a100:2
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64
 #SBATCH --output=log/slurm/pretrain_wcattn/log-%A-%a.log 
@@ -17,7 +17,7 @@ export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
 module purge
 module load apptainer
 
-model_name=('lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5')
+model_name=('lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-7b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5')
 vision_tower=('openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336')
 num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)

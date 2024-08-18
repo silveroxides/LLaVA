@@ -1,15 +1,15 @@
 #!/bin/bash -l
 
 #SBATCH -A collabrobogroup
-#SBATCH --array=0-4 
+#SBATCH --array=0-3 
 #SBATCH --ntasks=1 
-#SBATCH -t 24:00:00 
+#SBATCH -t 00:30:00 
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64
-#SBATCH --output=log/slurm/zero3/log-%A-%a.log 
-#SBATCH -J zero3
+#SBATCH --output=log/slurm/embed/log-%A-%a.log 
+#SBATCH -J embed
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -24,18 +24,21 @@ num_experts_per_tok=(2 2 3 2 3)
 num_layers=(12 14 16 18 24)
 num_heads=(12 14 16 18 16)
 batch_size=(32 32 32 32 32)
-output_dir=('./ckpts/zero3_a100/llava-v1.5-13b-pretrain-v1' './ckpts/zero3_a100/llava-v1.5-13b-pretrain-v2' './ckpts/zero3_a100/llava-v1.5-13b-pretrain-v3' './ckpts/zero3_a100/llava-v1.5-13b-pretrain-v4' './ckpts/zero3_a100/llava-v1.5-13b-pretrain-v5')
+lr=(1e-3 1e-3 2e-3 2e-3 1e-3)
+tune_embed_tokens=(True False True False)
+output_dir=('./ckpts/embed/llava-v1.5-13b-pretrain-v1' './ckpts/embed/llava-v1.5-13b-pretrain-v2' './ckpts/embed/llava-v1.5-13b-pretrain-v3' './ckpts/embed/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
 apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT llava/train/train_mem.py \
---deepspeed ./scripts/zero3.json \
+--deepspeed ./scripts/zero2.json \
 --model_name_or_path ${model_name[${SLURM_ARRAY_TASK_ID}]} \
 --version plain \
 --data_path ./playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json \
 --image_folder ./playground/data/images \
 --vision_tower openai/clip-vit-large-patch14-336 \
 --tune_mm_mlp_adapter True \
+--tune_embed_tokens ${tune_embed_tokens[${SLURM_ARRAY_TASK_ID}]} \
 --mm_vision_select_layer -2 \
 --mm_use_im_start_end False \
 --mm_use_im_patch_token False \
@@ -47,17 +50,17 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --num_heads ${num_heads[${SLURM_ARRAY_TASK_ID}]} \
 --aux_loss_coef 0.01 \
 --share_moe False \
---cross_attention True \
+--cross_attention False \
 --mm_projector_type 'mlp2x_gelu' \
---num_train_epochs 1 \
+--max_steps 20 \
 --per_device_train_batch_size ${batch_size[${SLURM_ARRAY_TASK_ID}]} \
 --per_device_eval_batch_size 4 \
 --gradient_accumulation_steps 1 \
 --evaluation_strategy "no" \
 --save_strategy "steps" \
---save_steps 2500 \
+--save_steps 10 \
 --save_total_limit 1 \
---learning_rate 1e-3 \
+--learning_rate ${lr[${SLURM_ARRAY_TASK_ID}]} \
 --weight_decay 0. \
 --warmup_ratio 0.03 \
 --lr_scheduler_type "cosine" \
