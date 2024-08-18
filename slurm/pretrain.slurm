@@ -1,9 +1,9 @@
 #!/bin/bash -l
 
 #SBATCH -A collabrobogroup
-#SBATCH --array=0-4
+#SBATCH --array=0-3
 #SBATCH --ntasks=1 
-#SBATCH -t 8:00:00 
+#SBATCH -t 15:00:00 
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:8
 #SBATCH -N 1 
@@ -24,10 +24,10 @@ num_experts_per_tok=(2 2 3 2 3)
 num_layers=(12 14 16 18 24)
 num_heads=(12 14 16 18 16)
 batch_size=(32 32 32 32 32)
-lr=(1e-3 1e-3 2e-3 2e-3 1e-3)
-tune_embed_tokens=(True False True False True)
-mm_projector_type=('mlp2x_gelu' 'mlp2x_gelu' 'mlp2x_gelu' 'mlp2x_gelu' 'sparse_moe')
-output_dir=('./ckpts/embed/llava-v1.5-13b-pretrain-v1' './ckpts/embed/llava-v1.5-13b-pretrain-v2' './ckpts/embed/llava-v1.5-13b-pretrain-v3' './ckpts/embed/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
+lr=(1e-3 2e-3 2e-3 1e-3)
+tune_embed_tokens=(False True False True)
+mm_projector_type=('mlp2x_gelu' 'mlp2x_gelu' 'mlp2x_gelu' 'sparse_moe')
+output_dir=('./ckpts/embed_v2/llava-v1.5-13b-pretrain-v1' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
@@ -59,7 +59,7 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --gradient_accumulation_steps 1 \
 --evaluation_strategy "no" \
 --save_strategy "steps" \
---save_steps 10 \
+--save_steps 2500 \
 --save_total_limit 1 \
 --learning_rate ${lr[${SLURM_ARRAY_TASK_ID}]} \
 --weight_decay 0. \
