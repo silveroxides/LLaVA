@@ -240,9 +240,9 @@ class LLaVATrainer(Trainer):
             keys_to_match = ['mm_projector', 'vision_resampler']
             if getattr(self.args, "use_im_start_end", False):
                 keys_to_match.extend(['embed_tokens', 'embed_in'])
-            if getattr(trainer.args, "tune_embed_tokens", False):
+            if getattr(self.args, "tune_embed_tokens", False):
                 keys_to_match.extend(['embed_tokens'])  
-            if getattr(trainer.args, "cross_attention", False):
+            if getattr(self.args, "cross_attention", False):
                 keys_to_match.extend(['cross_attention'])
             
             # Extract the relevant parameters
