@@ -3,9 +3,9 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0-1
 #SBATCH --ntasks=1 
-#SBATCH -t 03:00:00 
+#SBATCH -t 15:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:4
+#SBATCH --gres=gpu:a40:8
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64
 #SBATCH --output=log/slurm/pretrain_moe/log-%A-%a.log 
