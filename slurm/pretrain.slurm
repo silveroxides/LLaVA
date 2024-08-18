@@ -1,9 +1,9 @@
 #!/bin/bash -l
 
 #SBATCH -A collabrobogroup
-#SBATCH --array=0-3 
+#SBATCH --array=0-4
 #SBATCH --ntasks=1 
-#SBATCH -t 00:30:00 
+#SBATCH -t 15:00:00 
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
@@ -25,7 +25,8 @@ num_layers=(12 14 16 18 24)
 num_heads=(12 14 16 18 16)
 batch_size=(32 32 32 32 32)
 lr=(1e-3 1e-3 2e-3 2e-3 1e-3)
-tune_embed_tokens=(True False True False)
+tune_embed_tokens=(True False True False True)
+mm_projector_type=('mlp2x_gelu' 'mlp2x_gelu' 'mlp2x_gelu' 'mlp2x_gelu' 'sparse_moe')
 output_dir=('./ckpts/embed/llava-v1.5-13b-pretrain-v1' './ckpts/embed/llava-v1.5-13b-pretrain-v2' './ckpts/embed/llava-v1.5-13b-pretrain-v3' './ckpts/embed/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
@@ -51,7 +52,7 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --aux_loss_coef 0.01 \
 --share_moe False \
 --cross_attention False \
---mm_projector_type 'mlp2x_gelu' \
+--mm_projector_type ${mm_projector_type[${SLURM_ARRAY_TASK_ID}]} \
 --max_steps 20 \
 --per_device_train_batch_size ${batch_size[${SLURM_ARRAY_TASK_ID}]} \
 --per_device_eval_batch_size 4 \
