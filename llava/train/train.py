@@ -1175,6 +1175,8 @@ def train(attn_implementation=None):
                     args=training_args,
                     **data_module)
     
+    for name, _ in trainer.model.named_parameters():
+        print(name)
     # Initialize a W&B run
     rank0status = rank0_condition()
     
