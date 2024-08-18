@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1 
 #SBATCH -t 15:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:8
+#SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64
 #SBATCH --output=log/slurm/embed/log-%A-%a.log 
