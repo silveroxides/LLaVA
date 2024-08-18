@@ -7,7 +7,7 @@
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a40:8
 #SBATCH -N 1 
-#SBATCH --cpus-per-task=64
+#SBATCH --cpus-per-task=32
 #SBATCH --output=log/slurm/pretrain_moe/log-%A-%a.log 
 #SBATCH -J moe
 
