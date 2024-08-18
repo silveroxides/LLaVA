@@ -26,7 +26,6 @@ class CrossAttention(nn.Module):
 
 class MultiHeadCrossAttention(nn.Module):
     def __init__(self, input_dim, num_heads):
-        print(input_dim)
         super(MultiHeadCrossAttention, self).__init__()
         assert input_dim % num_heads == 0, "input_dim must be divisible by num_heads"
         self.num_heads = num_heads
@@ -133,6 +132,7 @@ class CrossAttentionEncoder(nn.Module):
         return visual_feature, text_feature
     
 def get_co_attention(input_dim, hidden_dim, num_layers, num_heads, dropout_rate):
+    print(f'input_dim: {input_dim}')
     return CrossAttentionEncoder(input_dim, hidden_dim, num_layers, num_heads, dropout_rate)
 
     

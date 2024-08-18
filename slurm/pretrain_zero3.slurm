@@ -3,12 +3,12 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0-4 
 #SBATCH --ntasks=1 
-#SBATCH -t 24:00:00 
+#SBATCH -t 01:00:00 
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64
-#SBATCH --output=log/slurm/zero3/log-%A-%a.log 
+#SBATCH --output=log/slurm/pretrain_zero3/log-%A-%a.log 
 #SBATCH -J zero3
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
@@ -24,7 +24,7 @@ num_experts_per_tok=(2 2 3 2 3)
 num_layers=(12 14 16 18 24)
 num_heads=(12 14 16 18 16)
 batch_size=(32 32 32 32 32)
-output_dir=('./ckpts/zero3_a100/llava-v1.5-13b-pretrain-v1' './ckpts/zero3_a100/llava-v1.5-13b-pretrain-v2' './ckpts/zero3_a100/llava-v1.5-13b-pretrain-v3' './ckpts/zero3_a100/llava-v1.5-13b-pretrain-v4' './ckpts/zero3_a100/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts/pretrain_zero3/llava-v1.5-13b-pretrain-v1' './ckpts/pretrain_zero3/llava-v1.5-13b-pretrain-v2' './ckpts/pretrain_zero3/llava-v1.5-13b-pretrain-v3' './ckpts/pretrain_zero3/llava-v1.5-13b-pretrain-v4' './ckpts/pretrain_zero3/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
