@@ -23,7 +23,7 @@ num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
 num_layers=(12 14 16 18 24)
 num_heads=(8 8 16 10 16)
-batch_size=(32 32 32 32 32)
+batch_size=(8 8 8 8 8)
 output_dir=('./ckpts/pretrain_zero3/llava-v1.5-13b-pretrain-v1' './ckpts/pretrain_zero3/llava-v1.5-13b-pretrain-v2' './ckpts/pretrain_zero3/llava-v1.5-13b-pretrain-v3' './ckpts/pretrain_zero3/llava-v1.5-13b-pretrain-v4' './ckpts/pretrain_zero3/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
