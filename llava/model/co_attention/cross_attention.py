@@ -26,6 +26,7 @@ class CrossAttention(nn.Module):
 
 class MultiHeadCrossAttention(nn.Module):
     def __init__(self, input_dim, num_heads):
+        print(input_dim)
         super(MultiHeadCrossAttention, self).__init__()
         assert input_dim % num_heads == 0, "input_dim must be divisible by num_heads"
         self.num_heads = num_heads
