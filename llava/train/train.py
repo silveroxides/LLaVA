@@ -737,10 +737,12 @@ def preprocess(
 class LazySupervisedDataset(Dataset):
     """Dataset for supervised fine-tuning."""
 
-    def __init__(self, data_path: str,
-                 tokenizer: transformers.PreTrainedTokenizer,
-                 data_args: DataArguments):
+    # calling this to initialize from make supervised data module
+    def __init__(self, data_path: str, tokenizer: transformers.PreTrainedTokenizer, data_args: DataArguments):
+        
+        # initalizeing the parent class module
         super(LazySupervisedDataset, self).__init__()
+
         list_data_dict = json.load(open(data_path, "r"))
 
         rank0_print("Formatting inputs...Skip in lazy mode")
@@ -756,8 +758,10 @@ class LazySupervisedDataset(Dataset):
     def lengths(self):
         length_list = []
         for sample in self.list_data_dict:
+            rank0_print(sample)
             img_tokens = 128 if 'image' in sample else 0
             length_list.append(sum(len(conv['value'].split()) for conv in sample['conversations']) + img_tokens)
+            rank0_print(length_list)
         return length_list
 
     @property
@@ -853,12 +857,12 @@ class DataCollatorForSupervisedDataset(object):
         return batch
 
 
-def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
-                                data_args) -> Dict:
+def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer, data_args) -> Dict:
+    
     """Make dataset and collator for supervised fine-tuning."""
-    train_dataset = LazySupervisedDataset(tokenizer=tokenizer,
-                                data_path=data_args.data_path,
-                                data_args=data_args)
+    
+    # initialize the LazySupervisedDataset class 
+    train_dataset = LazySupervisedDataset(tokenizer=tokenizer, data_path=data_args.data_path, data_args=data_args)
     
     # eval_dataset = LazySupervisedDataset(tokenizer=tokenizer,
     #                         data_path=data_args.validation_data_path,
@@ -866,9 +870,7 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
      
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer)
     
-    return dict(train_dataset=train_dataset,
-                eval_dataset=None,
-                data_collator=data_collator)
+    return dict(train_dataset=train_dataset, eval_dataset=None, data_collator=data_collator)
 
 
 def train(attn_implementation=None):
