@@ -1,15 +1,15 @@
 #!/bin/bash -l
 
 #SBATCH -A collabrobogroup
-#SBATCH --array=0-1
+#SBATCH --array=0
 #SBATCH --ntasks=1 
 #SBATCH -t 15:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a40:8
+#SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=32
-#SBATCH --output=log/slurm/pretrain_moe/log-%A-%a.log 
-#SBATCH -J moe
+#SBATCH --output=log/slurm/embed_co-attn/log-%A-%a.log 
+#SBATCH -J co-attn
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -21,13 +21,13 @@ model_name=('lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1
 vision_tower=('openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336')
 num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
-num_layers=(12 14 16 18 24)
-num_heads=(12 14 16 18 16)
+num_layers=(2 2 2 2 2)
+num_heads=(2 2 2 2 2)
 batch_size=(32 32 32 32 32)
 lr=(1e-3 2e-5 1e-3 1e-3)
 tune_embed_tokens=(True True False True)
-mm_projector_type=('sparse_moe' 'sparse_moe' 'sparse_moe' 'sparse_moe')
-output_dir=('./ckpts/moe/llava-v1.5-13b-pretrain-v1' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
+mm_projector_type=('mlp2x_gelu' 'sparse_moe' 'sparse_moe' 'sparse_moe')
+output_dir=('./ckpts/embed_co-attn/llava-v1.5-13b-pretrain-v1' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
@@ -51,15 +51,15 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --num_heads ${num_heads[${SLURM_ARRAY_TASK_ID}]} \
 --aux_loss_coef 0.01 \
 --share_moe False \
---cross_attention False \
+--cross_attention True \
 --mm_projector_type ${mm_projector_type[${SLURM_ARRAY_TASK_ID}]} \
---max_steps 1000 \
+--num_train_epochs 1 \
 --per_device_train_batch_size ${batch_size[${SLURM_ARRAY_TASK_ID}]} \
 --per_device_eval_batch_size 4 \
 --gradient_accumulation_steps 1 \
 --evaluation_strategy "no" \
 --save_strategy "steps" \
---save_steps 500 \
+--save_steps 2500 \
 --save_total_limit 1 \
 --learning_rate ${lr[${SLURM_ARRAY_TASK_ID}]} \
 --weight_decay 0. \
