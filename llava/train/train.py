@@ -960,8 +960,12 @@ def train(attn_implementation=None):
         
         else:
             # print('Calling the llama model > refered to LlavaLlamaForCausalLM class ')
+            config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
+            config.text_encoder = model_args.text_encoder
+            config.use_custom_embed_tokens = model_args.use_custom_embed_tokens
             model = LlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
+                config = config,
                 cache_dir=training_args.cache_dir,
                 attn_implementation=attn_implementation,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
