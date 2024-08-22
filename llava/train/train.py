@@ -965,8 +965,6 @@ def train(attn_implementation=None):
                 cache_dir=training_args.cache_dir,
                 attn_implementation=attn_implementation,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
-                use_custom_embed_tokens=model_args.use_custom_embed_tokens,
-                text_encoder=model_args.text_encoder,
                 **bnb_model_from_pretrained_args
             )
 

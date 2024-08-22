@@ -58,6 +58,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         super(LlamaForCausalLM, self).__init__(config)
         self.model = LlavaLlamaModel(config)
         self.config = config
+        print(self.config)
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         
