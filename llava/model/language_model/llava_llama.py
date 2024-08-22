@@ -61,10 +61,11 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         print(self.config)
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
+        self.use_custom_embed_tokens = config.use_custom_embed_tokens
         
         # Conditional replacement of the embedding layer
-        if getattr(config, 'use_custom_embed_tokens', False):
-            self.text_encoder = getattr(config, 'text_encoder', None)
+        if self.use_custom_embed_tokens:
+            self.text_encoder = config.text_encoder
             self.model.embed_tokens = CustomTextEncoder(self.text_encoder, config.hidden_size)
 
         # self.gate_logits = None
