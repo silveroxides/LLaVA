@@ -27,6 +27,7 @@ from transformers.generation.utils import GenerateOutput
 
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 from ..load_balancing_loss import aux_loss
+from ..multimodal_encoder.clip_text_encoder import CustomTextEncoder
 
 # this is inherating all the attributes of LlamaConfig
 # and adding new attribute called model_type attribute to it
@@ -59,6 +60,12 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         self.config = config
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
+        
+        # Conditional replacement of the embedding layer
+        if getattr(config, 'use_custom_embed_tokens', False):
+            self.text_encoder = getattr(config, 'text_encoder', None)
+            self.model.embed_tokens = CustomTextEncoder(self.text_encoder, config.hidden_size)
+
         # self.gate_logits = None
         # self.gate_logits = () # tuple of gate logits for each layer
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)

@@ -22,7 +22,7 @@ import logging
 import pathlib
 import wandb
 from typing import Dict, Optional, Sequence, List
-from transformers import BitsAndBytesConfig, AutoConfig
+from transformers import BitsAndBytesConfig, AutoConfig, CLIPTokenizer
 
 
 
@@ -70,6 +70,8 @@ class ModelArguments:
     freeze_backbone: bool = field(default=False)
     tune_mm_mlp_adapter: bool = field(default=False)
     tune_embed_tokens: bool = field(default=False)
+    use_custom_embed_tokens: bool = field(default=False)
+    text_encoder: Optional[str] = field(default=None)
     vision_tower: Optional[str] = field(default=None)
     mm_vision_select_layer: Optional[int] = field(default=-1)
     pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
@@ -384,26 +386,47 @@ def _add_speaker_and_signal(header, source, get_conversation=True):
     return conversation
 
 
-def preprocess_multimodal(
-    sources: Sequence[str],
-    data_args: DataArguments
-) -> Dict:
+# DEFAULT_IMAGE_TOKEN = "<image>"
+# data_args.is_multimodal = True
+
+def preprocess_multimodal( sources: Sequence[str], data_args: DataArguments) -> Dict:
+    
     is_multimodal = data_args.is_multimodal
+    
+    # Checks if the data is not multimodal. 
+    # If it's not, the function returns the sources unchanged.
     if not is_multimodal:
         return sources
 
     for source in sources:
         for sentence in source:
+            # {'value': 'Here is an image <image> for you to see.'}
+            # Checks if the DEFAULT_IMAGE_TOKEN is present in the sentence.
             if DEFAULT_IMAGE_TOKEN in sentence['value']:
+
+                # Removes the DEFAULT_IMAGE_TOKEN from the sentence and strips any leading/trailing whitespace.
                 sentence['value'] = sentence['value'].replace(DEFAULT_IMAGE_TOKEN, '').strip()
+                # 'Here is an image for you to see.'
+
                 sentence['value'] = DEFAULT_IMAGE_TOKEN + '\n' + sentence['value']
+                # '<image>\nHere is an image for you to see.'
+
                 sentence['value'] = sentence['value'].strip()
+                # Strips any leading/trailing whitespace again.
+
                 if "mmtag" in conversation_lib.default_conversation.version:
                     sentence['value'] = sentence['value'].replace(DEFAULT_IMAGE_TOKEN, '<Image>' + DEFAULT_IMAGE_TOKEN + '</Image>')
+            
             replace_token = DEFAULT_IMAGE_TOKEN
             if data_args.mm_use_im_start_end:
+                
+                # DEFAULT_IM_END_TOKEN = "<im_end>"
+                # DEFAULT_IM_START_TOKEN = "<im_start>"
                 replace_token = DEFAULT_IM_START_TOKEN + replace_token + DEFAULT_IM_END_TOKEN
+                # <im_start><image><im_end>
+
             sentence["value"] = sentence["value"].replace(DEFAULT_IMAGE_TOKEN, replace_token)
+            # <im_start><image><im_end>\nHere is an image for you to see
 
     return sources
 
@@ -664,10 +687,8 @@ def preprocess_mpt(
     )
 
 
-def preprocess_plain(
-    sources: Sequence[str],
-    tokenizer: transformers.PreTrainedTokenizer,
-) -> Dict:
+def preprocess_plain( sources: Sequence[str], tokenizer: transformers.PreTrainedTokenizer,) -> Dict:
+    
     # add end signal and concatenate together
     conversations = []
     for source in sources:
@@ -676,6 +697,7 @@ def preprocess_plain(
         source[0]['value'] = DEFAULT_IMAGE_TOKEN
         conversation = source[0]['value'] + source[1]['value'] + conversation_lib.default_conversation.sep
         conversations.append(conversation)
+    
     # tokenize conversations
     input_ids = [tokenizer_image_token(prompt, tokenizer, return_tensors='pt') for prompt in conversations]
     targets = copy.deepcopy(input_ids)
@@ -686,11 +708,7 @@ def preprocess_plain(
     return dict(input_ids=input_ids, labels=targets)
 
 
-def preprocess(
-    sources: Sequence[str],
-    tokenizer: transformers.PreTrainedTokenizer,
-    has_image: bool = False
-) -> Dict:
+def preprocess( sources: Sequence[str], tokenizer: transformers.PreTrainedTokenizer,has_image: bool = False) -> Dict:
     """
     Given a list of sources, each is a conversation list. This transform:
     1. Add signal '### ' at the beginning each sentence, with end signal '\n';
@@ -706,12 +724,14 @@ def preprocess(
         return preprocess_v1(sources, tokenizer, has_image=has_image)
     if conversation_lib.default_conversation.version == "mpt":
         return preprocess_mpt(sources, tokenizer, has_image=has_image)
+    
     # add end signal and concatenate together
     conversations = []
     for source in sources:
         header = f"{conversation_lib.default_conversation.system}\n\n"
         conversation = _add_speaker_and_signal(header, source)
         conversations.append(conversation)
+    
     # tokenize conversations
     def get_tokenize_len(prompts):
         return [len(tokenizer_image_token(prompt, tokenizer)) for prompt in prompts]
@@ -734,6 +754,7 @@ def preprocess(
     return dict(input_ids=input_ids, labels=targets)
 
 
+# this class will be initialized from make_supervised_data_module
 class LazySupervisedDataset(Dataset):
     """Dataset for supervised fine-tuning."""
 
@@ -750,40 +771,53 @@ class LazySupervisedDataset(Dataset):
         self.tokenizer = tokenizer
         self.list_data_dict = list_data_dict
         self.data_args = data_args
+        print(self.data_args)
 
     def __len__(self):
         return len(self.list_data_dict)
 
+    # take into account of all the sample in the dataset
+    # for each sample find the length of that sample
+    # add 128 with each sample that contains the image
+    # append each sample length into a list
     @property
     def lengths(self):
         length_list = []
         for sample in self.list_data_dict:
-            rank0_print(sample)
             img_tokens = 128 if 'image' in sample else 0
             length_list.append(sum(len(conv['value'].split()) for conv in sample['conversations']) + img_tokens)
-            rank0_print(length_list)
         return length_list
 
+    # take into account of all the sample in the dataset
+    # for each sample find the length of that sample
+    # if image contains in the sample the length kepts as it is
+    # if image is not present then the length is neglected
+    # append each sample length into a list
     @property
     def modality_lengths(self):
         length_list = []
         for sample in self.list_data_dict:
             cur_len = sum(len(conv['value'].split()) for conv in sample['conversations'])
-            cur_len = cur_len if 'image' in sample else -cur_len
+            cur_len = cur_len if 'image' in sample else - cur_len
             length_list.append(cur_len)
         return length_list
 
+    
     def __getitem__(self, i) -> Dict[str, torch.Tensor]:
         sources = self.list_data_dict[i]
         if isinstance(i, int):
             sources = [sources]
         assert len(sources) == 1, "Don't know why it is wrapped to a list"  # FIXME
+        
         if 'image' in sources[0]:
+            
             image_file = self.list_data_dict[i]['image']
             image_folder = self.data_args.image_folder
             processor = self.data_args.image_processor
             image = Image.open(os.path.join(image_folder, image_file)).convert('RGB')
+            
             if self.data_args.image_aspect_ratio == 'pad':
+
                 def expand2square(pil_img, background_color):
                     width, height = pil_img.size
                     if width == height:
@@ -798,17 +832,20 @@ class LazySupervisedDataset(Dataset):
                         return result
                 image = expand2square(image, tuple(int(x*255) for x in processor.image_mean))
                 image = processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
+            
             else:
                 image = processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
-            sources = preprocess_multimodal(
-                copy.deepcopy([e["conversations"] for e in sources]),
-                self.data_args)
+
+            # This ensures that the list and all its nested objects are fully copied. 
+            # Any changes made to the copied list or its nested objects will not affect the original list.
+            sources = preprocess_multimodal( copy.deepcopy([e["conversations"] for e in sources]), self.data_args)
+
+        
         else:
             sources = copy.deepcopy([e["conversations"] for e in sources])
-        data_dict = preprocess(
-            sources,
-            self.tokenizer,
-            has_image=('image' in self.list_data_dict[i]))
+        
+        data_dict = preprocess( sources, self.tokenizer, has_image=('image' in self.list_data_dict[i]))
+        
         if isinstance(i, int):
             data_dict = dict(input_ids=data_dict["input_ids"][0],
                              labels=data_dict["labels"][0])
@@ -928,6 +965,8 @@ def train(attn_implementation=None):
                 cache_dir=training_args.cache_dir,
                 attn_implementation=attn_implementation,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
+                use_custom_embed_tokens=model_args.use_custom_embed_tokens,
+                text_encoder=model_args.text_encoder,
                 **bnb_model_from_pretrained_args
             )
 
@@ -1015,6 +1054,15 @@ def train(attn_implementation=None):
             model_max_length=training_args.model_max_length,
             padding_side="right"
         )
+
+    elif model_args.text_encoder:
+        rank0_print('custom Text Tokenizer initialized')
+        tokenizer = CLIPTokenizer.from_pretrained(
+            model_args.text_tokenizer,             
+            cache_dir=training_args.cache_dir,
+            model_max_length=training_args.model_max_length,
+            padding_side="right"
+            )
 
     # loading LLM tokenizer
     else:
