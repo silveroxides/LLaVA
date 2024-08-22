@@ -1060,7 +1060,7 @@ def train(attn_implementation=None):
     elif model_args.text_encoder:
         rank0_print('custom Text Tokenizer initialized')
         tokenizer = CLIPTokenizer.from_pretrained(
-            model_args.text_tokenizer,             
+            model_args.text_encoder,             
             cache_dir=training_args.cache_dir,
             model_max_length=training_args.model_max_length,
             padding_side="right"
