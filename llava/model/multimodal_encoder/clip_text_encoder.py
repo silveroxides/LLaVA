@@ -9,6 +9,7 @@ class CustomTextEncoder(nn.Module):
         self.projection = nn.Linear(self.clip_text_encoder.config.hidden_size, llama_embedding_dim)
 
     def forward(self, input_ids, attention_mask=None):
+        print(f'input ids in text encoder: {input_ids}')
         outputs = self.clip_text_encoder(input_ids=input_ids, attention_mask=attention_mask)
         text_embeds = outputs.last_hidden_state
         print(f'Text embedding dimension:{text_embeds.shape}')
