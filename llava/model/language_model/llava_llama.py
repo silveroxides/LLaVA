@@ -60,7 +60,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
         self.config = config
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
-        self.use_custom_embed_tokens = config.use_custom_embed_tokens
         self.use_custom_embed_tokens = True
         
         # Conditional replacement of the embedding layer
