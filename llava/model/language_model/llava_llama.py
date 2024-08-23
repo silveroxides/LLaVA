@@ -48,7 +48,7 @@ class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
 # we have created this LlavaLlamaForCausalLM (child class) is a subclass of both LlamaForCausalLM (parent class) and LlavaMetaForCausalLM.
 # LlamaForCausalLM is the main class which is inharited by LlavaLlamaForCausalLM
 # now we can access all the functions of the parent class
-class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
+class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
     # print('inside LlavaLlamaForCausalLM')
     config_class = LlavaConfig
 
@@ -58,14 +58,14 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         super(LlamaForCausalLM, self).__init__(config)
         self.model = LlavaLlamaModel(config)
         self.config = config
-        print(self.config)
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         self.use_custom_embed_tokens = config.use_custom_embed_tokens
+        self.use_custom_embed_tokens = True
         
         # Conditional replacement of the embedding layer
         if self.use_custom_embed_tokens:
-            self.text_encoder = config.text_encoder
+            self.text_encoder = "openai/clip-vit-large-patch14"
             self.model.embed_tokens = CustomTextEncoder(self.text_encoder, config.hidden_size)
 
         # self.gate_logits = None
