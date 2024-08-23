@@ -471,7 +471,6 @@ class LlavaMetaForCausalLM(ABC):
             # next we get the text feature for this input ids.
             # the length of input ids for our example is 9
             # after self.get_model().embed_tokens(torch.cat(cur_input_ids_noim)) -> it becomes shape of [9, embed_dimension]
-            print(f'current input embeds shape: {torch.cat(cur_input_ids_noim).shape}')
             cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
 
             # Finally, the concatenated embeddings are split back into their original segments
