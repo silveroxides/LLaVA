@@ -1214,9 +1214,9 @@ def train(attn_implementation=None):
     print(model)
     print('*'*100)
 
-    # for name, param in model.named_parameters():
-    #     if param.requires_grad:
-    #         print(f'{name} : Trainable')
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            print(f'{name} : Trainable')
 
 
     trainer = LLaVATrainer(model=model,

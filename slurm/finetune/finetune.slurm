@@ -3,13 +3,13 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0
 #SBATCH --ntasks=1 
-#SBATCH -t 1:00:00 
+#SBATCH -t 8:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:4
+#SBATCH --gres=gpu:a100:8
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=32
-#SBATCH --output=log/slurm/it_test/log-%A-%a.log 
-#SBATCH -J instruct_tune
+#SBATCH --output=log/slurm/embed_co-attn/log-%A-%a.log 
+#SBATCH -J co-attn
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -24,26 +24,25 @@ num_experts_per_tok=(2 2 3 2 3)
 num_layers=(2 2 2 2 2)
 num_heads=(2 2 2 2 2)
 batch_size=(32 32 32 32 32)
-lr=(2e-5 2e-5 1e-3 1e-3)
-tune_embed_tokens=(False False False False)
+lr=(1e-3 2e-5 1e-3 1e-3)
+tune_embed_tokens=(True True False True)
 mm_projector_type=('mlp2x_gelu' 'sparse_moe' 'sparse_moe' 'sparse_moe')
-output_dir=('./ckpts_it/test/llava-v1.5-13b-pretrain-v1' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts/embed_co-attn/llava-v1.5-13b-pretrain-v1' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
 apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT llava/train/train_mem.py \
 --deepspeed ./scripts/zero2.json \
 --model_name_or_path ${model_name[${SLURM_ARRAY_TASK_ID}]} \
---version v1 \
---data_path ./playground/data/llava_v1_5_mix665k.json \
---image_folder ./playground/data \
+--version plain \
+--data_path ./playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json \
+--image_folder ./playground/data/images \
 --vision_tower openai/clip-vit-large-patch14-336 \
 --tune_mm_mlp_adapter True \
 --tune_embed_tokens ${tune_embed_tokens[${SLURM_ARRAY_TASK_ID}]} \
 --mm_vision_select_layer -2 \
 --mm_use_im_start_end False \
 --mm_use_im_patch_token False \
---image_aspect_ratio pad \
 --bf16 True \
 --output_dir ${output_dir[${SLURM_ARRAY_TASK_ID}]} \
 --num_experts_per_tok ${num_experts_per_tok[${SLURM_ARRAY_TASK_ID}]} \
@@ -54,13 +53,13 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --share_moe False \
 --cross_attention True \
 --mm_projector_type ${mm_projector_type[${SLURM_ARRAY_TASK_ID}]} \
---max_steps 10 \
+--num_train_epochs 1 \
 --per_device_train_batch_size ${batch_size[${SLURM_ARRAY_TASK_ID}]} \
---per_device_eval_batch_size 16 \
+--per_device_eval_batch_size 4 \
 --gradient_accumulation_steps 1 \
 --evaluation_strategy "no" \
 --save_strategy "steps" \
---save_steps 5 \
+--save_steps 2500 \
 --save_total_limit 1 \
 --learning_rate ${lr[${SLURM_ARRAY_TASK_ID}]} \
 --weight_decay 0. \
