@@ -128,16 +128,19 @@ class LlavaMetaModel:
             self.co_attention = get_co_attention(self.hidden_size, self.config.intermediate_size, num_layers=self.num_layers, num_heads=self.num_heads, dropout_rate=0.1)
             
 
-
-
         if pretrain_mm_mlp_adapter is not None:
             print('using pretrain mlp adapter')
             mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
             def get_w(weights, keyword):
                 return {k.split(keyword + '.')[1]: v for k, v in weights.items() if keyword in k}
+            
+            if self.config.mm_projector_type =='sparse_moe':
+                print('initialize moe using pretrain mlp adapter')
+                for i in range(model_args.num_experts):
+                    self.mm_projector.experts[i].load_state_dict(get_w(mm_projector_weights, 'mm_projector'))
+            else:
+                self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'))
 
-            self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'))
-            print(self.mm_projector)
 
     def get_cross_attention(self):
         
