@@ -53,7 +53,7 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --num_heads ${num_heads[${SLURM_ARRAY_TASK_ID}]} \
 --aux_loss_coef 0.01 \
 --share_moe False \
---cross_attention True \
+--cross_attention False \
 --mm_projector_type ${mm_projector_type[${SLURM_ARRAY_TASK_ID}]} \
 --max_steps 10 \
 --per_device_train_batch_size ${batch_size[${SLURM_ARRAY_TASK_ID}]} \
