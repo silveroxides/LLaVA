@@ -3,7 +3,7 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0
 #SBATCH --ntasks=1 
-#SBATCH -t 20:00:00 
+#SBATCH -t 30:00:00 
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:8
 #SBATCH -N 1 
