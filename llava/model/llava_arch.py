@@ -444,6 +444,9 @@ class LlavaMetaForCausalLM(ABC):
                 new_input_embeds.append(cur_input_embeds)
                 new_labels.append(labels[batch_idx])
                 cur_image_idx += 1
+                text_features.append(cur_input_embeds)
+                text_labels.append(cur_labels_noim)
+                splits.append('')
                 continue
 
             # cur_input_ids = torch.tensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])  
