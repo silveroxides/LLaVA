@@ -3,7 +3,7 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0
 #SBATCH --ntasks=1 
-#SBATCH -t 1:00:00 
+#SBATCH -t 20:00:00 
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a100:8
 #SBATCH -N 1 
@@ -27,7 +27,7 @@ batch_size=(16 16 16 16 16)
 lr=(2e-5 2e-5 1e-3 1e-3)
 tune_embed_tokens=(False False False False)
 mm_projector_type=('mlp2x_gelu' 'sparse_moe' 'sparse_moe' 'sparse_moe')
-output_dir=('./ckpts_it/test/llava-v1.5-13b-finetune-v1' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts_it/deafult/llava-v1.5-13b-finetune' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
@@ -54,13 +54,13 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --share_moe False \
 --cross_attention False \
 --mm_projector_type ${mm_projector_type[${SLURM_ARRAY_TASK_ID}]} \
---max_steps 10 \
+--num_train_epochs 1 \
 --per_device_train_batch_size ${batch_size[${SLURM_ARRAY_TASK_ID}]} \
 --per_device_eval_batch_size 16 \
 --gradient_accumulation_steps 1 \
 --evaluation_strategy "no" \
 --save_strategy "steps" \
---save_steps 5 \
+--save_steps 50000 \
 --save_total_limit 1 \
 --learning_rate ${lr[${SLURM_ARRAY_TASK_ID}]} \
 --weight_decay 0. \
