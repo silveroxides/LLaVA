@@ -131,10 +131,6 @@ class LlavaMetaModel:
         if pretrain_mm_mlp_adapter is not None:
             print('using pretrain mlp adapter')
             mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
-            print(mm_projector_weights.keys())
-
-            print(self.mm_projector)
-
             def get_w(weights, keyword):
                 return {k.split(keyword + '.')[1]: v for k, v in weights.items() if keyword in k}
             
