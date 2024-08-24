@@ -113,7 +113,7 @@ class CLIPVisionTower(nn.Module):
                 image_forward_outs, router_logits = self.vision_tower(images)
                 image_features = self.feature_select(image_forward_outs).to(images.dtype)
                 # will return router logits in future
-                return image_features
+                return image_features, router_logits
             
             else: 
                 image_forward_outs = self.vision_tower(images.to(device=self.device, dtype=self.dtype), output_hidden_states=True)

@@ -115,6 +115,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
         
         if gate_logits is not None:
             self.gate_logits.append(gate_logits.cpu().detach())
+            
         # self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
         # self.gate_logits = gate_logits # tuple of gate logits for each layer
         # self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer

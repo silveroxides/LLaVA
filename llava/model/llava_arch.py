@@ -202,17 +202,27 @@ class LlavaMetaForCausalLM(ABC):
         # get image features from vision encoder
         image_features = self.get_model().get_vision_tower()(images)
 
-        # passing the image features to the clip
-        # from the projector
-        image_features = self.get_model().mm_projector(image_features)
-
         try:
-            image_features, gate_logits = image_features
-            return image_features, gate_logits
+            image_features, gate_logits_encoder = image_features
+            image_features = self.get_model().mm_projector(image_features)
+            try:
+                image_features, gate_logits = image_features
+                return image_features, gate_logits, gate_logits_encoder
+            except ValueError:
+                # handle the case where only one value is returned
+                gate_logits = None
+                return image_features, gate_logits_encoder
+      
         except ValueError:
-            # handle the case where only one value is returned
-            gate_logits = None
-            return image_features
+            gate_logits_encoder = None
+            image_features = self.get_model().mm_projector(image_features)
+            try:
+                image_features, gate_logits = image_features
+                return image_features, gate_logits
+            except ValueError:
+                # handle the case where only one value is returned
+                gate_logits = None
+                return image_features
         
     def pad_text_features(self, text_embeds):
         

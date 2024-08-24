@@ -118,7 +118,7 @@ class CLIPEncoderMoELayer(nn.Module):
         # self.gate = nn.Linear(self.embed_dim, self.num_of_experts, bias=False)
         # self.experts = nn.ModuleList([CLIPMLP(config) for _ in range(self.num_of_experts)])
         self.CLIPMoE = sparseMoE
-        self.experts_out_dim = sparseMoE.experts[0].fc2.out_features
+        self.experts_out_dim = sparseMoE.experts[0].layer2.out_features
         self.residual_projection = nn.Linear(self.embed_dim , self.experts_out_dim)
         self.linear_projection = nn.Linear(self.experts_out_dim , self.embed_dim)
         self.layer_norm2 = nn.LayerNorm(self.embed_dim, eps=config.layer_norm_eps)
@@ -274,7 +274,7 @@ class CLIPSMoEVisionTransformer(nn.Module):
         hidden_states = self.pre_layrnorm(hidden_states)
 
         encoder_outputs, router_logits = self.encoder(hidden_states)
-        return encoder_outputs[-1], router_logits
+        return encoder_outputs, router_logits
     
         # encoder_outputs, balance_losses, router_z_losses = self.encoder(hidden_states)
         # return encoder_outputs[-1], torch.stack(balance_losses).mean(), torch.stack(router_z_losses).mean()
