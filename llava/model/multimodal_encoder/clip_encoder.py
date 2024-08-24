@@ -47,30 +47,31 @@ class CLIPVisionTower(nn.Module):
             pretrained_model = CLIPVisionModel.from_pretrained(self.vision_tower_name)
             pretrained_state_dict = pretrained_model.state_dict()
             custom_state_dict = self.vision_tower.state_dict()
+                    # Find matching and non-matching keys
+            pretrained_keys = set(pretrained_state_dict.keys())
+            custom_keys = set(custom_state_dict.keys())
+
+            matching_keys = pretrained_keys.intersection(custom_keys)
+            pretrained_only_keys = pretrained_keys - custom_keys
+            custom_only_keys = custom_keys - pretrained_keys
+
+            print("Keys in pretrained model but not in custom model:")
+            for key in pretrained_only_keys:
+                print(f"  {key}")
+
+            print("\nKeys in custom model but not in pretrained model:")
+            for key in custom_only_keys:
+                print(f"  {key}")
+
+            print("\nMatching keys:")
+            for key in matching_keys:
+                print(f"  {key}")  
         
         else:
             self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name, device_map=device_map)
 
         
-        # Find matching and non-matching keys
-        pretrained_keys = set(pretrained_state_dict.keys())
-        custom_keys = set(custom_state_dict.keys())
-
-        matching_keys = pretrained_keys.intersection(custom_keys)
-        pretrained_only_keys = pretrained_keys - custom_keys
-        custom_only_keys = custom_keys - pretrained_keys
-
-        print("Keys in pretrained model but not in custom model:")
-        for key in pretrained_only_keys:
-            print(f"  {key}")
-
-        print("\nKeys in custom model but not in pretrained model:")
-        for key in custom_only_keys:
-            print(f"  {key}")
-
-        print("\nMatching keys:")
-        for key in matching_keys:
-            print(f"  {key}")        # ##############################################################################################
+      # ##############################################################################################
         # encoder is frizzed
         
         self.vision_tower.requires_grad_(False)
