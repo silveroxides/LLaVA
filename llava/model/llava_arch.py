@@ -427,6 +427,9 @@ class LlavaMetaForCausalLM(ABC):
 
             # getting sum of number of images present in given input_ids
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
+            print('*'*+100)
+            print(f'Number of image: {num_images}')
+            print('*'*+100)
             # print(f'num_image: {num_images}')
 
             if num_images == 0:
