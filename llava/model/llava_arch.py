@@ -430,6 +430,11 @@ class LlavaMetaForCausalLM(ABC):
             # print(f'num_image: {num_images}')
 
             if num_images == 0:
+                
+                print('*'*+100)
+                print('NO IMAGE')
+                print('*'*+100)
+
                 cur_image_features = image_features[cur_image_idx]
                 cur_input_embeds_1 = self.get_model().embed_tokens(cur_input_ids)
                 cur_input_embeds = torch.cat([cur_input_embeds_1, cur_image_features[0:0]], dim=0)
@@ -526,7 +531,7 @@ class LlavaMetaForCausalLM(ABC):
         #     print(f' Shape of text_feature of: {txt_feature.shape}')
             
         text_features = [x.to(self.device) for x in text_features]
-        print(f'combined text feature shape: {text_features.shape}')
+
         padded_text_features = self.pad_text_features(text_features)
         print(f'padded text feature shape: {padded_text_features.shape}')
         padded_text_features_attention_mask = padded_text_features.sum(dim=-1) != 0
