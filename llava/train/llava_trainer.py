@@ -263,6 +263,12 @@ class LLaVATrainer(Trainer):
         else:
             model.generation_config.do_sample = True
             super(LLaVATrainer, self)._save_checkpoint(model, trial, metrics)
+            
+            # Save gate logits after training ends
+            if hasattr(self.model, 'gate_logits'):
+                gate_logits_path = os.path.join(output_dir, 'gate_logits.pt')
+                torch.save(self.model.gate_logits, gate_logits_path)
+                print(f'Gate logits saved to {gate_logits_path}')
 
 
     def _save(self, output_dir: Optional[str] = None, state_dict=None):
@@ -274,3 +280,9 @@ class LLaVATrainer(Trainer):
         else:
             self.model.generation_config.do_sample = True
             super(LLaVATrainer, self)._save(output_dir, state_dict)
+
+        # Save gate logits after training ends
+        if hasattr(self.model, 'gate_logits'):
+            gate_logits_path = os.path.join(output_dir, 'gate_logits.pt')
+            torch.save(self.model.gate_logits, gate_logits_path)
+            print(f'Gate logits saved to {gate_logits_path}')

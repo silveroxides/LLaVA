@@ -67,6 +67,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
             self.text_encoder = "openai/clip-vit-large-patch14"
             self.model.embed_tokens = CustomTextEncoder(self.text_encoder, config.hidden_size)
 
+        # self.gate_logits = None
+        self.gate_logits = [] # tuple of gate logits for each steps
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         # Initialize weights and apply final processing
@@ -111,6 +113,12 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
                 image_sizes
             )
         
+        self.gate_logits.append(gate_logits.cpu().detach())
+        # self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
+        # self.gate_logits = gate_logits # tuple of gate logits for each layer
+        # self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
+        # self.constrastive_loss = C_loss
+
 
         out = super().forward(
             input_ids=input_ids,
