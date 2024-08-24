@@ -252,6 +252,8 @@ class LlavaMetaForCausalLM(ABC):
     
     def clip_contrastive_loss(self, text_embeddings, image_embeddings, attention_mask, temperature=0.07):
 
+        print(f'Text embeding shape: {text_embeddings.shape}')
+        print(f'Image embeding shape: {image_embeddings.shape}')
         # # convert this to fp32 to mitigate `nan` during normalization
         text_embeds = text_embeddings.float()
         vision_embeds = image_embeddings.float()
@@ -301,6 +303,8 @@ class LlavaMetaForCausalLM(ABC):
         cross_attention  = self.get_cross_attention()
 
         # print(f'Cross attension {cross_attention}')
+        print(f'Input ids shape: {input_ids.shape}')
+        print(f'images shape: {images.shape}')
 
         
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
