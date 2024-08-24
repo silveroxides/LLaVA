@@ -261,6 +261,7 @@ class LLaVATrainer(Trainer):
                     component_weights = {k: v for k, v in weight_to_save.items() if key in k}
                     torch.save(component_weights, os.path.join(output_dir, f'{key}.bin'))
         else:
+            model.generation_config.do_sample = True
             super(LLaVATrainer, self)._save_checkpoint(model, trial, metrics)
 
 
@@ -271,4 +272,5 @@ class LLaVATrainer(Trainer):
         if getattr(self.args, 'tune_mm_mlp_adapter', False):
             pass
         else:
+            self.model.generation_config.do_sample = True
             super(LLaVATrainer, self)._save(output_dir, state_dict)
