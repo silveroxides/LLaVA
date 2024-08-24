@@ -5,9 +5,9 @@
 #SBATCH --ntasks=1 
 #SBATCH -t 1:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:4
+#SBATCH --gres=gpu:a100:8
 #SBATCH -N 1 
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=64
 #SBATCH --output=log/slurm/it_test/log-%A-%a.log 
 #SBATCH -J instruct_tune
 
