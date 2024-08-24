@@ -229,6 +229,10 @@ class LLaVATrainer(Trainer):
         return self.optimizer
 
     def _save_checkpoint(self, model, trial, metrics=None):
+
+        print('*'*100)
+        print('we are in the llava trainer _save checkpoint')
+        print('*'*100)
         if getattr(self.args, 'tune_mm_mlp_adapter', False):
             from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
             checkpoint_folder = f"{PREFIX_CHECKPOINT_DIR}-{self.state.global_step}"
@@ -261,6 +265,9 @@ class LLaVATrainer(Trainer):
 
 
     def _save(self, output_dir: Optional[str] = None, state_dict=None):
+        print('*'*100)
+        print('we are in the llava trainer _save')
+        print('*'*100)
         if getattr(self.args, 'tune_mm_mlp_adapter', False):
             pass
         else:

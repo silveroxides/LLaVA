@@ -211,8 +211,14 @@ def find_all_linear_names(model):
 
 def safe_save_model_for_hf_trainer(trainer: transformers.Trainer,
                                    output_dir: str):
+    
+
     """Collects the state dict and dump to disk."""
     if getattr(trainer.args, "tune_mm_mlp_adapter", False):
+
+        print('*'*100)
+        print('we are in the train.py safe_save_model_for_hf_trainer')
+        print('*'*100)
         # Save Adapter and Cross Attention
         keys_to_match = ['mm_projector']
         
@@ -251,12 +257,18 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer,
 
         return
 
-
+    print('*'*100)
+    print('full model saving train.py deepspeed')
+    print('*'*100)
     if trainer.deepspeed:
         torch.cuda.synchronize()
         trainer.save_model(output_dir)
         return
+    
 
+    print('*'*100)
+    print('we are in the train.py state_dict')
+    print('*'*100)
     state_dict = trainer.model.state_dict()
     if trainer.args.should_save:
         cpu_state_dict = {
