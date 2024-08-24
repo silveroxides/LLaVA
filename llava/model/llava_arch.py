@@ -252,8 +252,8 @@ class LlavaMetaForCausalLM(ABC):
     
     def clip_contrastive_loss(self, text_embeddings, image_embeddings, attention_mask, temperature=0.07):
 
-        print(f'Text embeding shape: {text_embeddings.shape}')
-        print(f'Image embeding shape: {image_embeddings.shape}')
+        # print(f'Text embeding shape: {text_embeddings.shape}')
+        # print(f'Image embeding shape: {image_embeddings.shape}')
         # # convert this to fp32 to mitigate `nan` during normalization
         text_embeds = text_embeddings.float()
         vision_embeds = image_embeddings.float()
@@ -303,8 +303,8 @@ class LlavaMetaForCausalLM(ABC):
         cross_attention  = self.get_cross_attention()
 
         # print(f'Cross attension {cross_attention}')
-        print(f'Input ids shape: {input_ids.shape}')
-        print(f'images shape: {images.shape}')
+        # print(f'Input ids shape: {input_ids.shape}')
+        # print(f'images shape: {images.shape}')
 
         
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
@@ -427,21 +427,21 @@ class LlavaMetaForCausalLM(ABC):
 
             # getting sum of number of images present in given input_ids
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
-            print('*'*+100)
-            print(f'Number of image: {num_images}')
-            print('*'*+100)
+            # print('*'*+100)
+            # print(f'Number of image: {num_images}')
+            # print('*'*+100)
             # print(f'num_image: {num_images}')
 
             if num_images == 0:
                 
-                print('*'*+100)
-                print('NO IMAGE')
-                print('*'*+100)
+                # print('*'*+100)
+                # print('NO IMAGE')
+                # print('*'*+100)
 
                 cur_image_features = image_features[cur_image_idx]
                 cur_input_embeds_1 = self.get_model().embed_tokens(cur_input_ids)
                 cur_input_embeds = torch.cat([cur_input_embeds_1, cur_image_features[0:0]], dim=0)
-                print(cur_input_embeds)
+                # print(cur_input_embeds)
                 new_input_embeds.append(cur_input_embeds)
                 new_labels.append(labels[batch_idx])
                 cur_image_idx += 1
@@ -540,7 +540,7 @@ class LlavaMetaForCausalLM(ABC):
         text_features = [x.to(self.device) for x in text_features]
 
         padded_text_features = self.pad_text_features(text_features)
-        print(f'padded text feature shape: {padded_text_features.shape}')
+        # print(f'padded text feature shape: {padded_text_features.shape}')
         padded_text_features_attention_mask = padded_text_features.sum(dim=-1) != 0
         # Create the mask with the same dtype and device as the input
         padded_text_features_attention_mask =  padded_text_features_attention_mask.to(dtype=attention_mask.dtype, device=attention_mask.device)
