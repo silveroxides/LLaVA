@@ -53,7 +53,7 @@ class SparseMoeBlock(nn.Module):
         self.gate = nn.Linear(self.hidden_dim, self.num_experts, bias=False)
 
         # self.experts = nn.ModuleList([Experts(config) for _ in range(self.num_experts)])
-        self.experts = nn.ModuleList([nn.Sequential(nn.Linear(config.mm_hidden_size, config.hidden_size), nn.GELU(), nn.Linear(config.hidden_size, config.hidden_size)) for _ in range(num_experts)])
+        self.experts = nn.ModuleList([nn.Sequential(nn.Linear(config.mm_hidden_size, config.hidden_size), nn.GELU(), nn.Linear(config.hidden_size, config.hidden_size)) for _ in range(self.num_experts)])
 
 
         # Jitter parameters
