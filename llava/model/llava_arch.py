@@ -444,8 +444,8 @@ class LlavaMetaForCausalLM(ABC):
                 new_input_embeds.append(cur_input_embeds)
                 new_labels.append(labels[batch_idx])
                 cur_image_idx += 1
-                text_features.append(cur_input_embeds)
-                text_labels.append(cur_labels_noim)
+                text_features.append(new_input_embeds)
+                text_labels.append(new_labels)
                 splits.append('')
                 continue
 
