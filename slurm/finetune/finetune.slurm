@@ -38,7 +38,6 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --data_path ./playground/data/llava_v1_5_mix665k.json \
 --image_folder ./playground/data \
 --vision_tower openai/clip-vit-large-patch14-336 \
---tune_mm_mlp_adapter True \
 --pretrain_mm_mlp_adapter ./ckpts/ref_embed/llava-v1.5-13b-pretrain-v1/mm_projector.bin \
 --tune_embed_tokens ${tune_embed_tokens[${SLURM_ARRAY_TASK_ID}]} \
 --mm_vision_select_layer -2 \
