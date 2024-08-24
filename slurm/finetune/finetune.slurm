@@ -27,7 +27,7 @@ batch_size=(32 32 32 32 32)
 lr=(2e-5 2e-5 1e-3 1e-3)
 tune_embed_tokens=(False False False False)
 mm_projector_type=('mlp2x_gelu' 'sparse_moe' 'sparse_moe' 'sparse_moe')
-output_dir=('./ckpts_it/test/llava-v1.5-13b-pretrain-v1' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts_it/test/llava-v1.5-13b-finetune-v1' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
