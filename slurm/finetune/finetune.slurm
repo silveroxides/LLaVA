@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1 
 #SBATCH -t 1:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:8
+#SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64
 #SBATCH --output=log/slurm/it_test/log-%A-%a.log 
@@ -23,7 +23,7 @@ num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
 num_layers=(2 2 2 2 2)
 num_heads=(2 2 2 2 2)
-batch_size=(32 32 32 32 32)
+batch_size=(16 16 16 16 16)
 lr=(2e-5 2e-5 1e-3 1e-3)
 tune_embed_tokens=(False False False False)
 mm_projector_type=('mlp2x_gelu' 'sparse_moe' 'sparse_moe' 'sparse_moe')
