@@ -327,7 +327,28 @@ class LlavaMetaForCausalLM(ABC):
             if type(images) is list:
                 images = [x.unsqueeze(0) if x.ndim == 3 else x for x in images]
             concat_images = torch.cat([image for image in images], dim=0)
-            image_features, gate_logits = self.encode_images(concat_images)
+            result = self.encode_images(concat_images)
+
+            if len(result) == 3:
+                image_features, gate_logits, gate_logits_encoder = result
+
+            elif len(result) == 2:
+                image_features, gate_logits = result
+                
+                if isinstance(gate_logits, tuple):
+                    gate_logits_encoder = gate_logits
+                    gate_logits = None
+                else:
+                    gate_logits_encoder = None
+
+            elif len(result) == 1:
+                image_features = result
+                gate_logits = None
+                gate_logits_encoder = None
+
+            else:
+                raise ValueError("Unexpected return value from encode_images.")
+            
             split_sizes = [image.shape[0] for image in images]
             image_features = torch.split(image_features, split_sizes, dim=0)
             mm_patch_merge_type = getattr(self.config, 'mm_patch_merge_type', 'flat')
@@ -374,18 +395,28 @@ class LlavaMetaForCausalLM(ABC):
         
         else:
             # Image Feature shape: torch.Size([4, 256, 5120]) -> [batch_size, sequence_length, embed_dim]
-            image_features = self.encode_images(images)
+            result = self.encode_images(images)
 
-            try:
-                image_features, gate_logits = image_features
-            
-            except ValueError:
-                # handle the case where only one value is returned
+    
+            if len(result) == 3:
+                image_features, gate_logits, gate_logits_encoder = result
+
+            elif len(result) == 2:
+                image_features, gate_logits = result
+                
+                if isinstance(gate_logits, tuple):
+                    gate_logits_encoder = gate_logits
+                    gate_logits = None
+                else:
+                    gate_logits_encoder = None
+
+            elif len(result) == 1:
+                image_features = result
                 gate_logits = None
-                image_features = image_features
-            # print('*'*100)
-            # print(f'Image Feature shape: {image_features.shape}')
-            # print(f'Input Ids Shape: {input_ids.shape}')
+                gate_logits_encoder = None
+
+            else:
+                raise ValueError("Unexpected return value from encode_images.")
         
         # TODO: image start / end is not implemented here to support pretraining.
         if getattr(self.config, 'tune_mm_mlp_adapter', False) and getattr(self.config, 'mm_use_im_start_end', False):
@@ -742,7 +773,7 @@ class LlavaMetaForCausalLM(ABC):
         if _position_ids is None:
             position_ids = None
 
-        return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits, align_loss
+        return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels, gate_logits, align_loss, gate_logits_encoder
 
     
     # invoked from train.py

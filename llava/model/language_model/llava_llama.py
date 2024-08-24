@@ -26,7 +26,7 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.generation.utils import GenerateOutput
 
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
-from ..load_balancing_loss import aux_loss
+from ..load_balancing_loss import *
 from ..multimodal_encoder.clip_text_encoder import CustomTextEncoder
 
 # this is inherating all the attributes of LlamaConfig
@@ -69,6 +69,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
 
         # self.gate_logits = None
         self.gate_logits = [] # tuple of gate logits for each steps
+        self.gate_logits_encoder = [] # tuple of gate logits for each steps
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         # Initialize weights and apply final processing
@@ -102,7 +103,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
                 inputs_embeds,
                 labels,
                 gate_logits,
-                alignment_loss
+                alignment_loss,
+                gate_logits_encoder
             ) = self.prepare_inputs_labels_for_multimodal(
                 input_ids,
                 position_ids,
@@ -115,7 +117,10 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
         
         if gate_logits is not None:
             self.gate_logits.append(gate_logits.cpu().detach())
-            
+
+        if gate_logits_encoder is not None:
+            self.gate_logits_encoder.append(gate_logits_encoder.cpu().detach())
+
         # self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
         # self.gate_logits = gate_logits # tuple of gate logits for each layer
         # self.all_gate_logits += (gate_logits,) # tuple of gate logits for each layer
@@ -143,6 +148,18 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
             self.config.num_experts,
             self.config.num_experts_per_tok,
             ) * self.config.aux_loss_coef
+
+            if gate_logits_encoder is not None:
+                encoder_moe_loss = load_balancing_loss_func(
+                    gate_logits_encoder, 
+                    self.config.num_experts,
+                    self.config.num_experts_per_tok,
+                    )* self.config.aux_loss_coef
+
+                load_balancing_loss+=encoder_moe_loss
+                if self.config.local_rank == 0:
+                    print(f'encoder_moe_loss: {encoder_moe_loss}')
+
 
     
             llm_loss = out['loss']
