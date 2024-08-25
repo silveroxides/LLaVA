@@ -139,30 +139,30 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict
         )
+        
+        if self.config.training:
+            projector_type = getattr(self.config, 'mm_projector_type', 'linear')
 
-        projector_type = getattr(self.config, 'mm_projector_type', 'linear')
+            if projector_type == 'sparse_moe':
+                load_balancing_loss = aux_loss(
+                gate_logits,
+                self.config.num_experts,
+                self.config.num_experts_per_tok,
+                ) * self.config.aux_loss_coef
 
-        if projector_type == 'sparse_moe':
-            load_balancing_loss = aux_loss(
-            gate_logits,
-            self.config.num_experts,
-            self.config.num_experts_per_tok,
-            ) * self.config.aux_loss_coef
+                if gate_logits_encoder is not None:
+                    encoder_moe_loss = load_balancing_loss_func(
+                        gate_logits_encoder, 
+                        self.config.num_experts,
+                        self.config.num_experts_per_tok,
+                        )* self.config.aux_loss_coef
 
-            if gate_logits_encoder is not None:
-                encoder_moe_loss = load_balancing_loss_func(
-                    gate_logits_encoder, 
-                    self.config.num_experts,
-                    self.config.num_experts_per_tok,
-                    )* self.config.aux_loss_coef
-
-                load_balancing_loss+=encoder_moe_loss
-                if self.config.local_rank == 0:
-                    print(f'encoder_moe_loss: {encoder_moe_loss}')
+                    load_balancing_loss+=encoder_moe_loss
+                    if self.config.local_rank == 0:
+                        print(f'encoder_moe_loss: {encoder_moe_loss}')
 
 
-    
-            if 'loss' in out:
+        
                 llm_loss = out['loss']
                 out['loss'] = llm_loss + load_balancing_loss.to(llm_loss.device) + alignment_loss.to(llm_loss.device)
 
@@ -178,8 +178,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
                     # ... log any other metrics you want (e.g., accuracy) ... 
                     })
 
-        else:
-            if 'loss' in out:
+            else:
                 llm_loss = out['loss']
                 out['loss'] = llm_loss + alignment_loss.to(llm_loss.device)
 
@@ -193,7 +192,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
                         "alignment_loss": alignment_loss,
                         # ... log any other metrics you want (e.g., accuracy) ... 
                     })
-        
+            
 
         return out
 
@@ -217,7 +216,11 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
                 attention_mask,
                 _,
                 inputs_embeds,
-                _,            
+                _,
+                _,
+                _,
+                _
+                
             ) = self.prepare_inputs_labels_for_multimodal(
                 inputs,
                 position_ids,
