@@ -13,6 +13,7 @@ class ModifiedEncoderLayer(nn.Module):
         # Initialize the Sparse MoE block and linear projection layer
         self.moe = sparseMoe
         self.linear_projection = nn.Linear(sparseMoe.experts[0][2].out_features, hidden_size)
+        self.router_logits = ()
 
     def forward(
         self,
@@ -46,7 +47,9 @@ class ModifiedEncoderLayer(nn.Module):
         hidden_states = self.layer_norm2(hidden_states)
 
         # MoE block
-        hidden_states, router_Logits = self.moe(hidden_states)
+        hidden_states, router_logit = self.moe(hidden_states)
+        
+        self.router_logits = (router_logit,)
 
         # Project the MoE output to match the residual dimension
         hidden_states = self.linear_projection(hidden_states)
@@ -58,7 +61,5 @@ class ModifiedEncoderLayer(nn.Module):
 
         if output_attentions:
             outputs += (attn_weights,)
-
-        outputs = (hidden_states, router_Logits)
         
         return outputs
