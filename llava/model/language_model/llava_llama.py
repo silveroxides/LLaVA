@@ -115,10 +115,10 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
                 image_sizes
             )
         
-        if gate_logits is not None:
+        if self.gate_logits is not None:
             self.gate_logits.append(gate_logits.cpu().detach())
 
-        if gate_logits_encoder is not None:
+        if self.gate_logits_encoder is not None:
             self.gate_logits_encoder.append(gate_logits_encoder.cpu().detach())
 
         # self.gate_logits = (gate_logits,) # tuple of gate logits for each layer
