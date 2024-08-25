@@ -40,17 +40,19 @@ class CLIPVisionTower(nn.Module):
 
         self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
 
+        # vision encoder with moe
         if sparseMoE is not None:
             cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
             self.vision_tower = CLIPSMoEVisionTransformer(cfg_only, sparseMoE, self.num_experts, self.num_selected)
             hidden_size = self.vision_tower.config.hidden_size
             self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name, device_map=device_map)
             
-            for i, encoder_layer in enumerate(self.vision_tower.encoder.layers):
-                self.vision_tower.encoder.layers[i] = ModifiedEncoderLayer(encoder_layer, hidden_size, sparseMoE)
+            for i, encoder_layer in enumerate(self.vision_tower.vision_model.encoder.layers):
+                self.vision_tower.vision_model.encoder.layers[i] = ModifiedEncoderLayer(encoder_layer, hidden_size, sparseMoE)
 
             print('moe block initialized in the encoder')
         
+        # vanilla vision encoder
         else:
             self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name, device_map=device_map)
 
