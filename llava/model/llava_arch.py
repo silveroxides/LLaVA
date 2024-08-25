@@ -319,6 +319,7 @@ class LlavaMetaForCausalLM(ABC):
         # print(f'Input ids shape: {input_ids.shape}')
         # print(f'images shape: {images.shape}')
 
+        gate_logits, align_loss, gate_logits_encoder = None
         
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
             return input_ids, position_ids, attention_mask, past_key_values, None, labels, gate_logits, align_loss, gate_logits_encoder
