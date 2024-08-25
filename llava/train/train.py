@@ -961,6 +961,8 @@ def train(attn_implementation=None):
 
     model.config.use_cache = False
     model.config.local_rank = local_rank
+    model.config.training = True
+
 
 
     # freezing the LLM
