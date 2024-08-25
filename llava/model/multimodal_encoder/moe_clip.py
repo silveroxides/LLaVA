@@ -1,14 +1,15 @@
 import torch
 import torch.nn as nn
-from transformers.models.clip.modeling_clip import CLIPEncoderLayer
 from typing import Any, Optional, Tuple
-from transformers import CLIPConfig
 
+class ModifiedEncoderLayer(nn.Module):
+    def __init__(self, original_layer, hidden_size, sparseMoe):
+        super().__init__()
+        self.self_attn = original_layer.self_attn
+        self.mlp = original_layer.mlp
+        self.layer_norm1 = original_layer.layer_norm1
+        self.layer_norm2 = original_layer.layer_norm2
 
-class ModifiedEncoderLayer(CLIPEncoderLayer):
-    def __init__(self, config: CLIPConfig, sparseMoe, hidden_size):
-        super().__init__(config)  # Initialize CLIPEncoderLayer's components
-        
         # Initialize the Sparse MoE block and linear projection layer
         self.moe = sparseMoe
         self.linear_projection = nn.Linear(sparseMoe.experts[0][2].out_features, hidden_size)
@@ -20,20 +21,29 @@ class ModifiedEncoderLayer(CLIPEncoderLayer):
         causal_attention_mask: torch.Tensor,
         output_attentions: Optional[bool] = False,
     ) -> Tuple[torch.FloatTensor]:
-
-        # Call the parent CLIPEncoderLayer's forward to handle self-attention and MLP
-        outputs = super().forward(
-            hidden_states,
-            attention_mask,
-            causal_attention_mask,
-            output_attentions
-        )
-
-        # Extract the hidden states
-        hidden_states = outputs[0]
-
-        # Residual connection before the MoE block
+        """
+        Args:
+            hidden_states (`torch.FloatTensor`): input to the layer of shape `(batch, seq_len, embed_dim)`
+            attention_mask (`torch.FloatTensor`): attention mask of size
+                `(batch, 1, tgt_len, src_len)` where padding elements are indicated by very large negative values.
+                `(config.encoder_attention_heads,)`.
+            output_attentions (`bool`, *optional*):
+                Whether or not to return the attentions tensors of all attention layers. See `attentions` under
+                returned tensors for more detail.
+        """
         residual = hidden_states
+
+        hidden_states = self.layer_norm1(hidden_states)
+        hidden_states, attn_weights = self.self_attn(
+            hidden_states=hidden_states,
+            attention_mask=attention_mask,
+            causal_attention_mask=causal_attention_mask,
+            output_attentions=output_attentions,
+        )
+        hidden_states = residual + hidden_states
+
+        residual = hidden_states
+        hidden_states = self.layer_norm2(hidden_states)
 
         # MoE block
         hidden_states, router_Logits = self.moe(hidden_states)
@@ -43,12 +53,12 @@ class ModifiedEncoderLayer(CLIPEncoderLayer):
 
         # Add the residual and apply the second layer normalization
         hidden_states = residual + hidden_states
-        hidden_states = self.layer_norm2(hidden_states)
 
         outputs = (hidden_states,)
 
         if output_attentions:
-            outputs += (outputs[1],) # Add attention weights
+            outputs += (attn_weights,)
 
-        # Return the modified hidden states and router logits
-        return outputs, router_Logits 
+        outputs = (hidden_states, router_Logits)
+        
+        return outputs
