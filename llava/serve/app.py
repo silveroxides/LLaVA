@@ -4,7 +4,7 @@ import argparse
 import time
 import subprocess
 
-import cumo.serve.gradio_web_server as gws
+import llava.serve.gradio_web_server as gws
 
 # Execute the pip install command with additional options
 #subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'flash-attn', '--no-build-isolation', '-U'])
