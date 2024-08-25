@@ -102,6 +102,9 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
                 past_key_values,
                 inputs_embeds,
                 labels,
+                gate_logits,
+                alignment_loss,
+                gate_logits_encoder
             ) = self.prepare_inputs_labels_for_multimodal(
                 input_ids,
                 position_ids,
