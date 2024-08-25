@@ -264,19 +264,19 @@ class LLaVATrainer(Trainer):
             model.generation_config.do_sample = True
             super(LLaVATrainer, self)._save_checkpoint(model, trial, metrics)
             
-            from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
-            checkpoint_folder = f"{PREFIX_CHECKPOINT_DIR}-{self.state.global_step}"
+            # from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
+            # checkpoint_folder = f"{PREFIX_CHECKPOINT_DIR}-{self.state.global_step}"
 
-            # Save gate logits after training ends
-            if hasattr(self.model, 'gate_logits'):
-                gate_logits_path = os.path.join(checkpoint_folder, 'gate_logits.pt')
-                torch.save(self.model.gate_logits, gate_logits_path)
-                print(f'Gate logits saved to {gate_logits_path}')
+            # # Save gate logits after training ends
+            # if hasattr(self.model, 'gate_logits'):
+            #     gate_logits_path = os.path.join(checkpoint_folder, 'gate_logits.pt')
+            #     torch.save(self.model.gate_logits, gate_logits_path)
+            #     print(f'Gate logits saved to {gate_logits_path}')
 
-            if hasattr(self.model, 'gate_logits_encoder') and self.model.gate_logits_encoder is not None:
-                gate_logits_path = os.path.join(checkpoint_folder, 'encoder_gate_logits.pt')
-                torch.save(self.model.gate_logits_encoder, gate_logits_path)
-                print(f'encoder Gate logits saved to {gate_logits_path}')
+            # if hasattr(self.model, 'gate_logits_encoder') and self.model.gate_logits_encoder is not None:
+            #     gate_logits_path = os.path.join(checkpoint_folder, 'encoder_gate_logits.pt')
+            #     torch.save(self.model.gate_logits_encoder, gate_logits_path)
+            #     print(f'encoder Gate logits saved to {gate_logits_path}')
 
     def _save(self, output_dir: Optional[str] = None, state_dict=None):
         print('*'*100)
