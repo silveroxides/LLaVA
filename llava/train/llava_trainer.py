@@ -269,7 +269,11 @@ class LLaVATrainer(Trainer):
                 gate_logits_path = os.path.join(output_dir, 'gate_logits.pt')
                 torch.save(self.model.gate_logits, gate_logits_path)
                 print(f'Gate logits saved to {gate_logits_path}')
-
+                
+            if hasattr(self.model, 'gate_logits_encoder') and self.model.gate_logits_encoder is not None:
+                gate_logits_path = os.path.join(output_dir, 'encoder_gate_logits.pt')
+                torch.save(self.model.gate_logits_encoder, gate_logits_path)
+                print(f'encoder Gate logits saved to {gate_logits_path}')
 
     def _save(self, output_dir: Optional[str] = None, state_dict=None):
         print('*'*100)
@@ -282,7 +286,12 @@ class LLaVATrainer(Trainer):
             super(LLaVATrainer, self)._save(output_dir, state_dict)
 
             # Save gate logits after training ends
-            if hasattr(self.model, 'gate_logits'):
+            if hasattr(self.model, 'gate_logits') and self.model.gate_logits is not None:
                 gate_logits_path = os.path.join(output_dir, 'gate_logits.pt')
                 torch.save(self.model.gate_logits, gate_logits_path)
                 print(f'Gate logits saved to {gate_logits_path}')
+
+            if hasattr(self.model, 'gate_logits_encoder') and self.model.gate_logits_encoder is not None:
+                gate_logits_path = os.path.join(output_dir, 'encoder_gate_logits.pt')
+                torch.save(self.model.gate_logits_encoder, gate_logits_path)
+                print(f'encoder Gate logits saved to {gate_logits_path}')
