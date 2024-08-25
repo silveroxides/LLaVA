@@ -14,7 +14,7 @@ def start_controller():
     controller_command = [
         sys.executable,
         "-m",
-        "cumo.serve.controller",
+        "llava.serve.controller",
         "--host",
         "0.0.0.0",
         "--port",
@@ -32,7 +32,7 @@ def start_worker(model_path: str, bits=16):
     worker_command = [
         sys.executable,
         "-m",
-        "cumo.serve.model_worker",
+        "llava.serve.model_worker",
         "--host",
         "0.0.0.0",
         "--controller",
