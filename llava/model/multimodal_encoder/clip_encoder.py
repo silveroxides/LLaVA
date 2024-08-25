@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from transformers import CLIPVisionModel, CLIPImageProcessor, CLIPVisionConfig
 from .clip_moe import CLIPSMoEVisionTransformer
-
+from .moe_clip import ModifiedEncoderLayer
 
 
 class CLIPVisionTower(nn.Module):
@@ -43,6 +43,13 @@ class CLIPVisionTower(nn.Module):
         if sparseMoE is not None:
             cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
             self.vision_tower = CLIPSMoEVisionTransformer(cfg_only, sparseMoE, self.num_experts, self.num_selected)
+            hidden_size = self.vision_tower.config.hidden_size
+            self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name, device_map=device_map)
+            
+            for i, encoder_layer in enumerate(self.vision_tower.encoder.layers):
+                self.vision_tower.encoder.layers[i] = ModifiedEncoderLayer(encoder_layer, hidden_size, sparseMoE)
+
+            print('moe block initialized in the encoder')
         
         else:
             self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name, device_map=device_map)
@@ -88,9 +95,8 @@ class CLIPVisionTower(nn.Module):
         else:
             
             if self.moe: 
-                image_forward_outs, router_logits = self.vision_tower(images)
+                image_forward_outs, router_logits = self.vision_tower(images.to(device=self.device, dtype=self.dtype), output_hidden_states=True)
                 image_features = self.feature_select(image_forward_outs).to(images.dtype)
-                # will return router logits in future
                 return image_features, router_logits
             
             else: 
