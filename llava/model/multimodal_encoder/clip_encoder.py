@@ -69,9 +69,9 @@ class CLIPVisionTower(nn.Module):
                     for param in layer.linear_projection.parameters():
                         param.requires_grad = True
 
-            for name, param in self.wrapped_vision_tower.named_parameters():
-                if param.requires_grad:
-                    print(f"{name} is unfrozen")
+            # for name, param in self.wrapped_vision_tower.named_parameters():
+            #     if param.requires_grad:
+            #         print(f"{name} is unfrozen")
                 # else:
                 #     print(f"{name} is frozen")
         
