@@ -402,6 +402,7 @@ class LlavaMetaForCausalLM(ABC):
         
         else:
             # Image Feature shape: torch.Size([4, 256, 5120]) -> [batch_size, sequence_length, embed_dim]
+            print(f'input image shape: {images.shape}')
             result = self.encode_images(images)
 
     
