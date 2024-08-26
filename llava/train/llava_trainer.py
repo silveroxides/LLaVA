@@ -260,6 +260,19 @@ class LLaVATrainer(Trainer):
                 for key in keys_to_match:
                     component_weights = {k: v for k, v in weight_to_save.items() if key in k}
                     torch.save(component_weights, os.path.join(output_dir, f'{key}.bin'))
+
+            # Save gate logits after training ends
+            if hasattr(self.model, 'gate_logits'):
+                gate_logits_path = os.path.join(checkpoint_folder, 'gate_logits.pt')
+                torch.save(self.model.gate_logits, gate_logits_path)
+                print(f'Gate logits saved to {gate_logits_path}')
+
+            if hasattr(self.model, 'gate_logits_encoder') and self.model.gate_logits_encoder is not None:
+                gate_logits_path = os.path.join(checkpoint_folder, 'encoder_gate_logits.pt')
+                torch.save(self.model.gate_logits_encoder, gate_logits_path)
+                print(f'encoder Gate logits saved to {gate_logits_path}')
+
+
         else:
             model.generation_config.do_sample = True
             super(LLaVATrainer, self)._save_checkpoint(model, trial, metrics)
