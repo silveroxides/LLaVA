@@ -57,18 +57,27 @@ class CLIPVisionTower(nn.Module):
 
             # Wrap the model with the LogitCollectorWrapper
             self.wrapped_vision_tower = LogitCollectorWrapper(self.vision_tower)
+
+            # backnone freezing
+            self.vision_tower.requires_grad_(False)
+
+            for layer in self.wrapped_vision_tower.model.vision_model.encoder.layers:
+                if isinstance(layer, ModifiedEncoderLayer):
+                    for param in layer.moe.parameters():
+                        param.requires_grad = True
+                        print(f'tune encoder moe')
+
+                    for param in layer.linear_projection.parameters():
+                        param.requires_grad = True
+                        print(f'tune encoder linear_projection')
         
         # vanilla vision encoder
         else:
             self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name, device_map=device_map)
+            self.vision_tower.requires_grad_(False)
 
-        
-      # ##############################################################################################
-        # encoder is frizzed
-        self.vision_tower.requires_grad_(False)
-        
-        # ##############################################################################################
 
+    
 
         self.is_loaded = True
 
