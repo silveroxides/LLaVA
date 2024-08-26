@@ -7,7 +7,7 @@ class LogitCollectorWrapper(nn.Module):
     def __init__(self, clip_vision_model):
         super().__init__()
         self.model = clip_vision_model
-        self.logits_buffer = defaultdict(list)
+        self.logits_buffer = ()
         self._hook_layers()
 
     def _hook_layers(self):
@@ -18,20 +18,19 @@ class LogitCollectorWrapper(nn.Module):
     def _create_hook(self, layer_idx):
         def hook(module, input, output):
             logits = module._last_router_logits
-            print(f'Logits before squeeze: {logits.shape}')
-            logits = logits.squeeze(0)
-            print(f'Logits after squeeze: {logits.shape}')
             if logits is not None:
-                self.logits_buffer[layer_idx].append(logits.detach().cpu())
+                self.logits_buffer[layer_idx]=(logits.detach().cpu(),)
+
         return hook
 
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
 
     def get_collected_logits(self):
-        logits_list = [torch.stack(self.logits_buffer[layer_idx]) for layer_idx in sorted(self.logits_buffer.keys())]
+        # logits_list = [torch.stack(self.logits_buffer[layer_idx]) for layer_idx in sorted(self.logits_buffer.keys())]
         # Convert the list to a tuple and return
-        return tuple(logits_list)
+        # return tuple(logits_list)
+        return self.logits_buffer
 
     def clear_logits(self):
         self.logits_buffer.clear()
