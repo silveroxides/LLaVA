@@ -26,7 +26,7 @@ def aux_loss(router_logits: torch.Tensor, num_experts: int, top_k: int):
     
     return overall_loss * num_experts
 
-def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tensor = None, top_k=2, attention_mask: Optional[torch.Tensor] = None
+def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tensor = None, top_k= None, attention_mask: Optional[torch.Tensor] = None
                             ) -> float:
     r"""
     Computes auxiliary load balancing loss as in Switch Transformer - implemented in Pytorch.
@@ -69,6 +69,7 @@ def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tens
 
         # Compute the average probability of routing to these experts
         router_prob_per_expert = torch.mean(routing_weights, dim=0)
+    
     else:
         batch_size, sequence_length = attention_mask.shape
         num_hidden_layers = concatenated_gate_logits.shape[0] // (batch_size * sequence_length)
