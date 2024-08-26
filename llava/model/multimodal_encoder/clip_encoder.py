@@ -116,6 +116,7 @@ class CLIPVisionTower(nn.Module):
                 for image in images:
                     image_forward_out = self.wrapped_vision_tower(image.to(device=self.device, dtype=self.dtype).unsqueeze(0), output_hidden_states=True)
                     image_features = self.feature_select(image_forward_outs).to(images.dtype)
+                    print(f'image_features shape : {image_features.shape}')
                     image_features.append(image_feature)
                     # router_logits.append(router_logits)
 
