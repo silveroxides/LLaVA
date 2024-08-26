@@ -209,9 +209,11 @@ class LlavaMetaForCausalLM(ABC):
             # If unpacking fails, set gate_logits_encoder to None
             gate_logits_encoder = None
             image_features = self.get_model().mm_projector(image_features)
+            print(f'shape of image features: {image_features.shape}')
         
         else:
             image_features = self.get_model().mm_projector(image_features)
+            print(f'shape of image features: {image_features.shape}')
 
         try:
             image_features, gate_logits = image_features
