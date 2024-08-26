@@ -204,25 +204,23 @@ class LlavaMetaForCausalLM(ABC):
 
         try:
             image_features, gate_logits_encoder = image_features
-            image_features = self.get_model().mm_projector(image_features)
-            try:
-                image_features, gate_logits = image_features
-                return image_features, gate_logits, gate_logits_encoder
-            except ValueError:
-                # handle the case where only one value is returned
-                gate_logits = None
-                return image_features, gate_logits_encoder
-      
         except ValueError:
+            # If unpacking fails, set gate_logits_encoder to None
             gate_logits_encoder = None
             image_features = self.get_model().mm_projector(image_features)
-            try:
-                image_features, gate_logits = image_features
-                return image_features, gate_logits
-            except ValueError:
-                # handle the case where only one value is returned
-                gate_logits = None
-                return image_features
+        else:
+            image_features = self.get_model().mm_projector(image_features)
+
+        try:
+            image_features, gate_logits = image_features
+        except ValueError:
+            # Handle the case where only one value is returned
+            gate_logits = None
+        if gate_logits_encoder is None:
+            return image_features, gate_logits
+        else:
+            return image_features, gate_logits, gate_logits_encoder
+
         
     def pad_text_features(self, text_embeds):
         
