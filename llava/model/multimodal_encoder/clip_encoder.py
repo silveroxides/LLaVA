@@ -79,6 +79,7 @@ class CLIPVisionTower(nn.Module):
         else:
             self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name, device_map=device_map)
             self.vision_tower.requires_grad_(False)
+            print('pretrained vision model initialized')
 
 
     
