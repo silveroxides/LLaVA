@@ -116,8 +116,8 @@ class CLIPVisionTower(nn.Module):
                 router_logits = self.wrapped_vision_tower.get_collected_logits()
                 
                 # Iterate through the tuple to print the shapes of the logits
-                for i, logits in enumerate(router_logits):
-                    print(f"Layer {i} logits shape: {logits.shape}")
+                # for i, logits in enumerate(router_logits):
+                #     print(f"Layer {i} logits shape: {logits.shape}")
                 # Clear logits if needed
                 self.wrapped_vision_tower.clear_logits()
 
