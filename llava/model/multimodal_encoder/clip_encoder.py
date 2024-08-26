@@ -65,11 +65,15 @@ class CLIPVisionTower(nn.Module):
                 if isinstance(layer, ModifiedEncoderLayer):
                     for param in layer.moe.parameters():
                         param.requires_grad = True
-                        print(f'tune encoder moe')
 
                     for param in layer.linear_projection.parameters():
                         param.requires_grad = True
-                        print(f'tune encoder linear_projection')
+
+            for name, param in self.wrapped_vision_tower.named_parameters():
+                if param.requires_grad:
+                    print(f"{name} is unfrozen")
+                # else:
+                #     print(f"{name} is frozen")
         
         # vanilla vision encoder
         else:
