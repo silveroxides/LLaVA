@@ -18,7 +18,9 @@ class LogitCollectorWrapper(nn.Module):
     def _create_hook(self, layer_idx):
         def hook(module, input, output):
             logits = module._last_router_logits
+            print(f'Logits before squeeze: {logits.shape}')
             logits = logits.squeeze(0)
+            print(f'Logits after squeeze: {logits.shape}')
             if logits is not None:
                 self.logits_buffer[layer_idx].append(logits.detach().cpu())
         return hook
