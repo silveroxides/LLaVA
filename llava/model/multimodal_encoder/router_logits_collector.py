@@ -26,7 +26,8 @@ class LogitCollectorWrapper(nn.Module):
         return self.model(*args, **kwargs)
 
     def get_collected_logits(self):
-        return {k: torch.stack(v) for k, v in self.logits_buffer.items()}
+        logits_list = [torch.stack(self.logits_buffer[layer_idx]) for layer_idx in sorted(self.logits_buffer.keys())]
+        return tuple(logits_list)
 
     def clear_logits(self):
         self.logits_buffer.clear()
