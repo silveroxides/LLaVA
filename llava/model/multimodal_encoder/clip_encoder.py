@@ -4,6 +4,8 @@ import torch.nn as nn
 from transformers import CLIPVisionModel, CLIPImageProcessor, CLIPVisionConfig, CLIPConfig
 from .clip_moe import CLIPSMoEVisionTransformer
 from .moe_clip import ModifiedEncoderLayer
+from .router_logits_collector import LogitCollectorWrapper
+
 
 
 
@@ -52,6 +54,9 @@ class CLIPVisionTower(nn.Module):
                 self.vision_tower.vision_model.encoder.layers[i] = ModifiedEncoderLayer(encoder_layer, hidden_size, sparseMoE)
 
             print('moe block initialized in the encoder')
+
+            # Wrap the model with the LogitCollectorWrapper
+            self.wrapped_vision_tower = LogitCollectorWrapper(self.vision_tower)
         
         # vanilla vision encoder
         else:
@@ -86,20 +91,38 @@ class CLIPVisionTower(nn.Module):
         # for video
         if type(images) is list:
             image_features = []
-            router_logits = []
-            for image in images:
-                image_forward_out = self.vision_tower(image.to(device=self.device, dtype=self.dtype).unsqueeze(0), output_hidden_states=True)
-                image_feature, router_logits = self.feature_select(image_forward_out).to(image.dtype)
-                image_features.append(image_feature)
-                router_logits.append(router_logits)
+            # router_logits = []
+            if self.moe is None:
+                for image in images:
+                    image_forward_out = self.vision_tower(image.to(device=self.device, dtype=self.dtype).unsqueeze(0), output_hidden_states=True)
+                    image_feature = self.feature_select(image_forward_out).to(image.dtype)
+                    image_features.append(image_feature)
+                    # router_logits.append(router_logits)
+
+            else:
+                for image in images:
+                    image_forward_out = self.wrapped_vision_tower(image.to(device=self.device, dtype=self.dtype).unsqueeze(0), output_hidden_states=True)
+                    image_features = self.feature_select(image_forward_outs).to(images.dtype)
+                    image_features.append(image_feature)
+                    # router_logits.append(router_logits)
+
         
         # image is not a list but tensor
         # for image
         else:
             
             if self.moe: 
-                image_forward_outs, router_logits = self.vision_tower(images.to(device=self.device, dtype=self.dtype), output_hidden_states=True)
+                image_forward_outs = self.wrapped_vision_tower(images.to(device=self.device, dtype=self.dtype), output_hidden_states=True)
                 image_features = self.feature_select(image_forward_outs).to(images.dtype)
+                router_logits = self.wrapped_vision_tower.get_collected_logits()
+                
+                # Process or analyze the logits as needed
+                for layer_idx, logits in router_logits.items():
+                    print(f"Layer {layer_idx} logits shape: {logits.shape}")
+
+                # Clear logits if needed
+                self.wrapped_vision_tower.clear_logits()
+
                 return image_features, router_logits
             
             else: 

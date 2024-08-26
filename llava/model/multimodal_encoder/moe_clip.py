@@ -13,7 +13,8 @@ class ModifiedEncoderLayer(nn.Module):
         # Initialize the Sparse MoE block and linear projection layer
         self.moe = sparseMoe
         self.linear_projection = nn.Linear(sparseMoe.experts[0][2].out_features, hidden_size)
-        self.router_logits = ()
+
+        self.router_logits = None
 
     def forward(
         self,
@@ -32,6 +33,12 @@ class ModifiedEncoderLayer(nn.Module):
                 Whether or not to return the attentions tensors of all attention layers. See `attentions` under
                 returned tensors for more detail.
         """
+        """
+        Overwriting Problem:
+        In the forward method, the line self.router_logits = (router_logit,) 
+        overwrites the router_logits attribute each time the forward pass is called. 
+        This means only the most recent router_logit is stored, and previous ones are lost.
+        """
         residual = hidden_states
 
         hidden_states = self.layer_norm1(hidden_states)
@@ -49,7 +56,7 @@ class ModifiedEncoderLayer(nn.Module):
         # MoE block
         hidden_states, router_logit = self.moe(hidden_states)
         
-        self.router_logits = (router_logit,)
+        self._last_router_logits = router_logit
 
         # Project the MoE output to match the residual dimension
         hidden_states = self.linear_projection(hidden_states)
