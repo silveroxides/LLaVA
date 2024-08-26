@@ -19,7 +19,7 @@ class LogitCollectorWrapper(nn.Module):
         def hook(module, input, output):
             logits = module._last_router_logits
             if logits is not None:
-                self.logits_buffer[layer_idx]=(logits.detach().cpu(),)
+                self.logits_buffer = (logits.detach().cpu(), )
 
         return hook
 
