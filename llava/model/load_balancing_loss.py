@@ -57,6 +57,8 @@ def load_balancing_loss_func( gate_logits: torch.Tensor, num_experts: torch.Tens
         compute_device = gate_logits[0].device
         concatenated_gate_logits = torch.cat([layer_gate.to(compute_device) for layer_gate in gate_logits], dim=0)
 
+    concatenated_gate_logits = concatenated_gate_logits.float()
+
     routing_weights = torch.nn.functional.softmax(concatenated_gate_logits, dim=-1)
 
     _, selected_experts = torch.topk(routing_weights, top_k, dim=-1)
