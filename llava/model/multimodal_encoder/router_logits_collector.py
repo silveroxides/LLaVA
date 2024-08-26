@@ -19,7 +19,10 @@ class LogitCollectorWrapper(nn.Module):
         def hook(module, input, output):
             logits = module._last_router_logits
             if logits is not None:
-                self.logits_buffer[layer_idx].append(logits.detach().cpu())
+                # Remove the batch dimension if it's 1
+                squeezed_logits = logits.squeeze(0).detach().cpu() if logits.dim() == 3 and logits.size(0) == 1 else logits.detach().cpu()
+                self.logits_buffer[layer_idx].append(squeezed_logits)
+                
         return hook
 
     def forward(self, *args, **kwargs):
