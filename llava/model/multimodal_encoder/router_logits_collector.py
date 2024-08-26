@@ -18,11 +18,9 @@ class LogitCollectorWrapper(nn.Module):
     def _create_hook(self, layer_idx):
         def hook(module, input, output):
             logits = module._last_router_logits
+            logits = logits.squeeze(0)
             if logits is not None:
-                # Remove the batch dimension if it's 1
-                squeezed_logits = logits.squeeze(0).detach().cpu() if logits.dim() == 3 and logits.size(0) == 1 else logits.detach().cpu()
-                self.logits_buffer[layer_idx].append(squeezed_logits)
-                
+                self.logits_buffer[layer_idx].append(logits.detach().cpu())
         return hook
 
     def forward(self, *args, **kwargs):
@@ -30,6 +28,7 @@ class LogitCollectorWrapper(nn.Module):
 
     def get_collected_logits(self):
         logits_list = [torch.stack(self.logits_buffer[layer_idx]) for layer_idx in sorted(self.logits_buffer.keys())]
+        # Convert the list to a tuple and return
         return tuple(logits_list)
 
     def clear_logits(self):

@@ -144,6 +144,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM,):
             projector_type = getattr(self.config, 'mm_projector_type', 'linear')
 
             if projector_type == 'sparse_moe':
+                print(f'gate logits shape: {gate_logits.shape}')
                 load_balancing_loss = aux_loss(
                 gate_logits,
                 self.config.num_experts,
