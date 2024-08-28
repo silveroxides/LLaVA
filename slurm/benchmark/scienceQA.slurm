@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 #SBATCH -A collabrobogroup
-#SBATCH --array=0-4
+#SBATCH --array=0
 #SBATCH --ntasks=1 
 #SBATCH -t 01:00:00 
 #SBATCH -p gpu
@@ -13,6 +13,9 @@
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
+
+export CUDA_VISIBLE_DEVICES=0
+
 
 module purge
 module load apptainer
