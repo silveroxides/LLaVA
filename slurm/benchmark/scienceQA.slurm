@@ -18,7 +18,7 @@ export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
 module purge
 module load apptainer
 
-model_paths=('./ckpts_it/baseline/base-v1.5-13b-finetune' 'ckpts_it/baseline/base-v1.5-13b-finetune-v2' 'ckpts_it/moe_full/moe-e4t2-finetune' 'ckpts_it/moe_full/moe-e5t3-finetune' 'ckpts_it/moe/moe-e8t2-finetune')
+model_paths=('./ckpts_it/baseline/llava-base' 'ckpts_it/baseline/llava-base-v2' 'ckpts_it/moe_full/llava-moe-e4t2' 'ckpts_it/moe_full/llava-moe-e5t3' 'ckpts_it/moe/llava-moe-e8t2')
 file_names=('base-v2' 'base-v2' 'moe-e4t4' 'moe-e5t3' 'moe-e8t2')
 outputs=('baseline_output' 'moe-e4t4_output' 'moe-e5t3_output' 'moe-e8t2_output')
 results=('baseline_result' 'moe-e4t4_result' 'moe-e5t3_result' 'moe-e8t2_result')
@@ -42,5 +42,5 @@ apptainer exec --nv /scratch/mi8uu/mrm/sifs/llava.sif \
 python3 llava/eval/eval_science_qa.py \
     --base-dir ./playground/data/eval/scienceqa \
     --result-file ./playground/data/eval/scienceqa/answers/${current_file_name}/${current_file_name}.jsonl \
-    --output-file ./playground/data/eval/scienceqa/answers/${current_file_name}/${current_output}.jsonl \
-    --output-result ./playground/data/eval/scienceqa/answers/${current_file_name}/${current_result}.json
+    --output-file ./playground/data/eval/scienceqa/answers/${current_file_name}/output.jsonl \
+    --output-result ./playground/data/eval/scienceqa/answers/${current_file_name}/result.json
