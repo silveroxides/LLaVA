@@ -743,7 +743,6 @@ class LazySupervisedDataset(Dataset):
         self.tokenizer = tokenizer
         self.list_data_dict = list_data_dict
         self.data_args = data_args
-        print(self.data_args)
 
     def __len__(self):
         return len(self.list_data_dict)
@@ -1068,28 +1067,10 @@ def train(attn_implementation=None):
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
-    
-    
-    # initializing the MoE. This is going to be shared accross the modality
-    def initialize_moe(config, model_args):
-        
-        config.mm_projector_type = getattr(model_args, 'mm_projector_type', 'linear')
-        config.num_experts = getattr(model_args, 'num_experts', 1)
-        config.num_experts_per_tok = getattr(model_args, 'num_experts_per_tok', 1)
-        config.aux_loss_coef = getattr(model_args, 'aux_loss_coef', 0.01)
-        
-        # gettting the config for the vision tower
-        vision_tower_name = getattr(model_args, 'vision_tower', 'openai/clip-vit-large-patch14')
-        vision_tower_config = CLIPConfig.from_pretrained(vision_tower_name)
-        config.mm_hidden_size = vision_tower_config.vision_config.hidden_size
-
-        sparseMoE = build_vision_projector(config)
-
-        return sparseMoE
 
     if model_args.vision_tower is not None:
 
-        sparseMoE = initialize_moe(model.config, model_args)
+
         
         model.get_model().initialize_vision_modules(
             model_args=model_args,
@@ -1177,7 +1158,6 @@ def train(attn_implementation=None):
     # model.base_model.model.lm_head.weight.data = model.base_model.model.lm_head.weight.data.float()
 
 
-    print(data_args)
     # data module contain train_datset and data_collector instance
     data_module = make_supervised_data_module(tokenizer=tokenizer,
                                               data_args=data_args)

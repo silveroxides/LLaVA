@@ -53,7 +53,7 @@ class CLIPVisionTower(nn.Module):
             for i, encoder_layer in enumerate(self.vision_tower.vision_model.encoder.layers):
                 self.vision_tower.vision_model.encoder.layers[i] = ModifiedEncoderLayer(encoder_layer, hidden_size, sparseMoE)
 
-            print('moe block initialized in the encoder')
+            print('shared moe encoder initialized')
 
             # Wrap the model with the LogitCollectorWrapper
             self.wrapped_vision_tower = LogitCollectorWrapper(self.vision_tower)
@@ -100,11 +100,14 @@ class CLIPVisionTower(nn.Module):
     @torch.no_grad()
     def forward(self, images):
         
+        router_logits = None
+
         # image is a list
         # for video
         if type(images) is list:
             image_features = []
             # router_logits = []
+            
             if self.moe is None:
                 for image in images:
                     image_forward_out = self.vision_tower(image.to(device=self.device, dtype=self.dtype).unsqueeze(0), output_hidden_states=True)
@@ -136,17 +139,18 @@ class CLIPVisionTower(nn.Module):
                 # Clear logits if needed
                 self.wrapped_vision_tower.clear_logits()
 
-                return image_features, router_logits
             
             else: 
                 image_forward_outs = self.vision_tower(images.to(device=self.device, dtype=self.dtype), output_hidden_states=True)
                 image_features = self.feature_select(image_forward_outs).to(images.dtype)
-                return image_features
 
             
             
-        # return image_features, router_logits
-        
+        # Prepare the return tuple
+        if router_logits is not None:
+            return image_features, router_logits
+        else:
+            return image_features      
 
     @property
     def dummy_feature(self):

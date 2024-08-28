@@ -57,8 +57,8 @@ class SparseMoeBlock(nn.Module):
 
 
         # Jitter parameters
-        # self.jitter_noise = config.router_jitter_noise
         self.jitter_noise = 0.01
+        # self.jitter_noise = config.router_jitter_noise
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         """ """

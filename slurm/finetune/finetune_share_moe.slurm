@@ -19,15 +19,15 @@ module load apptainer
 
 model_name=('lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-13b-v1.5')
 vision_tower=('openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336')
-num_experts=(4 4 4 5 6)
-num_experts_per_tok=(2 2 3 2 3)
+num_experts=(5 4 4 5 6)
+num_experts_per_tok=(3 2 3 2 3)
 num_layers=(2 2 2 2 2)
 num_heads=(2 2 2 2 2)
 batch_size=(16 16 16 16 16)
 lr=(2e-5 2e-5 1e-3 1e-3)
 tune_embed_tokens=(False False False False)
 mm_projector_type=('sparse_moe' 'sparse_moe' 'sparse_moe' 'sparse_moe')
-output_dir=('./ckpts_it/share_moe/llava-v1.5-13b-finetune' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts_it/share_moe/llava-share_moe-e5t3' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 

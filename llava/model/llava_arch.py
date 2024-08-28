@@ -22,6 +22,7 @@ import copy
 import pprint
 
 from torch.nn.utils.rnn import pad_sequence
+from transformers import CLIPConfig, CLIPVisionModel
 from .multimodal_encoder.builder import build_vision_tower
 from .co_attention.cross_attention import get_co_attention
 from .multimodal_projector.builder import build_vision_projector
@@ -53,10 +54,9 @@ class LlavaMetaModel:
         return vision_tower
     
     def initialize_vision_modules(self, model_args, fsdp=None):
-        print('Inside initialize_vision_modules')
+        # print('Inside initialize_vision_modules')
         # vision_tower = openai/clip-vit-large-patch14
         vision_tower = model_args.vision_tower
-        print(f'vision tower: {vision_tower}')
         mm_vision_select_layer = model_args.mm_vision_select_layer
         mm_vision_select_feature = model_args.mm_vision_select_feature
         pretrain_mm_mlp_adapter = model_args.pretrain_mm_mlp_adapter
@@ -64,6 +64,14 @@ class LlavaMetaModel:
         share_moe = model_args.share_moe
         co_attention = model_args.cross_attention
 
+        # preparing vision projection
+        self.config.mm_projector_type = getattr(model_args, 'mm_projector_type', 'linear')
+        self.config.num_experts = getattr(model_args, 'num_experts', 1)
+        self.config.num_experts_per_tok = getattr(model_args, 'num_experts_per_tok', 1)
+        self.config.aux_loss_coef = getattr(model_args, 'aux_loss_coef', 0.01)
+        # gettting the config for the vision tower
+        vision_tower_config = CLIPConfig.from_pretrained(vision_tower)
+        self.config.mm_hidden_size = vision_tower_config.vision_config.hidden_size
         self.config.mm_vision_tower = vision_tower
 
         if getattr(self, 'mm_projector', None) is None:
@@ -93,11 +101,6 @@ class LlavaMetaModel:
 
             else: vision_tower = build_vision_tower(model_args)
 
-            print('-' * 140)
-            print('*'*40+'build vision tower'+'*'*40)
-            print(vision_tower)
-            print('-' * 140)
-
             if fsdp is not None and len(fsdp) > 0:
                 self.vision_tower = [vision_tower]
             else:
@@ -111,11 +114,6 @@ class LlavaMetaModel:
             vision_tower.load_model()
 
         self.config.use_mm_proj = True
-        self.config.mm_projector_type = getattr(model_args, 'mm_projector_type', 'linear')
-        self.config.num_experts = getattr(model_args, 'num_experts', 1)
-        self.config.num_experts_per_tok = getattr(model_args, 'num_experts_per_tok', 1)
-        self.config.aux_loss_coef = getattr(model_args, 'aux_loss_coef', 0.01)
-        self.config.mm_hidden_size = vision_tower.hidden_size
         self.hidden_size = self.config.hidden_size
         self.config.mm_vision_select_layer = mm_vision_select_layer
         self.config.mm_vision_select_feature = mm_vision_select_feature
@@ -199,28 +197,31 @@ class LlavaMetaForCausalLM(ABC):
 
     def encode_images(self, images):
         
-        # get image features from vision encoder
-        image_features = self.get_model().get_vision_tower()(images)
+        output_features = self.get_model().get_vision_tower()(images)
 
         try:
-            image_features, gate_logits_encoder = image_features
-            # print(f'shape of image features: {image_features.shape}')
+            # Try to unpack image_features, assuming it contains two values
+            image_features, gate_logits_encoder = output_features
+            # Process image_features if unpacking was successful
+            image_features = self.get_model().mm_projector(image_features)
+            
 
-        
         except ValueError:
-            # If unpacking fails, set gate_logits_encoder to None
+            # If unpacking fails, only image_features is returned and gate_logits_encoder should be None
             gate_logits_encoder = None
+            image_features = output_features
             image_features = self.get_model().mm_projector(image_features)
-        
-        else:
-            image_features = self.get_model().mm_projector(image_features)
-            # print(f'shape of image features: {image_features.shape}')
+
 
         try:
+            # Attempt to unpack the processed image_features again, assuming it could yield two values
             image_features, gate_logits = image_features
+
         except ValueError:
-            # Handle the case where only one value is returned
+            # If unpacking fails, gate_logits should be None
             gate_logits = None
+
+        # Return the appropriate output based on whether gate_logits_encoder is None
         if gate_logits_encoder is None:
             return image_features, gate_logits
         else:
@@ -317,10 +318,6 @@ class LlavaMetaForCausalLM(ABC):
         
         vision_tower = self.get_vision_tower()
         cross_attention  = self.get_cross_attention()
-
-        # print(f'Cross attension {cross_attention}')
-        # print(f'Input ids shape: {input_ids.shape}')
-        # print(f'images shape: {images.shape}')
 
         gate_logits = None
         align_loss = None
