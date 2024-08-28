@@ -14,13 +14,11 @@
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
 
-export CUDA_VISIBLE_DEVICES=0
-
 
 module purge
 module load apptainer
 
-model_paths=('ckpts_it/baseline/base-v1.5-13b-finetune' 'ckpts_it/baseline/base-v1.5-13b-finetune-v2' 'ckpts_it/moe_full/moe-e4t2-finetune' 'ckpts_it/moe_full/moe-e5t3-finetune' 'ckpts_it/moe/moe-e8t2-finetune')
+model_paths=('./ckpts_it/baseline/base-v1.5-13b-finetune' 'ckpts_it/baseline/base-v1.5-13b-finetune-v2' 'ckpts_it/moe_full/moe-e4t2-finetune' 'ckpts_it/moe_full/moe-e5t3-finetune' 'ckpts_it/moe/moe-e8t2-finetune')
 file_names=('base-v2' 'base-v2' 'moe-e4t4' 'moe-e5t3' 'moe-e8t2')
 outputs=('baseline_output' 'moe-e4t4_output' 'moe-e5t3_output' 'moe-e8t2_output')
 results=('baseline_result' 'moe-e4t4_result' 'moe-e5t3_result' 'moe-e8t2_result')
