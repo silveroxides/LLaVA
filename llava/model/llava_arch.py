@@ -204,7 +204,7 @@ class LlavaMetaForCausalLM(ABC):
 
         try:
             image_features, gate_logits_encoder = image_features
-            print(f'shape of image features: {image_features.shape}')
+            # print(f'shape of image features: {image_features.shape}')
 
         
         except ValueError:
@@ -214,7 +214,7 @@ class LlavaMetaForCausalLM(ABC):
         
         else:
             image_features = self.get_model().mm_projector(image_features)
-            print(f'shape of image features: {image_features.shape}')
+            # print(f'shape of image features: {image_features.shape}')
 
         try:
             image_features, gate_logits = image_features
@@ -402,7 +402,6 @@ class LlavaMetaForCausalLM(ABC):
         
         else:
             # Image Feature shape: torch.Size([4, 256, 5120]) -> [batch_size, sequence_length, embed_dim]
-            print(f'input image shape: {images.shape}')
             result = self.encode_images(images)
 
     

@@ -19,7 +19,7 @@ module purge
 module load apptainer
 
 model_paths=('./ckpts_it/baseline/llava-base' 'ckpts_it/baseline/llava-base-v2' 'ckpts_it/moe_full/llava-moe-e4t2' 'ckpts_it/moe_full/llava-moe-e5t3' 'ckpts_it/moe/llava-moe-e8t2')
-file_names=('base-v2' 'base-v2' 'moe-e4t4' 'moe-e5t3' 'moe-e8t2')
+file_names=('base' 'base-v2' 'moe-e4t4' 'moe-e5t3' 'moe-e8t2')
 outputs=('baseline_output' 'moe-e4t4_output' 'moe-e5t3_output' 'moe-e8t2_output')
 results=('baseline_result' 'moe-e4t4_result' 'moe-e5t3_result' 'moe-e8t2_result')
 
