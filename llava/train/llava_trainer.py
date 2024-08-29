@@ -249,6 +249,7 @@ class LLaVATrainer(Trainer):
             if getattr(self.args, "cross_attention", False):
                 keys_to_match.extend(['cross_attention'])
             
+
             # Extract the relevant parameters
             weight_to_save = get_mm_adapter_state_maybe_zero_3(self.model.named_parameters(), keys_to_match)
 

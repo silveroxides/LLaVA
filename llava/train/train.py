@@ -231,7 +231,7 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer,
         if getattr(trainer.args, "cross_attention", False):
             keys_to_match.extend(['co_attention'])
 
-        
+
         # Extract the relevant parameters
         weight_to_save = get_mm_adapter_state_maybe_zero_3(trainer.model.named_parameters(), keys_to_match)
         
@@ -1098,6 +1098,8 @@ def train(attn_implementation=None):
         # mlp_adapter is mumtimodal projector
         # making it freez/tune based on the model 
         model.config.tune_mm_mlp_adapter = training_args.tune_mm_mlp_adapter = model_args.tune_mm_mlp_adapter
+        model.config.tune_embed_tokens = training_args.tune_embed_tokens = model_args.tune_embed_tokens
+        model.config.cross_attention = training_args.cross_attention = model_args.cross_attention
 
         if model_args.tune_mm_mlp_adapter:
             model.requires_grad_(False)
