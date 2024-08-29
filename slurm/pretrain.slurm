@@ -3,9 +3,9 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0
 #SBATCH --ntasks=1 
-#SBATCH -t 12:00:00 
+#SBATCH -t 16:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:4
+#SBATCH --gres=gpu:a40:8
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=32
 #SBATCH --output=log/slurm/tune_embed/log-%A-%a.log 
