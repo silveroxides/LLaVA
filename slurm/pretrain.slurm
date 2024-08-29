@@ -3,13 +3,13 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0
 #SBATCH --ntasks=1 
-#SBATCH -t 8:00:00 
+#SBATCH -t 12:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:8
+#SBATCH --gres=gpu:a100:4
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=32
-#SBATCH --output=log/slurm/embed_co-attn/log-%A-%a.log 
-#SBATCH -J co-attn
+#SBATCH --output=log/slurm/tune_embed/log-%A-%a.log 
+#SBATCH -J tune_embed
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -27,7 +27,7 @@ batch_size=(32 32 32 32 32)
 lr=(1e-3 2e-5 1e-3 1e-3)
 tune_embed_tokens=(True True False True)
 mm_projector_type=('mlp2x_gelu' 'sparse_moe' 'sparse_moe' 'sparse_moe')
-output_dir=('./ckpts/embed_co-attn/llava-v1.5-13b-pretrain-v1' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts/ref_embed/llava-tune_embeds' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
@@ -51,7 +51,7 @@ apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT l
 --num_heads ${num_heads[${SLURM_ARRAY_TASK_ID}]} \
 --aux_loss_coef 0.01 \
 --share_moe False \
---cross_attention True \
+--cross_attention False \
 --mm_projector_type ${mm_projector_type[${SLURM_ARRAY_TASK_ID}]} \
 --num_train_epochs 1 \
 --per_device_train_batch_size ${batch_size[${SLURM_ARRAY_TASK_ID}]} \
