@@ -1,7 +1,7 @@
 #!/bin/bash
 
-python -m llava.eval.model_vqa \
-    --model-path liuhaotian/llava-v1.5-13b \
+python3 -m llava.eval.model_vqa \
+    --model-path ./ckpts_it/baseline/llava-base \
     --question-file ./playground/data/eval/mm-vet/llava-mm-vet.jsonl \
     --image-folder ./playground/data/eval/mm-vet/images \
     --answers-file ./playground/data/eval/mm-vet/answers/llava-v1.5-13b.jsonl \
@@ -10,7 +10,7 @@ python -m llava.eval.model_vqa \
 
 mkdir -p ./playground/data/eval/mm-vet/results
 
-python scripts/convert_mmvet_for_eval.py \
+python3 scripts/convert_mmvet_for_eval.py \
     --src ./playground/data/eval/mm-vet/answers/llava-v1.5-13b.jsonl \
     --dst ./playground/data/eval/mm-vet/results/llava-v1.5-13b.json
 
