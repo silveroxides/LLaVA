@@ -32,7 +32,7 @@ PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
 apptainer exec --nv /scratch/mi8uu/mrm/sifs/llava.sif deepspeed --master_port $PORT llava/train/train_mem.py \
---deepspeed ./scripts/zero3.json \
+--deepspeed ./scripts/zero2.json \
 --model_name_or_path ${model_name[${SLURM_ARRAY_TASK_ID}]} \
 --version plain \
 --data_path ./playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json \
