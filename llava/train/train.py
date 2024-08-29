@@ -1120,6 +1120,9 @@ def train(attn_implementation=None):
         if model_args.pretrain_embed_tokens is not None:
             embed_tokens_weights = torch.load(model_args.pretrain_embed_tokens, map_location='cpu')
             embed_tokens_weights = {k.replace('model.embed_tokens.', ''): v for k, v in embed_tokens_weights.items()}
+            print(f'Embed tokens shape: {embed_tokens_weights.shape}')
+            print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.weight.shape}')
+
             model.get_model().embed_tokens.load_state_dict(embed_tokens_weights)
             rank0_print('Pretrain embed tokens initialized')
 
