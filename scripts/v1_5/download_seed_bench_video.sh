@@ -1,0 +1,32 @@
+#!/bin/bash
+
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.003							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.004							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.005							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.006							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.007							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.008							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.009							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.010							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.011							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.012							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.013							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.014							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.015							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.016							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.017							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.018							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.019							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.020							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.021							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.022							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.023							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.024							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.025							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.026							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.027							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.028							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.029							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.030							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.031							
+wget https://huggingface.co/datasets/AILab-CVC/SEED-Bench/resolve/main/v1_video.zip.032							
