@@ -24,7 +24,8 @@ import pprint
 from torch.nn.utils.rnn import pad_sequence
 from transformers import CLIPConfig, CLIPVisionModel
 from .multimodal_encoder.builder import build_vision_tower
-from .co_attention.cross_attention import get_co_attention
+# from .co_attention.cross_attention import get_co_attention
+from .co_attention.cross_attn import get_co_attention
 from .multimodal_projector.builder import build_vision_projector
 
 from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
@@ -601,37 +602,48 @@ class LlavaMetaForCausalLM(ABC):
                 print('img feature got zero before passing to cross attn')
 
             # image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
-            image_features, co_text_features = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
+            cross_attention_output = self.cross_attention(padded_text_features, image_features, padded_text_features_attention_mask)
 
             # text_features = self.remove_padding(co_text_features, padded_text_features_attention_mask)
+            try:
+                # Try to unpack image_features, assuming it contains two values
+                image_features, co_text_features = cross_attention_output
+                # Process image_features if unpacking was successful
+                image_features = self.get_model().mm_projector(image_features)
+                
+
+            except ValueError:
+                # If unpacking fails, only image_features is returned and gate_logits_encoder should be None
+                co_text_features = None
+                image_features = cross_attention_output
 
 
 
             # Check for NaN values
-            text_features_has_nan = torch.isnan(co_text_features).any().item()
+            # text_features_has_nan = torch.isnan(co_text_features).any().item()
             image_features_has_nan = torch.isnan(image_features).any().item()
 
             # Check for infinity values
             image_features_has_inf = torch.isinf(image_features).any().item()
-            text_features_has_inf = torch.isinf(co_text_features).any().item()
+            # text_features_has_inf = torch.isinf(co_text_features).any().item()
 
             # Check for zero values
             image_features_has_zero = (image_features == 0).any().item()
 
-            if text_features_has_nan:
-                print("text_features_has_nan Contains NaN")
-            if text_features_has_inf:
-                print("text_features_has_inf Contains Inf")
+            # if text_features_has_nan:
+            #     print("text_features_has_nan Contains NaN")
+            # if text_features_has_inf:
+            #     print("text_features_has_inf Contains Inf")
             if image_features_has_nan:
                 print("image_features_has_nan Contains NaN")
             if image_features_has_inf:
                 print("image_features_has_inf Contains Inf:")
 
             
-            for x in co_text_features:
-                text_features_has_zero = (x == 0).any().item()
-                if text_features_has_zero:
-                    print("text_features_has_zero Contains Zero:", text_features_has_zero)
+            # for x in co_text_features:
+            #     text_features_has_zero = (x == 0).any().item()
+            #     if text_features_has_zero:
+            #         print("text_features_has_zero Contains Zero:", text_features_has_zero)
 
             if image_features_has_zero:
                 print("image_features_has_zero Contains Zero:", image_features_has_zero)

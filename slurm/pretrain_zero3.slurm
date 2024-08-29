@@ -1,15 +1,15 @@
 #!/bin/bash -l
 
 #SBATCH -A collabrobogroup
-#SBATCH --array=0-4 
+#SBATCH --array=0
 #SBATCH --ntasks=1 
-#SBATCH -t 01:00:00 
+#SBATCH -t 20:00:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a100:2
+#SBATCH --gres=gpu:a40:8
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64
 #SBATCH --output=log/slurm/pretrain_wcattn/log-%A-%a.log 
-#SBATCH -J wcattn
+#SBATCH -J cross_attn
 
 export TORCH_HOME=/project/CollabRoboGroup/.cache
 export TRANSFORMERS_CACHE=/project/CollabRoboGroup/.cache
@@ -21,15 +21,15 @@ model_name=('lmsys/vicuna-13b-v1.5' 'lmsys/vicuna-7b-v1.5' 'lmsys/vicuna-13b-v1.
 vision_tower=('openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336' 'openai/clip-vit-large-patch14-336')
 num_experts=(3 4 4 5 6)
 num_experts_per_tok=(2 2 3 2 3)
-num_layers=(12 14 16 18 24)
+num_layers=(24 14 16 18 24)
 num_heads=(16 16 16 16 16)
 batch_size=(32 32 32 32 32)
-output_dir=('./ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v1' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v2' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v3' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v4' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts/pretrain_wcattn/llava-zer03' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v2' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v3' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v4' './ckpts/pretrain_wcattn/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
 apptainer exec --nv /scratch/mi8uu/mrm/llava.sif deepspeed --master_port $PORT llava/train/train_mem.py \
---deepspeed ./scripts/zero2.json \
+--deepspeed ./scripts/zero3.json \
 --model_name_or_path ${model_name[${SLURM_ARRAY_TASK_ID}]} \
 --version plain \
 --data_path ./playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json \
