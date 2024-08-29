@@ -7,7 +7,7 @@
 #SBATCH -p gpu
 #SBATCH --gres=gpu:a40:8
 #SBATCH -N 1 
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=64
 #SBATCH --output=log/slurm/tune_embed/log-%A-%a.log 
 #SBATCH -J tune_embed
 
