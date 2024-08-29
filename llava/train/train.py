@@ -1068,8 +1068,6 @@ def train(attn_implementation=None):
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
-    print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.shape}')
-    print(f'model.get_model().embed_tokens: {model.model.embed_tokens.shape}')
 
 
 
@@ -1123,7 +1121,17 @@ def train(attn_implementation=None):
         
         if model_args.pretrain_embed_tokens is not None:
             embed_tokens_weights = torch.load(model_args.pretrain_embed_tokens, map_location='cpu')
+            
+            # Print the shape of the weights
+            for key, value in embed_tokens_weights.items():
+                print(f"Key: {key}, Shape: {value.shape}")
+
+            # Check the embed_tokens layer structure
+            print(model.get_model().embed_tokens)
+
+
             embed_tokens_weights = {k.replace('model.embed_tokens.', ''): v for k, v in embed_tokens_weights.items()}
+            
             # print(f'Embed tokens shape: {embed_tokens_weights.shape}')
             print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.weight.shape}')
             print(f'model.get_model().embed_tokens: {model.model.embed_tokens.weight.shape}')
