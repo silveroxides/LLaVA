@@ -3,9 +3,9 @@
 #SBATCH -A collabrobogroup
 #SBATCH --array=0
 #SBATCH --ntasks=1 
-#SBATCH -t 20:00:00 
+#SBATCH -t 00:20:00 
 #SBATCH -p gpu
-#SBATCH --gres=gpu:a40:8
+#SBATCH --gres=gpu:a40:4
 #SBATCH -N 1 
 #SBATCH --cpus-per-task=64
 #SBATCH --output=log/slurm/tune_embed/log-%A-%a.log 
@@ -27,7 +27,7 @@ batch_size=(32 32 32 32 32)
 lr=(1e-3 2e-5 1e-3 1e-3)
 tune_embed_tokens=(True True False True)
 mm_projector_type=('mlp2x_gelu' 'sparse_moe' 'sparse_moe' 'sparse_moe')
-output_dir=('./ckpts/ref_embed/llava-tune_embeds' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
+output_dir=('./ckpts/ref_embed/llava-tune_embeds-test' './ckpts/moe/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v3' './ckpts/embed_v2/llava-v1.5-13b-pretrain-v4' './ckpts/embed/llava-v1.5-13b-pretrain-v5')
 PORT=$((29500 + SLURM_JOB_ID % 1000))
 
 
@@ -39,6 +39,7 @@ apptainer exec --nv /scratch/mi8uu/mrm/sifs/llava.sif deepspeed --master_port $P
 --image_folder ./playground/data/images \
 --vision_tower openai/clip-vit-large-patch14-336 \
 --tune_mm_mlp_adapter True \
+--pretrain_embed_tokens ./ckpts/ref_embed/llava-tune_embeds/embed_tokens.bin \
 --tune_embed_tokens ${tune_embed_tokens[${SLURM_ARRAY_TASK_ID}]} \
 --mm_vision_select_layer -2 \
 --mm_use_im_start_end False \

@@ -1120,6 +1120,7 @@ def train(attn_implementation=None):
         if model_args.pretrain_embed_tokens is not None:
             embed_tokens_weights = torch.load(model_args.pretrain_embed_tokens, map_location='cpu')
             model.get_model().embed_tokens.load_state_dict(embed_tokens_weights)
+            rank0_print('Pretrain embed tokens initialized')
 
 
         model.config.freeze_mm_mlp_adapter = training_args.freeze_mm_mlp_adapter
