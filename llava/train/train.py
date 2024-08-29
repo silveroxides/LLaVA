@@ -1068,6 +1068,10 @@ def train(attn_implementation=None):
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
+    print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.weight.shape}')
+    print(f'model.get_model().embed_tokens: {model.model.embed_tokens.weight.shape}')
+
+
 
     if model_args.vision_tower is not None:
 
