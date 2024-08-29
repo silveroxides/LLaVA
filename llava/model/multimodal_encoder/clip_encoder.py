@@ -68,12 +68,6 @@ class CLIPVisionTower(nn.Module):
 
                     for param in layer.linear_projection.parameters():
                         param.requires_grad = True
-
-            # for name, param in self.wrapped_vision_tower.named_parameters():
-            #     if param.requires_grad:
-            #         print(f"{name} is unfrozen")
-                # else:
-                #     print(f"{name} is frozen")
         
         # vanilla vision encoder
         else:
@@ -132,11 +126,6 @@ class CLIPVisionTower(nn.Module):
                 image_forward_outs = self.wrapped_vision_tower(images.to(device=self.device, dtype=self.dtype), output_hidden_states=True)
                 image_features = self.feature_select(image_forward_outs).to(images.dtype)
                 router_logits = self.wrapped_vision_tower.get_collected_logits()
-                
-                # Iterate through the tuple to print the shapes of the logits
-                # for i, logits in enumerate(router_logits):
-                #     print(f"Layer {i} logits shape: {logits.shape}")
-                # Clear logits if needed
                 self.wrapped_vision_tower.clear_logits()
 
             
