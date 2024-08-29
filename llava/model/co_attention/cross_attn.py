@@ -57,13 +57,13 @@ class SimplifiedCrossAttentionEncoder(nn.Module):
         self.layers = nn.ModuleList([SimplifiedCrossAttentionLayer(input_dim, hidden_dim) 
                                      for _ in range(num_layers)])
 
-    def forward(self, visual_feature, text_feature, mask=None):
+    def forward(self, text_feature, visual_feature, mask=None):
         for layer in self.layers:
             visual_feature = layer(visual_feature, text_feature)
         return visual_feature
     
 def get_co_attention(input_dim, hidden_dim, num_layers, num_heads, dropout_rate):
-    print(f'cimplified cross attention implemented')
+    print(f'simplified cross attention implemented')
     return SimplifiedCrossAttentionEncoder(input_dim, hidden_dim, num_layers)
 
 
