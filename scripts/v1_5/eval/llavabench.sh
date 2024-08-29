@@ -1,7 +1,7 @@
 #!/bin/bash
 
-python -m llava.eval.model_vqa \
-    --model-path liuhaotian/llava-v1.5-13b \
+python3 -m llava.eval.model_vqa \
+    --model-path ./ckpts_it/baseline/llava-base \
     --question-file ./playground/data/eval/llava-bench-in-the-wild/questions.jsonl \
     --image-folder ./playground/data/eval/llava-bench-in-the-wild/images \
     --answers-file ./playground/data/eval/llava-bench-in-the-wild/answers/llava-v1.5-13b.jsonl \
@@ -10,7 +10,7 @@ python -m llava.eval.model_vqa \
 
 mkdir -p playground/data/eval/llava-bench-in-the-wild/reviews
 
-python llava/eval/eval_gpt_review_bench.py \
+python3 llava/eval/eval_gpt_review_bench.py \
     --question playground/data/eval/llava-bench-in-the-wild/questions.jsonl \
     --context playground/data/eval/llava-bench-in-the-wild/context.jsonl \
     --rule llava/eval/table/rule.json \
@@ -20,4 +20,4 @@ python llava/eval/eval_gpt_review_bench.py \
     --output \
         playground/data/eval/llava-bench-in-the-wild/reviews/llava-v1.5-13b.jsonl
 
-python llava/eval/summarize_gpt_review.py -f playground/data/eval/llava-bench-in-the-wild/reviews/llava-v1.5-13b.jsonl
+python3 llava/eval/summarize_gpt_review.py -f playground/data/eval/llava-bench-in-the-wild/reviews/llava-v1.5-13b.jsonl
