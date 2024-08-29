@@ -1119,26 +1119,26 @@ def train(attn_implementation=None):
                 for param in model.get_model().embed_tokens.parameters():
                     param.requires_grad = True
         
-        if model_args.pretrain_embed_tokens is not None:
-            embed_tokens_weights = torch.load(model_args.pretrain_embed_tokens, map_location='cpu')
+        # if model_args.pretrain_embed_tokens is not None:
+        #     embed_tokens_weights = torch.load(model_args.pretrain_embed_tokens, map_location='cpu')
             
-            # # Print the shape of the weights
-            # for key, value in embed_tokens_weights.items():
-            #     print(f"Key: {key}, Shape: {value.shape}")
+        #     # # Print the shape of the weights
+        #     # for key, value in embed_tokens_weights.items():
+        #     #     print(f"Key: {key}, Shape: {value.shape}")
 
-            # # Check the embed_tokens layer structure
-            # print(model.get_model().embed_tokens)
+        #     # # Check the embed_tokens layer structure
+        #     # print(model.get_model().embed_tokens)
 
 
-            adjusted_weight = {k.replace('model.embed_tokens.', ''): v for k, v in embed_tokens_weights.items()}
-            print(f'adjusted weight keys: {adjusted_weight}')
+        #     adjusted_weight = {k.replace('model.embed_tokens.', ''): v for k, v in embed_tokens_weights.items()}
+        #     print(f'adjusted weight keys: {adjusted_weight}')
 
-            # # print(f'Embed tokens shape: {embed_tokens_weights.shape}')
-            # print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.weight.shape}')
-            # print(f'model.get_model().embed_tokens: {model.model.embed_tokens.weight.shape}')
+        #     # # print(f'Embed tokens shape: {embed_tokens_weights.shape}')
+        #     # print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.weight.shape}')
+        #     # print(f'model.get_model().embed_tokens: {model.model.embed_tokens.weight.shape}')
 
-            model.get_model().embed_tokens.load_state_dict(adjusted_weight)
-            rank0_print('Pretrain embed tokens initialized')
+        #     model.get_model().embed_tokens.load_state_dict(adjusted_weight)
+        #     rank0_print('Pretrain embed tokens initialized')
 
 
         model.config.freeze_mm_mlp_adapter = training_args.freeze_mm_mlp_adapter
