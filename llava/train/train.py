@@ -1132,10 +1132,10 @@ def train(attn_implementation=None):
             print(f'adjusted weight keys: {adjusted_weight.shape}')
 
             # print(f'Embed tokens shape: {embed_tokens_weights.shape}')
-            print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens[0].shape}')
-            print(f'model.get_model().embed_tokens: {model.model.embed_tokens[0].shape}')
+            print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.weight.shape}')
+            print(f'model.get_model().embed_tokens: {model.model.embed_tokens.weight.shape}')
 
-            model.get_model().embed_tokens[0].load_state_dict(adjusted_weight)
+            model.get_model().embed_tokens.load_state_dict(adjusted_weight)
             rank0_print('Pretrain embed tokens initialized')
 
 
