@@ -1,7 +1,7 @@
 #!/bin/bash
 
 deepspeed llava/train/train_mem.py \
-    --deepspeed ./scripts/zero3.json \
+    --deepspeed ./scripts/zero2.json \
     --model_name_or_path lmsys/vicuna-7b-v1.5 \
     --version plain \
     --data_path ./playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json \
@@ -9,7 +9,7 @@ deepspeed llava/train/train_mem.py \
     --vision_tower openai/clip-vit-large-patch14-336 \
     --tune_mm_mlp_adapter True \
     --tune_embed_tokens True \
-    --pretrain_embed_tokens ./ckpts/ref_embed/llava-tune_embeds \
+    --pretrain_embed_tokens ./ckpts/ref_embed/llava-tune_embeds/embed_tokens.bin \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end False \
     --mm_use_im_patch_token False \
