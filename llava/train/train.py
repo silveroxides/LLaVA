@@ -23,7 +23,6 @@ import pathlib
 import wandb
 from typing import Dict, Optional, Sequence, List
 from transformers import BitsAndBytesConfig, AutoConfig, CLIPTokenizer
-from deepspeed.utils.zero_to_fp32 import load_state_dict_from_zero_checkpoint
 
 
 
@@ -1119,24 +1118,24 @@ def train(attn_implementation=None):
                     param.requires_grad = True
         
         if model_args.pretrain_embed_tokens is not None:
-            state_dict = load_state_dict_from_zero_checkpoint(model_args.pretrain_embed_tokens)
+            embed_tokens_weights = torch.load(model_args.pretrain_embed_tokens, map_location='cpu')
             
             # Print the shape of the weights
-            for key, value in state_dict.items():
+            for key, value in embed_tokens_weights.items():
                 print(f"Key: {key}, Shape: {value.shape}")
 
             # Check the embed_tokens layer structure
             print(model.get_model().embed_tokens)
 
 
-            adjusted_weight = {k.replace('model.embed_tokens.', ''): v for k, v in state_dict.items()}
+            adjusted_weight = {k.replace('model.embed_tokens.', ''): v for k, v in embed_tokens_weights.items()}
             print(f'adjusted weight keys: {adjusted_weight}')
 
-            # # print(f'Embed tokens shape: {embed_tokens_weights.shape}')
-            # print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.weight.shape}')
-            # print(f'model.get_model().embed_tokens: {model.model.embed_tokens.weight.shape}')
+            # print(f'Embed tokens shape: {embed_tokens_weights.shape}')
+            print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.weight.shape}')
+            print(f'model.get_model().embed_tokens: {model.model.embed_tokens.weight.shape}')
 
-            model.get_model().embed_tokens.load_state_dict(adjusted_weight)
+            model.get_model().embed_tokens[0].load_state_dict(adjusted_weight)
             rank0_print('Pretrain embed tokens initialized')
 
 
