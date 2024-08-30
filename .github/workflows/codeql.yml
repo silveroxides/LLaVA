@@ -19,7 +19,7 @@ jobs:
 
     strategy:
       matrix:
-        language: [ 'javascript', 'python', 'shell', 'html' ]
+        language: [ 'javascript', 'python', 'shell' ]
 
     steps:
     - name: Checkout repository
