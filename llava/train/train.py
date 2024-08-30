@@ -23,7 +23,7 @@ import pathlib
 import wandb
 from typing import Dict, Optional, Sequence, List
 from transformers import BitsAndBytesConfig, AutoConfig, CLIPTokenizer
-from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
+from deepspeed.utils.zero_to_fp32 import load_state_dict_from_zero_checkpoint
 
 
 
@@ -1119,7 +1119,7 @@ def train(attn_implementation=None):
                     param.requires_grad = True
         
         if model_args.pretrain_embed_tokens is not None:
-            state_dict = get_fp32_state_dict_from_zero_checkpoint(model_args.pretrain_embed_tokens)
+            state_dict = load_state_dict_from_zero_checkpoint(model_args.pretrain_embed_tokens)
             
             # Print the shape of the weights
             for key, value in state_dict.items():
