@@ -1129,7 +1129,7 @@ def train(attn_implementation=None):
 
 
             adjusted_weight = {k.replace('model.embed_tokens.', ''): v for k, v in embed_tokens_weights.items()}
-            print(f'adjusted weight keys: {adjusted_weight.shape}')
+            # print(f'adjusted weight keys: {adjusted_weight.shape}')
 
             # print(f'Embed tokens shape: {embed_tokens_weights.shape}')
             print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.weight.shape}')
