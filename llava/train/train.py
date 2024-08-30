@@ -23,6 +23,7 @@ import pathlib
 import wandb
 from typing import Dict, Optional, Sequence, List
 from transformers import BitsAndBytesConfig, AutoConfig, CLIPTokenizer
+from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
 
 
 
@@ -1062,9 +1063,12 @@ def train(attn_implementation=None):
         tokenizer.pad_token = tokenizer.unk_token
     
     else:
+        # if tokenizer do not have "unk_token" add this when you initialize the tokenizer
         tokenizer.pad_token = tokenizer.unk_token
+
         if model_args.version in conversation_lib.conv_templates:
             conversation_lib.default_conversation = conversation_lib.conv_templates[model_args.version]
+        
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
@@ -1080,11 +1084,6 @@ def train(attn_implementation=None):
             fsdp=training_args.fsdp
         )
         
-        # print('-'*100)
-        # print('-'*40+'Model After Initializing vision Module'+'-'*40)
-        # print(model)
-        # print('-'*100)
-
         vision_tower = model.get_vision_tower()
 
 
@@ -1119,26 +1118,26 @@ def train(attn_implementation=None):
                 for param in model.get_model().embed_tokens.parameters():
                     param.requires_grad = True
         
-        # if model_args.pretrain_embed_tokens is not None:
-        #     embed_tokens_weights = torch.load(model_args.pretrain_embed_tokens, map_location='cpu')
+        if model_args.pretrain_embed_tokens is not None:
+            state_dict = get_fp32_state_dict_from_zero_checkpoint(model_args.pretrain_embed_tokens)
             
-        #     # # Print the shape of the weights
-        #     # for key, value in embed_tokens_weights.items():
-        #     #     print(f"Key: {key}, Shape: {value.shape}")
+            # Print the shape of the weights
+            for key, value in state_dict.items():
+                print(f"Key: {key}, Shape: {value.shape}")
 
-        #     # # Check the embed_tokens layer structure
-        #     # print(model.get_model().embed_tokens)
+            # Check the embed_tokens layer structure
+            print(model.get_model().embed_tokens)
 
 
-        #     adjusted_weight = {k.replace('model.embed_tokens.', ''): v for k, v in embed_tokens_weights.items()}
-        #     print(f'adjusted weight keys: {adjusted_weight}')
+            adjusted_weight = {k.replace('model.embed_tokens.', ''): v for k, v in state_dict.items()}
+            print(f'adjusted weight keys: {adjusted_weight}')
 
-        #     # # print(f'Embed tokens shape: {embed_tokens_weights.shape}')
-        #     # print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.weight.shape}')
-        #     # print(f'model.get_model().embed_tokens: {model.model.embed_tokens.weight.shape}')
+            # # print(f'Embed tokens shape: {embed_tokens_weights.shape}')
+            # print(f'model.get_model().embed_tokens: {model.get_model().embed_tokens.weight.shape}')
+            # print(f'model.get_model().embed_tokens: {model.model.embed_tokens.weight.shape}')
 
-        #     model.get_model().embed_tokens.load_state_dict(adjusted_weight)
-        #     rank0_print('Pretrain embed tokens initialized')
+            model.get_model().embed_tokens.load_state_dict(adjusted_weight)
+            rank0_print('Pretrain embed tokens initialized')
 
 
         model.config.freeze_mm_mlp_adapter = training_args.freeze_mm_mlp_adapter
@@ -1219,6 +1218,7 @@ def train(attn_implementation=None):
         trainer.train(resume_from_checkpoint=True)
     else:
         trainer.train()
+    
     trainer.save_state()
 
     model.config.use_cache = True
